@@ -30,8 +30,14 @@ module Solitaire.Types where
 
   data Move
     = MoveStack MoveStack
-    | MoveToFoundation MoveToFoundation
     | FlipCard FlipCard
+    | MoveToFoundation MoveToFoundation
+    deriving (Eq, Show, Read)
+
+  data MoveStack = MS
+    { ms_pileIndex1 :: Int
+    , ms_pileIndex2 :: Int
+    }
     deriving (Eq, Show, Read)
 
   data FlipCard = FC
@@ -40,12 +46,6 @@ module Solitaire.Types where
     deriving (Eq, Show, Read)
 
   data MoveToFoundation = MTF
-    { mtf_pileIndex :: Int
-    }
-    deriving (Eq, Show, Read)
-
-  data MoveStack = MS
-    { ms_pileIndex1 :: Int
-    , ms_pileIndex2 :: Int
-    }
-    deriving (Eq, Show, Read)
+  { mtf_pileIndex :: Int
+  }
+  deriving (Eq, Show, Read)

@@ -42,8 +42,15 @@ toPile cards =
 indexFrom :: Int -> [a] -> IntMap a
 indexFrom offset = M.fromAscList . zip [offset..]
 
-solve :: Game -> [Move]
+solve :: Game -> [(Move, Game)]
 solve = _
+
+moveReducer :: Game -> Move -> Game
+moveReducer game move =
+  case move of
+    MoveStack (MS (i j)) -> _
+    FlipCard (FC i) -> _
+    MoveToFoundation (MTF i) -> _
 
 -- effectful
 shuffleIO :: Foldable f => f a -> IO [a]
