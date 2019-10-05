@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 36a7a35d0516e5b1ffb38cec4541280a61f30a5a2a7b01980b4fe5a2bd81560d
+-- hash: ad5879de08abcd7271d80e0820a42b64423e146394a9208a7a64736e128ba98c
 
 name:           solitaire
 version:        0.1.0.0
@@ -27,13 +27,16 @@ source-repository head
 
 library
   exposed-modules:
-      Lexer
+      Main
+      Solitaire
   other-modules:
       Paths_solitaire
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , containers
+    , vector
   default-language: Haskell2010
 
 executable solitaire-exe
@@ -45,14 +48,16 @@ executable solitaire-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers
     , solitaire
+    , vector
   default-language: Haskell2010
 
 test-suite solitaire-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      LexerSpec
+      SolitaireSpec
       Paths_solitaire
   hs-source-dirs:
       test
@@ -60,6 +65,8 @@ test-suite solitaire-test
   build-depends:
       QuickCheck
     , base >=4.7 && <5
+    , containers
     , hspec
     , solitaire
+    , vector
   default-language: Haskell2010
