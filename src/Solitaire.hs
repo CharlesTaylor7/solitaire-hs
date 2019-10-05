@@ -4,7 +4,6 @@ Prototype is a simplified Spider solitaire.
 Cards are suitless and have rank between 1 to 5
 There are 3 piles of 5 cards each with the top 2 rows face up.
 --}
-{-# LANGUAGE RankNTypes #-}
 module Solitaire where
 
 import Data.IntMap (IntMap)
@@ -20,6 +19,7 @@ import Data.Foldable
 import Data.Traversable
 import Control.Applicative
 
+import Solitaire.PrettyPrinter
 import Solitaire.Types
 
 -- Pure declarations
@@ -43,14 +43,14 @@ indexFrom :: Int -> [a] -> IntMap a
 indexFrom offset = M.fromAscList . zip [offset..]
 
 solve :: Game -> [(Move, Game)]
-solve = _
+solve = undefined
 
 moveReducer :: Game -> Move -> Game
 moveReducer game move =
   case move of
-    MoveStack (MS (i j)) -> _
-    FlipCard (FC i) -> _
-    MoveToFoundation (MTF i) -> _
+    MoveStack (MS i j) -> undefined
+    FlipCard (FC i) -> undefined
+    MoveToFoundation (MTF i) -> undefined
 
 -- effectful
 shuffleIO :: Foldable f => f a -> IO [a]
