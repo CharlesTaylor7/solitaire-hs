@@ -1,3 +1,4 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Solitaire.Types where
 
 import Data.IntMap (IntMap)
@@ -19,13 +20,18 @@ data Pile = Pile
   }
   deriving (Eq, Show, Read)
 
+newtype Layout = Layout
+  { unLayout :: IntMap Pile
+  }
+  deriving (Eq, Show, Read)
+
 data Foundation = Foundation
   { numSets :: Int
   }
   deriving (Eq, Show, Read)
 
 data Game = Game
-  { layout :: IntMap Pile
+  { layout :: Layout
   , foundation :: Foundation
   }
   deriving (Eq, Show, Read)

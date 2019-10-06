@@ -84,7 +84,7 @@ newGame :: IO Game
 newGame = do
   shuffled <- shuffleIO deck
   let piles = toPile <$> chunksOf 5 shuffled
-  let layout = indexFrom 0 piles
+  let layout = Layout $ indexFrom 0 piles
   let foundation = Foundation 0
   pure $ Game layout foundation
 

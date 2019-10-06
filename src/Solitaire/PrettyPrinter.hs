@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, PartialTypeSignatures #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, PartialTypeSignatures, GeneralizedNewtypeDeriving #-}
 module Solitaire.PrettyPrinter where
 
 -- base
@@ -17,8 +17,10 @@ import Lens.Micro
 -- app
 import Solitaire.Types
 
-type Row = [CardView]
-type Layout = IntMap Pile
+newtype Row = Row
+  { unRow :: [CardView]
+  }
+  deriving (Eq, Show, Read, Semigroup, Monoid)
 
 data CardView
   = Empty
@@ -46,12 +48,18 @@ instance Pretty CardView where
   pretty FaceDown = "-"
   pretty (FaceUp card) = pretty card
 
+instance Pretty Row where
+  pretty = intercalate "|" . map pretty . unRow
+
+instance Pretty Layout where
+  pretty = intercalate "\n" . map pretty . toRows
+
+instance Pretty Foundation where
+  pretty (Foundation n) = "[" <> pretty n <> "]"
+
 instance Pretty Game where
-  pretty (Game layout _) =
-    toRows layout
-      & map (map pretty)
-      & map (intercalate "|")
-      & intercalate "\n"
+  pretty (Game layout foundation) =
+    pretty foundation <> "\n" <> pretty layout
 
 unsnoc :: Vector a -> Maybe (Vector a, a)
 unsnoc vector =
@@ -77,8 +85,11 @@ peelCard pile =
     id
     (peelFaceDown pile <|> peelFaceUp pile)
 
+peelRow' :: IntMap Pile -> ([CardView], IntMap Pile)
+peelRow' = traverse ((pure . fst &&& id . snd) . peelCard)
+
 peelRow :: Layout -> (Row, Layout)
-peelRow = traverse ((pure . fst &&& id . snd) . peelCard)
+peelRow = (Row . fst &&& Layout . snd) . peelRow' . unLayout
 
 loopM :: Monad m => (a -> m (Either a b)) -> a -> m b
 loopM act x = act x >>= loopM act ||| pure
@@ -88,8 +99,8 @@ toRows = fst . loopM act
   where
     act layout =
       let
-        (row, piles) = peelRow layout
-        rowWriter = ([row], piles)
+        (r@(Row row), piles) = peelRow layout
+        rowWriter = ([r], piles)
       in
         if all (== Empty) row
         then pure $ Right ()
