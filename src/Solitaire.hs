@@ -6,6 +6,12 @@ There are 3 piles of 5 cards each with the top 2 rows face up.
 --}
 module Solitaire where
 
+-- base
+import Data.Foldable
+import Data.Traversable
+import Control.Applicative
+
+-- libraries
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as M
 
@@ -15,10 +21,9 @@ import qualified Data.Vector as V
 import Data.Vector.Mutable (IOVector)
 import qualified Data.Vector.Mutable as MV
 
-import Data.Foldable
-import Data.Traversable
-import Control.Applicative
+import System.Random
 
+-- app
 import Solitaire.PrettyPrinter
 import Solitaire.Types
 
@@ -66,9 +71,9 @@ shuffleIOVector vector =
   let
     n = MV.length vector
   in
-    for_ [1..n] $ \i ->
-      for_ [1..i] $ \j ->
-        MV.swap vector i j
+    for_ [0..(n-1)] $ \i ->
+      randomRIO (0, i) >>=
+        MV.swap vector i
 
 newGame :: IO Game
 newGame = do

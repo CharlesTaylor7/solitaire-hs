@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c78e4815ad8a12e00315af4076da5c8ccdf7b51173e4cef64a3dab6d52e1ae18
+-- hash: f667cc9de29810403e0220f4fd1cb059bafcb19948493614f450b0b38d31c6a4
 
 name:           solitaire
 version:        0.1.0.0
@@ -27,7 +27,6 @@ source-repository head
 
 library
   exposed-modules:
-      Main
       Solitaire
       Solitaire.PrettyPrinter
       Solitaire.Types
@@ -40,6 +39,7 @@ library
     , containers
     , microlens
     , microlens-th
+    , random
     , vector
   default-language: Haskell2010
 
@@ -55,6 +55,7 @@ executable solitaire-exe
     , containers
     , microlens
     , microlens-th
+    , random
     , solitaire
     , vector
   default-language: Haskell2010
@@ -75,6 +76,7 @@ test-suite solitaire-test
     , hspec
     , microlens
     , microlens-th
+    , random
     , solitaire
     , vector
   default-language: Haskell2010

@@ -24,6 +24,7 @@ dependencies:
 - containers
 - microlens
 - microlens-th
+- random
 - vector
 
 library:
