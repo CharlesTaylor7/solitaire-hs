@@ -25,6 +25,7 @@ dependencies:
 - microlens
 - microlens-th
 - random
+- transformers
 - vector
 
 library:

@@ -64,7 +64,7 @@ solve = undefined
 
 moveReducer :: Game -> Move -> Game
 moveReducer game move =
-  case move of
+  case normalize move of
     MoveStack (MS i j) -> undefined
     FlipCard (FC i) -> undefined
     MoveToFoundation (MTF i) -> undefined
@@ -95,16 +95,13 @@ newGame = do
   let foundation = Foundation 0
   pure $ Game layout foundation
 
-randomMove :: IO Move
-randomMove = undefined
-
 gameLoop :: IO ()
 gameLoop =
   let
     act game = do
       putStrLn $ pretty game
       getLine
-      move <- randomMove
+      move <- randomIO
       let g' = moveReducer game move
       pure $ Left $ g'
   in do

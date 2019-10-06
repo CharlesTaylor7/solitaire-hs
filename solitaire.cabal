@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f667cc9de29810403e0220f4fd1cb059bafcb19948493614f450b0b38d31c6a4
+-- hash: a8331a72e3357cd0de6c977a1754ed6e92b44e3314756b6b006f46ab7ee5d4dc
 
 name:           solitaire
 version:        0.1.0.0
@@ -30,6 +30,7 @@ library
       Solitaire
       Solitaire.PrettyPrinter
       Solitaire.Types
+      Solitaire.Utils
   other-modules:
       Paths_solitaire
   hs-source-dirs:
@@ -40,6 +41,7 @@ library
     , microlens
     , microlens-th
     , random
+    , transformers
     , vector
   default-language: Haskell2010
 
@@ -57,6 +59,7 @@ executable solitaire-exe
     , microlens-th
     , random
     , solitaire
+    , transformers
     , vector
   default-language: Haskell2010
 
@@ -78,5 +81,6 @@ test-suite solitaire-test
     , microlens-th
     , random
     , solitaire
+    , transformers
     , vector
   default-language: Haskell2010
