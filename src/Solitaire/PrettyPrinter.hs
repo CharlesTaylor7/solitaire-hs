@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, PartialTypeSignatures #-}
 module Solitaire.PrettyPrinter where
 
 -- base
@@ -89,7 +89,8 @@ toRows = fst . loopM act
     act layout =
       let
         (row, piles) = peelRow layout
+        rowWriter = ([row], piles)
       in
         if all (== Empty) row
         then pure $ Right ()
-        else pure $ Left piles
+        else Left <$> rowWriter

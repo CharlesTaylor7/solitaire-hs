@@ -4,7 +4,12 @@ Prototype is a simplified Spider solitaire.
 Cards are suitless and have rank between 1 to 5
 There are 3 piles of 5 cards each with the top 2 rows face up.
 --}
-module Solitaire where
+module Solitaire
+  ( module Solitaire
+  , module M
+  , module V
+  , module MV
+  ) where
 
 -- base
 import Data.Foldable
