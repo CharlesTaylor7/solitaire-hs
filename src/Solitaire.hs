@@ -31,6 +31,7 @@ import System.Random
 -- app
 import Solitaire.PrettyPrinter
 import Solitaire.Types
+import Solitaire.Utils
 
 -- Pure declarations
 chunksOf :: Int -> [a] -> [[a]]
@@ -52,7 +53,13 @@ toPile cards =
 indexFrom :: Int -> [a] -> IntMap a
 indexFrom offset = M.fromAscList . zip [offset..]
 
-solve :: Game -> [(Move, Game)]
+data Step = Step
+  { step_move :: Move
+  , step_game :: Game
+  }
+  deriving (Eq, Read, Show)
+
+solve :: Game -> [Step]
 solve = undefined
 
 moveReducer :: Game -> Move -> Game
@@ -88,8 +95,19 @@ newGame = do
   let foundation = Foundation 0
   pure $ Game layout foundation
 
-main :: IO ()
-main = do
-  game <- newGame
-  let solution = solve game
-  print solution
+randomMove :: IO Move
+randomMove = undefined
+
+gameLoop :: IO ()
+gameLoop =
+  let
+    act game = do
+      putStrLn $ pretty game
+      getLine
+      move <- randomMove
+      let g' = moveReducer game move
+      pure $ Left $ g'
+  in do
+    game <- newGame
+    solution <- loopM act game
+    pure ()

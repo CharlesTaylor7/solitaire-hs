@@ -16,6 +16,7 @@ import Lens.Micro
 
 -- app
 import Solitaire.Types
+import Solitaire.Utils
 
 newtype Row = Row
   { unRow :: [CardView]
@@ -30,9 +31,6 @@ data CardView
 
 class Pretty a where
   pretty :: a -> String
-
-instance {-# INCOHERENT #-} Show a => Pretty a where
-  pretty = show
 
 instance Pretty Char where
   pretty = pure
@@ -55,7 +53,7 @@ instance Pretty Layout where
   pretty = intercalate "\n" . map pretty . toRows
 
 instance Pretty Foundation where
-  pretty (Foundation n) = "[" <> pretty n <> "]"
+  pretty (Foundation n) = "[" <> show n <> "]"
 
 instance Pretty Game where
   pretty (Game layout foundation) =
@@ -90,9 +88,6 @@ peelRow' = traverse ((pure . fst &&& id . snd) . peelCard)
 
 peelRow :: Layout -> (Row, Layout)
 peelRow = (Row . fst &&& Layout . snd) . peelRow' . unLayout
-
-loopM :: Monad m => (a -> m (Either a b)) -> a -> m b
-loopM act x = act x >>= loopM act ||| pure
 
 toRows :: Layout -> [Row]
 toRows = fst . loopM act
