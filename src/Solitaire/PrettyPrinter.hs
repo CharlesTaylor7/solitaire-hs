@@ -17,6 +17,15 @@ import Lens.Micro
 -- app
 import Solitaire.Types
 
+type Row = [CardView]
+type Layout = IntMap Pile
+
+data CardView
+  = Empty
+  | FaceDown
+  | FaceUp Card
+  deriving (Eq, Read, Show)
+
 class Pretty a where
   pretty :: a -> String
 
@@ -31,6 +40,18 @@ instance Pretty String where
 
 instance Pretty Card where
   pretty = show . (+ 1) . fromEnum
+
+instance Pretty CardView where
+  pretty Empty = " "
+  pretty FaceDown = "-"
+  pretty (FaceUp card) = pretty card
+
+instance Pretty Game where
+  pretty (Game layout _) =
+    toRows layout
+      & map (map pretty)
+      & map (intercalate "|")
+      & intercalate "\n"
 
 unsnoc :: Vector a -> Maybe (Vector a, a)
 unsnoc vector =
@@ -56,35 +77,19 @@ peelCard pile =
     id
     (peelFaceDown pile <|> peelFaceUp pile)
 
-printRow :: IntMap Pile -> ([CardView], IntMap Pile)
-printRow = traverse ((pure . fst &&& id . snd) . peelCard)
-
-data CardView
-  = Empty
-  | FaceDown
-  | FaceUp Card
-
-instance Pretty CardView where
-  pretty Empty = " "
-  pretty FaceDown = "-"
-  pretty (FaceUp card) = pretty card
-
-type Row = IntMap CardView
-
-toRows :: IntMap Pile -> [Row]
-toRows piles =
-
-instance Pretty Game where
-  pretty (Game layout _) = intercalate "|" rows
-    where
-      (rows, _) = loopM act layout
-      act layout =
-        let
-          (row, piles) = printRow layout
-        in
-          if all (== ' ') row
-          then pure $ Right ()
-          else pure $ Left piles
+peelRow :: Layout -> (Row, Layout)
+peelRow = traverse ((pure . fst &&& id . snd) . peelCard)
 
 loopM :: Monad m => (a -> m (Either a b)) -> a -> m b
 loopM act x = act x >>= loopM act ||| pure
+
+toRows :: Layout -> [Row]
+toRows = fst . loopM act
+  where
+    act layout =
+      let
+        (row, piles) = peelRow layout
+      in
+        if all (== Empty) row
+        then pure $ Right ()
+        else pure $ Left piles
