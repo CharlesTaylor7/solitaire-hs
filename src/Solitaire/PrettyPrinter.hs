@@ -24,7 +24,7 @@ instance {-# INCOHERENT #-} Show a => Pretty a where
   pretty = show
 
 instance Pretty Char where
-  pretty = (: [])
+  pretty = pure
 
 instance Pretty String where
   pretty = id
@@ -32,35 +32,47 @@ instance Pretty String where
 instance Pretty Card where
   pretty = show . (+ 1) . fromEnum
 
-faceDownCard :: String
-faceDownCard = "-"
-
 unsnoc :: Vector a -> Maybe (Vector a, a)
 unsnoc vector =
   if V.null vector
   then Nothing
   else Just $ V.init &&& V.last $ vector
 
-printFaceDown, printFaceUp :: Pile -> Maybe (String, Pile)
-printFaceDown pile@(Pile _ vector) =
+peelFaceDown, peelFaceUp :: Pile -> Maybe (CardView, Pile)
+peelFaceDown pile@(Pile _ vector) =
   do
     (init, last) <- unsnoc vector
-    pure ("-", pile { faceDown = init })
+    pure (FaceDown, pile { faceDown = init })
 
-printFaceUp pile@(Pile vector _) =
+peelFaceUp pile@(Pile vector _) =
   do
     (init, last) <- unsnoc vector
-    pure (pretty last, pile { faceUp = init })
+    pure (FaceUp last, pile { faceUp = init })
 
-printCard :: Pile -> (String, Pile)
-printCard pile =
+peelCard :: Pile -> (CardView, Pile)
+peelCard pile =
   maybe
-    (" ", Pile V.empty V.empty)
+    (Empty, Pile V.empty V.empty)
     id
-    (printFaceDown pile <|> printFaceUp pile)
+    (peelFaceDown pile <|> peelFaceUp pile)
 
-printRow :: IntMap Pile -> (String, IntMap Pile)
-printRow = traverse printCard
+printRow :: IntMap Pile -> ([CardView], IntMap Pile)
+printRow = traverse ((pure . fst &&& id . snd) . peelCard)
+
+data CardView
+  = Empty
+  | FaceDown
+  | FaceUp Card
+
+instance Pretty CardView where
+  pretty Empty = " "
+  pretty FaceDown = "-"
+  pretty (FaceUp card) = pretty card
+
+type Row = IntMap CardView
+
+toRows :: IntMap Pile -> [Row]
+toRows piles =
 
 instance Pretty Game where
   pretty (Game layout _) = intercalate "|" rows
