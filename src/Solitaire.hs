@@ -4,8 +4,11 @@ Prototype is a simplified Spider solitaire.
 Cards are suitless and have rank between 1 to 5
 There are 3 piles of 5 cards each with the top 2 rows face up.
 --}
+{-# LANGUAGE TypeApplications #-}
 module Solitaire
   ( module Solitaire
+  , module Solitaire.Utils
+  , module Solitaire.Types
   , module M
   , module V
   , module MV
@@ -34,13 +37,6 @@ import Solitaire.Types
 import Solitaire.Utils
 
 -- Pure declarations
-chunksOf :: Int -> [a] -> [[a]]
-chunksOf n xs =
-  if null xs
-  then []
-  else
-    let (chunk, rest) = splitAt n xs
-    in chunk : chunksOf n rest
 
 deck :: [Card]
 deck = enumFromTo One Five >>= replicate 3
@@ -62,9 +58,21 @@ data Step = Step
 solve :: Game -> [Step]
 solve = undefined
 
+numPiles :: Int
+numPiles = 3
+
+numCardCopies :: Int
+numCardCopies = 3
+
+numCards :: Int
+numCards = enumSize @Card undefined
+
+initialPileSize :: Int
+initialPileSize = length deck `div` numPiles
+
 moveReducer :: Game -> Move -> Game
 moveReducer game move =
-  case normalize move of
+  case normalize 3 move of
     MoveStack (MS i j) -> undefined
     FlipCard (FC i) -> undefined
     MoveToFoundation (MTF i) -> undefined
@@ -90,7 +98,7 @@ shuffleIOVector vector =
 newGame :: IO Game
 newGame = do
   shuffled <- shuffleIO deck
-  let piles = toPile <$> chunksOf 5 shuffled
+  let piles = toPile <$> chunksOf initialPileSize shuffled
   let layout = Layout $ indexFrom 0 piles
   let foundation = Foundation 0
   pure $ Game layout foundation

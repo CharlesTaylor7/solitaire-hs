@@ -5,6 +5,8 @@ import Test.QuickCheck
 import Test.Hspec
 
 spec = do
-  describe "Solitaire" $
-    describe "deck" $
-      it "has more than zero cards" 
+  describe "Solitaire" $ do
+    describe "deck" $ do
+      it "should have the right number of cards" $ do
+        let deckSize = length deck
+        deckSize `shouldBe` (numCards * numCardCopies)

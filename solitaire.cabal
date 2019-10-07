@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a8331a72e3357cd0de6c977a1754ed6e92b44e3314756b6b006f46ab7ee5d4dc
+-- hash: d69d182293325bdf750f1b76d349aaf45a1f0352ca99a58c9bcebc23e1708989
 
 name:           solitaire
 version:        0.1.0.0
@@ -67,6 +67,7 @@ test-suite solitaire-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Solitaire.UtilsSpec
       SolitaireSpec
       Paths_solitaire
   hs-source-dirs:

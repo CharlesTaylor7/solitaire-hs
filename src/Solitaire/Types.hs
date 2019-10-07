@@ -13,7 +13,7 @@ data Card
   | Three
   | Four
   | Five
-  deriving (Eq, Show, Read, Ord, Enum)
+  deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 data Pile = Pile
   { faceUp :: Vector Card
