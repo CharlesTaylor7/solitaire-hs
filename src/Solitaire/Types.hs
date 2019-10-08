@@ -1,10 +1,10 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, TemplateHaskell #-}
 module Solitaire.Types where
 
 import Data.IntMap (IntMap)
 import Data.Vector (Vector)
-import Control.Monad.Trans.State.Strict
-import Lens.Micro
+import Control.Monad.State.Strict
+import Control.Lens
 import System.Random(Random(..), RandomGen)
 
 data Card
@@ -25,6 +25,7 @@ newtype Layout = Layout
   { unLayout :: IntMap Pile
   }
   deriving (Eq, Show, Read)
+makePrisms ''Layout
 
 data Foundation = Foundation
   { numSets :: Int

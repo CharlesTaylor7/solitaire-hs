@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d69d182293325bdf750f1b76d349aaf45a1f0352ca99a58c9bcebc23e1708989
+-- hash: c2846b4bfc4dc8d4d89c0ad1f4b53358a88e7153d11f8d6537b0c6692204c01e
 
 name:           solitaire
 version:        0.1.0.0
@@ -38,10 +38,9 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
-    , microlens
-    , microlens-th
+    , lens
+    , mtl
     , random
-    , transformers
     , vector
   default-language: Haskell2010
 
@@ -55,11 +54,10 @@ executable solitaire-exe
   build-depends:
       base >=4.7 && <5
     , containers
-    , microlens
-    , microlens-th
+    , lens
+    , mtl
     , random
     , solitaire
-    , transformers
     , vector
   default-language: Haskell2010
 
@@ -78,10 +76,9 @@ test-suite solitaire-test
     , base >=4.7 && <5
     , containers
     , hspec
-    , microlens
-    , microlens-th
+    , lens
+    , mtl
     , random
     , solitaire
-    , transformers
     , vector
   default-language: Haskell2010
