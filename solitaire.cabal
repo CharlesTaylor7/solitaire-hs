@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 05c77a2706bb4e5abc9458eb6b2579a2f6ba348eca743170f9ca476e26f9ab1e
+-- hash: 3416f8da5e76f5b73d3529dfdcb072dd1661a652a47072dc1cf2ac9ff28cc967
 
 name:           solitaire
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       Solitaire
+      Solitaire.Error
       Solitaire.PrettyPrinter
       Solitaire.Types
       Solitaire.Utils

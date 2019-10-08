@@ -15,9 +15,11 @@ module Solitaire
   ) where
 
 -- base
+import Data.Function
 import Data.Foldable
 import Data.Traversable
 import Control.Applicative
+import Control.Monad.Zip
 
 -- libraries
 import Control.Lens
@@ -71,6 +73,31 @@ numCards = enumSize @Card undefined
 
 initialPileSize :: Int
 initialPileSize = length deck `div` numPiles
+
+isSuccessorOf :: Card -> Card -> Bool
+a `isSuccessorOf` b =
+  fromEnum a - fromEnum b == 1
+
+countWhile :: Foldable f => (a -> Bool) -> f a -> Int
+countWhile p =
+  let
+    reducer x acc
+      | p x = 1 + acc
+      | otherwise = acc
+  in foldr reducer 0
+
+splitAtStack :: Vector Card -> (Vector Card, Vector Card)
+splitAtStack cards =
+  maybe
+    (V.empty, V.empty)
+    (\(head, rest) ->
+      let
+        n =
+          mzip rest cards
+            & countWhile (uncurry isSuccessorOf)
+      in V.splitAt (n+1) cards
+    )
+    (uncons cards)
 
 moveReducer :: Move -> Game -> Game
 moveReducer move =
