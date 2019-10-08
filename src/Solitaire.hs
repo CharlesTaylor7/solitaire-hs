@@ -20,6 +20,8 @@ import Data.Traversable
 import Control.Applicative
 
 -- libraries
+import Control.Lens
+
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as M
 
@@ -70,10 +72,14 @@ numCards = enumSize @Card undefined
 initialPileSize :: Int
 initialPileSize = length deck `div` numPiles
 
-moveReducer :: Game -> Move -> Game
-moveReducer game move =
+moveReducer :: Move -> Game -> Game
+moveReducer move =
   case normalize 3 move of
-    MoveStack (MS i j) -> undefined
+    MoveStack (MS i j) ->
+      let
+        moveStack = id
+      in layout . _Layout %~ moveStack
+
     FlipCard (FC i) -> undefined
     MoveToFoundation (MTF i) -> undefined
 
@@ -110,7 +116,7 @@ gameLoop =
       putStrLn $ pretty game
       getLine
       move <- randomIO
-      let g' = moveReducer game move
+      let g' = moveReducer move game
       pure $ Left $ g'
   in do
     game <- newGame

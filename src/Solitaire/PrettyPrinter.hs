@@ -72,13 +72,13 @@ newtype RowCount = RowCount Int
 toCardViews :: RowCount -> Pile -> [CardView]
 toCardViews (RowCount n) =
   let
-    getFaceUps = toList . fmap FaceUp . faceUp
-    getFaceDowns = toList . fmap (const FaceDown) . faceDown
+    getFaceUps = toList . fmap FaceUp . view faceUp
+    getFaceDowns = toList . fmap (const FaceDown) . view faceDown
   in
     rightPad n Empty . (getFaceDowns <> getFaceUps)
 
 pileSize :: Pile -> Int
-pileSize = (+) <$> V.length . faceUp <*> V.length . faceDown
+pileSize = (+) <$> V.length . view faceUp <*> V.length . view faceDown
 
 toRows :: Layout -> [Row]
 toRows (Layout layout) =

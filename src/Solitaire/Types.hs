@@ -16,8 +16,8 @@ data Card
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 data Pile = Pile
-  { faceUp :: Vector Card
-  , faceDown :: Vector Card
+  { _faceUp :: Vector Card
+  , _faceDown :: Vector Card
   }
   deriving (Eq, Show, Read)
 
@@ -25,16 +25,15 @@ newtype Layout = Layout
   { unLayout :: IntMap Pile
   }
   deriving (Eq, Show, Read)
-makePrisms ''Layout
 
 data Foundation = Foundation
-  { numSets :: Int
+  { _numSets :: Int
   }
   deriving (Eq, Show, Read)
 
 data Game = Game
-  { layout :: Layout
-  , foundation :: Foundation
+  { _layout :: Layout
+  , _foundation :: Foundation
   }
   deriving (Eq, Show, Read)
 
@@ -45,21 +44,32 @@ data Move
   deriving (Eq, Show, Read)
 
 data MoveStack = MS
-  { ms_fromIndex :: Int
-  , ms_toIndex :: Int
+  { _ms_fromIndex :: Int
+  , _ms_toIndex :: Int
   }
   deriving (Eq, Show, Read)
 
 data FlipCard = FC
-  { fc_pileIndex :: Int
+  { _fc_pileIndex :: Int
   }
   deriving (Eq, Show, Read)
 
 data MoveToFoundation = MTF
-  { mtf_pileIndex :: Int
+  { _mtf_pileIndex :: Int
   }
   deriving (Eq, Show, Read)
 
+makePrisms ''Card
+makePrisms ''Layout
+makeLenses ''Foundation
+makeLenses ''Game
+makeLenses ''Pile
+makePrisms ''Move
+makeLenses ''MoveStack
+makeLenses ''FlipCard
+makeLenses ''MoveToFoundation
+
+-- ToDo: encode pile count at the type level in the move type, making this function obsolete
 normalize :: Int -> Move -> Move
 normalize n move =
   case move of
