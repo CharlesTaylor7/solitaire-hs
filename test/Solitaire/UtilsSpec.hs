@@ -42,12 +42,15 @@ spec = do
               else (Product x, Left (x - 1))
         loopM factorial 4 `shouldBe` (Product 24, ())
       it "enables branching in the list monad" $ do
-        let act x =
-              if x <= 0
-              then [Right (x + 1)]
-              else
-                [ Left (x - 1)
-                , Left (x - 2)
-                , Right (x + 1)
-                ]
-        loopM act 3 `shouldBe` [1, 0, 2, 1, 3, 1, 0, 2, 4]
+        let
+          act :: Int -> [Either Int Int]
+          act x =
+            if x <= 0
+            then [Right (x + 1)]
+            else
+              [ Left (x - 1)
+              , Left (x - 2)
+              , Right (x + 1)
+              ]
+        let expected = [1, 0, 2, 1, 3, 1, 0, 2, 4] :: [Int]
+        loopM act 3 `shouldBe` expected

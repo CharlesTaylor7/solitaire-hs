@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c2846b4bfc4dc8d4d89c0ad1f4b53358a88e7153d11f8d6537b0c6692204c01e
+-- hash: 05c77a2706bb4e5abc9458eb6b2579a2f6ba348eca743170f9ca476e26f9ab1e
 
 name:           solitaire
 version:        0.1.0.0
@@ -65,12 +65,13 @@ test-suite solitaire-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Solitaire.PrettyPrinterSpec
       Solitaire.UtilsSpec
       SolitaireSpec
       Paths_solitaire
   hs-source-dirs:
       test
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -XOverloadedLists
   build-depends:
       QuickCheck
     , base >=4.7 && <5
