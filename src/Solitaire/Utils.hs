@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module Solitaire.Utils where
 
 import Control.Arrow ((|||))

@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, PartialTypeSignatures, GeneralizedNewtypeDeriving #-}
 module Solitaire.PrettyPrinter where
 
 -- base
@@ -35,9 +34,6 @@ class Pretty a where
 
 instance Pretty Char where
   pretty = pure
-
-instance Pretty String where
-  pretty = id
 
 instance Pretty Card where
   pretty = show . (+ 1) . fromEnum

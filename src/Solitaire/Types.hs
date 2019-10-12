@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Solitaire.Types where
 
 import Data.IntMap (IntMap)

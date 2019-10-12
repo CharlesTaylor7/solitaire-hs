@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
 module Solitaire.UtilsSpec where
 
 import Data.Monoid

@@ -27,6 +27,16 @@ dependencies:
 - random
 - vector
 
+default-extensions:
+  - TypeApplications
+  - GeneralizedNewtypeDeriving
+  - PartialTypeSignatures
+  - MonoLocalBinds
+  - TupleSections
+  - ScopedTypeVariables
+  - RankNTypes
+  - OverloadedLists
+
 library:
   source-dirs: src
 
@@ -49,7 +59,6 @@ tests:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
-    - -XOverloadedLists
     dependencies:
     - solitaire
     - hspec
