@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3416f8da5e76f5b73d3529dfdcb072dd1661a652a47072dc1cf2ac9ff28cc967
+-- hash: 0b2ad392bbdd0de4ae71e733d146cef07760296276340f13bdbe9f65d0b3b68c
 
 name:           solitaire
 version:        0.1.0.0
@@ -36,6 +36,7 @@ library
       Paths_solitaire
   hs-source-dirs:
       src
+  default-extensions: TypeApplications GeneralizedNewtypeDeriving PartialTypeSignatures MonoLocalBinds TupleSections ScopedTypeVariables RankNTypes OverloadedLists
   build-depends:
       base >=4.7 && <5
     , containers
@@ -51,6 +52,7 @@ executable solitaire-exe
       Paths_solitaire
   hs-source-dirs:
       app
+  default-extensions: TypeApplications GeneralizedNewtypeDeriving PartialTypeSignatures MonoLocalBinds TupleSections ScopedTypeVariables RankNTypes OverloadedLists
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
@@ -72,7 +74,8 @@ test-suite solitaire-test
       Paths_solitaire
   hs-source-dirs:
       test
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -XOverloadedLists
+  default-extensions: TypeApplications GeneralizedNewtypeDeriving PartialTypeSignatures MonoLocalBinds TupleSections ScopedTypeVariables RankNTypes OverloadedLists
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       QuickCheck
     , base >=4.7 && <5
