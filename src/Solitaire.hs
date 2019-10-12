@@ -122,10 +122,11 @@ shuffleIOVector :: IOVector a -> IO ()
 shuffleIOVector vector =
   let
     n = MV.length vector
+    indices = [0..(n-1)] :: [Int]
   in
-    for_ [0..(n-1)] $ \i ->
-      randomRIO (0, i) >>=
-        MV.swap vector i
+    for_ indices $ \i ->
+    randomRIO (0, i) >>=
+    MV.swap vector i
 
 newGame :: IO Game
 newGame = do
