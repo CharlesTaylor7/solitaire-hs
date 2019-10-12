@@ -105,17 +105,38 @@ moveReducer move =
       let
         move layout =
           let
-            sourcePile = layout ^. at i
-            targetPile = layout ^. at j
-            (stack, rest) = splitAtStack sourcePile
-            without = sourcePile & (faceUp .~ rest)
-            appended = targetPile & (faceUp <>~ stack)
+            (stack, rest) =
+              layout ^?! ix i . faceUp . to splitAtStack
+            source' = ix i . faceUp .~ rest
+            target' = ix j . faceUp <>~ stack
           in
-            layout & (set (at i) without) . (set (at j) appended)
-      in layout . _Layout %~ _
+            layout & source' . target'
 
-    FlipCard (FC i) -> undefined
-    MoveToFoundation (MTF i) -> undefined
+      in layout . _Layout %~ move
+
+    FlipCard (FC i) ->
+      let
+        flipCard pile =
+          let
+            (head, rest) = pile ^?! faceDown . _Cons
+            faceUp' = faceUp .~ [head]
+            faceDown' = faceDown .~ rest
+          in
+            pile & faceUp' . faceDown'
+      in
+        layout . _Layout . ix i %~ flipCard
+
+    MoveToFoundation (MTF i) ->
+      let
+        updateLayout layout =
+          let
+            pile = layout ^?! ix i
+            pile' = pile & faceUp %~ (view (to splitAtStack . _2))
+          in
+            layout
+      in
+        (layout . _Layout %~ updateLayout)
+          . (foundation . numSets +~ 1)
 
 -- effectful
 shuffleIO :: Foldable f => f a -> IO [a]
