@@ -2,8 +2,8 @@ module Solitaire.Utils where
 
 import Control.Arrow ((|||))
 
-enumSize :: forall a. (Bounded a, Enum a) => a -> Int
-enumSize _ = hi - lo + 1
+enumSize :: forall a. (Bounded a, Enum a) => Int
+enumSize = hi - lo + 1
   where
     hi = fromEnum (maxBound :: a)
     lo = fromEnum (minBound :: a)

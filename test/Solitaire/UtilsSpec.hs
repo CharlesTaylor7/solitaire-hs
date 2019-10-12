@@ -24,9 +24,7 @@ spec = do
         chunksOf 3 [1..5] `shouldBe` [[1, 2, 3], [4, 5]]
     describe "enumSize" $ do
       it "gets the size of a bounded enum" $ do
-        enumSize @DummyEnum A `shouldBe` 3
-      it "does not evaluate its argument" $ do
-        enumSize @DummyEnum undefined `shouldBe` 3
+        enumSize @DummyEnum `shouldBe` 3
     describe "loopM" $ do
       it "enables while loops in the identity monad" $ do
         let factorial (product, n) =

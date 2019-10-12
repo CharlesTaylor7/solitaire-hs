@@ -68,7 +68,7 @@ numCardCopies :: Int
 numCardCopies = 3
 
 numCards :: Int
-numCards = enumSize @Card undefined
+numCards = enumSize @Card
 
 initialPileSize :: Int
 initialPileSize = length deck `div` numPiles

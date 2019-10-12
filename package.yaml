@@ -28,6 +28,7 @@ dependencies:
 - vector
 
 default-extensions:
+  - AllowAmbiguousTypes
   - TypeApplications
   - GeneralizedNewtypeDeriving
   - PartialTypeSignatures
