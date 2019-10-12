@@ -103,8 +103,16 @@ moveReducer move =
   case normalize 3 move of
     MoveStack (MS i j) ->
       let
-        moveStack = id
-      in layout . _Layout %~ moveStack
+        move layout =
+          let
+            sourcePile = layout ^. at i
+            targetPile = layout ^. at j
+            (stack, rest) = splitAtStack sourcePile
+            without = sourcePile & (faceUp .~ rest)
+            appended = targetPile & (faceUp <>~ stack)
+          in
+            layout & (set (at i) without) . (set (at j) appended)
+      in layout . _Layout %~ _
 
     FlipCard (FC i) -> undefined
     MoveToFoundation (MTF i) -> undefined
