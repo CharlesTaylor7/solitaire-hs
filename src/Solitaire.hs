@@ -109,9 +109,9 @@ gameLoop =
       putStrLn $ pretty game
       getLine
       move <- randomIO
-      let g' = moveReducer move game
-      pure $ Left $ g'
+      pure $ moveReducer move game ^. swapped
   in do
     game <- newGame
-    solution <- loopM act game
+    error <- loopM act game
+    print error
     pure ()

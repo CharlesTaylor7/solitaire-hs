@@ -1,13 +1,17 @@
 module Solitaire.Actions where
 
+-- base
 import Control.Monad.Zip
 
+-- lens
 import Control.Lens
 
+-- containers
 import Data.IntMap (IntMap)
 import Data.Vector (Vector)
 import qualified Data.Vector as V
 
+-- app
 import Solitaire.Types
 
 isSuccessorOf :: Card -> Card -> Bool
@@ -35,42 +39,47 @@ splitAtStack cards =
     )
     (uncons cards)
 
-moveReducer :: Move -> Game -> Game
-moveReducer move =
-  case normalize 3 move of
-    MoveStack (MS i j) ->
-      let
-        move layout =
-          let
-            (stack, rest) =
-              layout ^?! ix i . faceUp . to splitAtStack
-            source' = ix i . faceUp .~ rest
-            target' = ix j . faceUp <>~ stack
-          in
-            layout & source' . target'
+data InvalidMove = InvalidMove
+  deriving (Read, Show, Eq)
 
-      in layout . _Layout %~ move
-
-    FlipCard (FC i) ->
-      let
-        flipCard pile =
+moveReducer :: Move -> Game -> Either InvalidMove Game
+moveReducer move game = Right $ f game
+  where
+    f =
+      case normalize 3 move of
+        MoveStack (MS i j) ->
           let
-            (head, rest) = pile ^?! faceDown . _Cons
-            faceUp' = faceUp .~ [head]
-            faceDown' = faceDown .~ rest
-          in
-            pile & faceUp' . faceDown'
-      in
-        layout . _Layout . ix i %~ flipCard
+            move layout =
+              let
+                (stack, rest) =
+                  layout ^?! ix i . faceUp . to splitAtStack
+                source' = ix i . faceUp .~ rest
+                target' = ix j . faceUp <>~ stack
+              in
+                layout & source' . target'
 
-    MoveToFoundation (MTF i) ->
-      let
-        updateLayout layout =
+          in layout . _Layout %~ move
+
+        FlipCard (FC i) ->
           let
-            pile = layout ^?! ix i
-            pile' = pile & faceUp %~ (view (to splitAtStack . _2))
+            flipCard pile =
+              let
+                (head, rest) = pile ^?! faceDown . _Cons
+                faceUp' = faceUp .~ [head]
+                faceDown' = faceDown .~ rest
+              in
+                pile & faceUp' . faceDown'
           in
-            layout
-      in
-        (layout . _Layout %~ updateLayout)
-          . (foundation . numSets +~ 1)
+            layout . _Layout . ix i %~ flipCard
+
+        MoveToFoundation (MTF i) ->
+          let
+            updateLayout layout =
+              let
+                pile = layout ^?! ix i
+                pile' = pile & faceUp %~ (view (to splitAtStack . _2))
+              in
+                layout
+          in
+            (layout . _Layout %~ updateLayout)
+              . (foundation . numSets +~ 1)
