@@ -11,6 +11,9 @@ import Data.IntMap (IntMap)
 import Data.Vector (Vector)
 import qualified Data.Vector as V
 
+-- either
+import Data.Either.Combinators
+
 -- app
 import Solitaire.Types
 
@@ -39,47 +42,44 @@ splitAtStack cards =
     )
     (uncons cards)
 
-data InvalidMove = InvalidMove
+data InvalidMove
+  = CardFlipOnUnexposedPileError Int
   deriving (Read, Show, Eq)
 
 moveReducer :: Move -> Game -> Either InvalidMove Game
-moveReducer move game = Right $ f game
-  where
-    f =
-      case normalize 3 move of
-        MoveStack (MS i j) ->
-          let
-            move layout =
-              let
-                (stack, rest) =
-                  layout ^?! ix i . faceUp . to splitAtStack
-                source' = ix i . faceUp .~ rest
-                target' = ix j . faceUp <>~ stack
-              in
-                layout & source' . target'
+moveReducer move =
+  case normalize 3 move of
+    FlipCard (FC i) ->
+      (layout . _Layout . ix i) $ \pile ->
+      do
+        (head, rest) <- pile ^? faceDown . _Cons . to
+          (maybeToRight (CardFlipOnUnexposedPileError i))
+        let faceUp' = faceUp .~ [head]
+        let faceDown' = faceDown .~ rest
+        pure $ pile & faceUp' . faceDown'
 
-          in layout . _Layout %~ move
+    -- MoveToFoundation (MTF i) ->
+    --   let
+    --     updateLayout layout =
+    --       let
+    --         pile = layout ^?! ix i
+    --         pile' = pile & faceUp %~ (view (to splitAtStack . _2))
+    --       in
+    --         layout
+    --   in
+    --     Right $
+    --       (layout . _Layout %~ updateLayout)
+    --       . (foundation . numSets +~ 1)
 
-        FlipCard (FC i) ->
-          let
-            flipCard pile =
-              let
-                (head, rest) = pile ^?! faceDown . _Cons
-                faceUp' = faceUp .~ [head]
-                faceDown' = faceDown .~ rest
-              in
-                pile & faceUp' . faceDown'
-          in
-            layout . _Layout . ix i %~ flipCard
+    -- MoveStack (MS i j) ->
+    --   let
+    --     move layout =
+    --       let
+    --         (stack, rest) =
+    --           layout ^?! ix i . faceUp . to splitAtStack
+    --         source' = ix i . faceUp .~ rest
+    --         target' = ix j . faceUp <>~ stack
+    --       in
+    --         layout & source' . target'
 
-        MoveToFoundation (MTF i) ->
-          let
-            updateLayout layout =
-              let
-                pile = layout ^?! ix i
-                pile' = pile & faceUp %~ (view (to splitAtStack . _2))
-              in
-                layout
-          in
-            (layout . _Layout %~ updateLayout)
-              . (foundation . numSets +~ 1)
+    --   in Right $ layout . _Layout %~ move

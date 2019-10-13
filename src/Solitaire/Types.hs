@@ -59,6 +59,10 @@ data MoveToFoundation = MTF
   }
   deriving (Eq, Show, Read)
 
+flipCard = FlipCard . FC
+moveToFoundation = MoveToFoundation . MTF
+moveStack i j = MoveStack $ MS i j
+
 makePrisms ''Card
 makePrisms ''Layout
 makeLenses ''Foundation
