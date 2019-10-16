@@ -52,5 +52,5 @@ spec = do
                 ))
               , _foundation = Foundation { _numSets = 0 }
               }
-        let expected = Left (CardFlipOnUnexposedPileError 1)
+        let expected = Left (CardFlipOnEmptyPileError 1)
         moveReducer move game `shouldBe` expected

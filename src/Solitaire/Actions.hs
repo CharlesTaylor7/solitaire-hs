@@ -2,6 +2,7 @@ module Solitaire.Actions where
 
 -- base
 import Control.Monad.Zip
+import Data.Maybe
 
 -- lens
 import Control.Lens
@@ -44,7 +45,11 @@ splitAtStack cards =
 
 data InvalidMove
   = CardFlipOnUnexposedPileError Int
+  | CardFlipOnEmptyPileError Int
   deriving (Read, Show, Eq)
+
+matches :: Traversal' s a -> s -> Bool
+matches t s = isNothing $ s^? t
 
 moveReducer :: Move -> Game -> Either InvalidMove Game
 moveReducer move =
@@ -52,8 +57,10 @@ moveReducer move =
     FlipCard (FC i) ->
       (layout . _Layout . ix i) $ \pile ->
       do
-        (head, rest) <- pile ^? faceDown . _Cons . to
-          (maybeToRight (CardFlipOnUnexposedPileError i))
+        _ <- if isn't (faceUp . _Empty) pile then Left (CardFlipOnEmptyPileError i) else Right ()
+        let maybeFaceDown = pile ^? faceDown . _Cons
+        (head, rest) <- maybeFaceDown
+          & (maybeToRight $ CardFlipOnEmptyPileError i)
         let faceUp' = faceUp .~ [head]
         let faceDown' = faceDown .~ rest
         pure $ pile & faceUp' . faceDown'
