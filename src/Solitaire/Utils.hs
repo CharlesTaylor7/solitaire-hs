@@ -1,6 +1,10 @@
 module Solitaire.Utils where
 
 import Control.Arrow ((|||))
+import GHC.Exts
+
+enumerate :: (Bounded a, Enum a, IsList l, Item l ~ a) => l
+enumerate = [minBound..maxBound]
 
 enumSize :: forall a. (Bounded a, Enum a) => Int
 enumSize = hi - lo + 1

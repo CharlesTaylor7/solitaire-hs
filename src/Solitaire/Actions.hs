@@ -4,7 +4,10 @@ module Solitaire.Actions where
 import Control.Monad.Zip (mzip)
 import Control.Monad ((>=>))
 import Control.Arrow ((>>>))
+import Control.Applicative (liftA2)
+
 import Data.Maybe
+import Debug.Trace
 
 -- lens
 import Control.Lens
@@ -50,10 +53,16 @@ splitAtStack cards =
     (uncons cards)
 
 data InvalidMove
-  = CardFlipOnUnexposedPileError Int
-  | CardFlipOnEmptyPileError Int
-  | IncompleteSetError Int
+  = CardFlipOnUnexposedPile Int
+  | CardFlipOnEmptyPile Int
+  | IncompleteSet Int
+  | MismatchingStacks Int Int
+  | EmptyStackSource Int
+  | EmptyStackTarget Int
   deriving (Read, Show, Eq)
+
+errorIf :: Bool -> e -> Either e ()
+errorIf b e = if b then Left e else Right ()
 
 moveReducer :: Move -> Game -> Either InvalidMove Game
 moveReducer move =
@@ -61,16 +70,15 @@ moveReducer move =
     FlipCard (FC i) ->
       layout . _Layout . ix i $ \pile -> do
         _ <- if isJust $ pile ^? faceUp . _Cons
-             then Left (CardFlipOnUnexposedPileError i)
+             then Left (CardFlipOnUnexposedPile i)
              else Right ()
 
         (head, rest) <- pile ^? faceDown . _Cons
-          & (maybeToRight $ CardFlipOnEmptyPileError i)
+          & (maybeToRight $ CardFlipOnEmptyPile i)
 
         let faceUp' = faceUp .~ [head]
         let faceDown' = faceDown .~ rest
         pure $ pile & faceUp' . faceDown'
-
     MoveToFoundation (MTF i) ->
       foundation . numSets +~ 1 >>>
       (layout . _Layout . ix i $ \pile ->
@@ -80,15 +88,27 @@ moveReducer move =
         in
           if length set == setSize
           then pure pile'
-          else Left $ IncompleteSetError i
+          else Left $ IncompleteSet i
       )
-
     MoveStack (MS i j) ->
-      (layout . _Layout $ \layout ->
+      layout . _Layout $ \layout -> do
         let
           (stack, rest) =
             layout ^?! ix i . faceUp . to splitAtStack
           source' = ix i . faceUp .~ rest
-          target' = ix j . faceUp <>~ stack
-        in
-          pure $ layout & source' . target')
+          target' = ix j . faceUp %~ (stack <>)
+
+        errorIf (null stack) $
+          EmptyStackSource i
+
+        errorIf (isNothing $ layout ^? ix j . faceUp . _head) $
+          EmptyStackTarget j
+
+        let t = layout ^? ix j . faceUp . _head
+        let s = stack ^? _last
+        let match = (liftA2 isSuccessorOf) s t
+
+        errorIf (maybe True id match) $
+          MismatchingStacks i j
+
+        pure $ layout & source' . target'

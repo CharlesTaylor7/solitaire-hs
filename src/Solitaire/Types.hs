@@ -61,7 +61,7 @@ data MoveToFoundation = MTF
 
 flipCard = FlipCard . FC
 moveToFoundation = MoveToFoundation . MTF
-moveStack i j = MoveStack $ MS i j
+moveStack = (MoveStack .) . MS
 
 makePrisms ''Card
 makePrisms ''Layout

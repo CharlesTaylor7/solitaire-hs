@@ -38,6 +38,7 @@ default-extensions:
   - ScopedTypeVariables
   - RankNTypes
   - OverloadedLists
+  - GADTs
 
 library:
   source-dirs: src
