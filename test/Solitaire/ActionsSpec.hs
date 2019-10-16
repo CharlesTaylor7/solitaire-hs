@@ -18,7 +18,7 @@ spec = do
               { _layout = Layout
                 (M.empty & at 1 .~
                   (Just (Pile
-                    { _faceUp = V.empty
+                    { _faceUp = []
                     , _faceDown = [One]
                     })
                   )
