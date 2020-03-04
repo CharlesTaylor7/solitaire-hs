@@ -1,28 +1,21 @@
 module Solitaire.Imports
-  ( module Data.Vector.Mutable
-  , module Prelude
+  ( module Prelude
   , module RIO
-  , module Data.Monoid
-  , module Data.List
   , module Control.Arrow
-  , module Control.Monad.Zip
   , module Control.Lens
-  , module System.Random
   , module Control.Monad.Except
   , module Control.Monad.State.Strict
+  , module Control.Monad.Zip
+  , module Data.Vector.Mutable
+  , module Data.Monoid
+  , module Data.List
+  , module System.Random
   ) where
 
 import Prelude (putStrLn, maximum, enumFromTo, getLine, print)
 import Data.Monoid
-import Data.Maybe
 import Data.List (intercalate, transpose, splitAt)
-import Data.Function
-import Data.Foldable
-import Data.Traversable
-import Debug.Trace
-import Control.Applicative
 import Control.Arrow
-import Control.Monad
 import Control.Monad.Zip (mzip)
 
 -- rio
