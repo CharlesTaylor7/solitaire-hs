@@ -1,28 +1,9 @@
 module Solitaire.Actions where
 
--- base
-import Control.Monad.Zip (mzip)
-import Control.Monad ((>=>))
-import Control.Arrow ((>>>))
-import Control.Applicative (liftA2)
-
-import Data.Maybe
-import Debug.Trace
-
--- lens
-import Control.Lens
-
--- containers
-import Data.IntMap (IntMap)
-import Data.Vector (Vector)
-import qualified Data.Vector as V
-
--- either
-import Data.Either.Combinators
-
--- app
+import Solitaire.Imports
 import Solitaire.Types
 import Solitaire.Utils
+import qualified Data.Vector as V
 
 setSize :: Int
 setSize = enumSize @Card

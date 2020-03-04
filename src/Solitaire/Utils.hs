@@ -22,3 +22,7 @@ chunksOf n xs =
   else
     let (chunk, rest) = splitAt n xs
     in chunk : chunksOf n rest
+
+maybeToRight :: a -> Maybe b -> Either a b
+maybeToRight _ (Just b) = Right b
+maybeToRight a _        = Left a
