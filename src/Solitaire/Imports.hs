@@ -22,6 +22,7 @@ module Solitaire.Imports
   -- random
   , module System.Random
   -- mtl
+  , module Control.Monad.Except
   , module Control.Monad.State.Strict
   ) where
 
@@ -37,9 +38,14 @@ import Control.Arrow
 import Control.Monad
 import Control.Monad.Zip
 
--- libraries
+-- lens
 import Control.Lens
+
+-- mtl
+import Control.Monad.Except
 import Control.Monad.State.Strict
+
+-- random
 import System.Random
 
 -- containers

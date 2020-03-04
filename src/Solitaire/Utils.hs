@@ -21,7 +21,3 @@ chunksOf n xs
   | n <= 0 = error "Cannot take chunks of 0 or negative numbers"
   | otherwise = chunk : chunksOf n rest
     where (chunk, rest) = splitAt n xs
-
-maybeToRight :: a -> Maybe b -> Either a b
-maybeToRight _ (Just b) = Right b
-maybeToRight a _        = Left a
