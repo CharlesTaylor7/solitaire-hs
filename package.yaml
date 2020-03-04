@@ -26,7 +26,6 @@ dependencies:
 - mtl
 - random
 - vector
-- either
 
 default-extensions:
   - AllowAmbiguousTypes

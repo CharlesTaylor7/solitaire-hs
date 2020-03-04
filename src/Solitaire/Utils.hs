@@ -1,7 +1,7 @@
 module Solitaire.Utils where
 
-import Control.Arrow ((|||))
-import GHC.Exts
+import Solitaire.Imports
+import GHC.Exts (IsList(..))
 
 enumerate :: (Bounded a, Enum a, IsList l, Item l ~ a) => l
 enumerate = [minBound..maxBound]
