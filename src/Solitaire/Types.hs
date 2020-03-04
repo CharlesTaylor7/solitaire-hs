@@ -1,11 +1,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Solitaire.Types where
 
-import Data.IntMap (IntMap)
-import Data.Vector (Vector)
-import Control.Monad.State.Strict
-import Control.Lens
-import System.Random(Random(..), RandomGen)
+import Solitaire.Imports
+-- import Data.IntMap (IntMap)
+-- import Data.Vector (Vector)
+-- import Control.Monad.State.Strict
+-- import Control.Lens
+-- import System.Random(Random(..), RandomGen)
 
 data Card
   = One

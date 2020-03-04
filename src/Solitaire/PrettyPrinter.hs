@@ -17,6 +17,7 @@ import Control.Lens hiding (Empty)
 -- app
 import Solitaire.Types
 import Solitaire.Utils
+import Solitaire.Invariants
 
 newtype Row = Row
   { unRow :: [CardView]
@@ -72,9 +73,6 @@ toCardViews (RowCount n) =
     getFaceDowns = toList . fmap (const FaceDown) . view faceDown
   in
     rightPad n Empty . (getFaceDowns <> getFaceUps)
-
-pileSize :: Pile -> Int
-pileSize = (+) <$> V.length . view faceUp <*> V.length . view faceDown
 
 toRows :: Layout -> [Row]
 toRows (Layout layout) =
