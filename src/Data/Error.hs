@@ -3,9 +3,10 @@
   Either is error correcting in its semigroup instance.
   Error propagates errors in its semigroup instance.
 --}
-module Solitaire.Error where
+module Data.Error where
 
-import Solitaire.Imports
+import Data.Monoid
+import Data.Semigroup
 
 data Error e a
   = Error e
