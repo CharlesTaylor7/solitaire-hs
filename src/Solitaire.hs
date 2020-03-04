@@ -83,6 +83,6 @@ gameLoop =
       pure $ moveReducer move game ^. swapped
   in do
     game <- newGame
-    error <- loopM act game
+    error <- runApp $ loopM act game
     print error
     pure ()

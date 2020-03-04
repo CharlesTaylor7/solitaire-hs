@@ -1,5 +1,7 @@
 module Solitaire.Error where
 
+import Solitaire.Imports
+
 data Error e a
   = Error e
   | Success a

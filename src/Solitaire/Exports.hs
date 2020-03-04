@@ -1,5 +1,6 @@
 module Solitaire.Exports
   ( module Solitaire.Actions
+  , module Solitaire.App
   , module Solitaire.Error
   , module Solitaire.Imports
   , module Solitaire.Invariants
@@ -9,6 +10,7 @@ module Solitaire.Exports
   ) where
 
 import Solitaire.Actions
+import Solitaire.App
 import Solitaire.Error
 import Solitaire.Imports
 import Solitaire.Invariants
