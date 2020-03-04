@@ -195,6 +195,6 @@ spec = do
                 }
           let expected = Left $ MismatchingStacks 0 2
           let result = moveReducer move game
+          print (cardsInLayout)
           printP result
-          printP expected
           result `shouldBe` expected

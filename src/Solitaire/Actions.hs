@@ -33,15 +33,6 @@ splitAtStack cards =
     )
     (uncons cards)
 
-data InvalidMove
-  = CardFlipOnUnexposedPile Int
-  | CardFlipOnEmptyPile Int
-  | IncompleteSet Int
-  | MismatchingStacks Int Int
-  | EmptyStackSource Int
-  | EmptyStackTarget Int
-  deriving (Read, Show, Eq)
-
 errorIf :: Bool -> e -> Either e ()
 errorIf b e = if b then Left e else Right ()
 

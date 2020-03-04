@@ -2,11 +2,6 @@
 module Solitaire.Types where
 
 import Solitaire.Imports
--- import Data.IntMap (IntMap)
--- import Data.Vector (Vector)
--- import Control.Monad.State.Strict
--- import Control.Lens
--- import System.Random(Random(..), RandomGen)
 
 data Card
   = One
@@ -59,6 +54,15 @@ data MoveToFoundation = MTF
   { _mtf_pileIndex :: Int
   }
   deriving (Eq, Show, Read)
+
+data InvalidMove
+  = CardFlipOnUnexposedPile Int
+  | CardFlipOnEmptyPile Int
+  | IncompleteSet Int
+  | MismatchingStacks Int Int
+  | EmptyStackSource Int
+  | EmptyStackTarget Int
+  deriving (Read, Show, Eq)
 
 flipCard = FlipCard . FC
 moveToFoundation = MoveToFoundation . MTF

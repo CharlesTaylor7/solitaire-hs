@@ -11,22 +11,11 @@ import Solitaire.Invariants
 import qualified Data.IntMap as M
 import qualified Data.Vector as V
 
-printP :: Pretty a => a -> IO ()
-printP = putStrLn . pretty
-
-newtype Row = Row
-  { unRow :: [CardView]
-  }
-  deriving (Eq, Show, Read, Semigroup, Monoid)
-
-data CardView
-  = Empty
-  | FaceDown
-  | FaceUp Card
-  deriving (Eq, Read, Show)
-
 class Pretty a where
   pretty :: a -> String
+
+instance Pretty InvalidMove where
+  pretty = show
 
 instance (Pretty a, Pretty b) => Pretty (Either a b) where
   pretty (Left x) = pretty x
@@ -56,14 +45,25 @@ instance Pretty Game where
   pretty (Game layout foundation) =
     pretty foundation <> "\n" <> pretty layout
 
+newtype Row = Row
+  { unRow :: [CardView]
+  }
+  deriving (Eq, Show, Read, Semigroup, Monoid)
+
+data CardView
+  = Empty
+  | FaceDown
+  | FaceUp Card
+  deriving (Eq, Read, Show)
+
+newtype RowCount = RowCount Int
+
 rightPad :: Int -> a -> [a] -> [a]
 rightPad n filler list =
   let
     k = n - length list
   in
     list <> replicate k filler
-
-newtype RowCount = RowCount Int
 
 toCardViews :: RowCount -> Pile -> [CardView]
 toCardViews (RowCount n) =
@@ -84,3 +84,7 @@ toRows (Layout layout) =
     columns = toCardViews rowCount <$> toList layout
     rows = transpose columns & map Row
   in rows
+
+-- exports
+printP :: Pretty a => a -> IO ()
+printP = putStrLn . pretty
