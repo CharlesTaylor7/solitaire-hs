@@ -81,7 +81,6 @@ act game = do
   let appResult = moveReducer move game
   either <- runExceptT . unApp $ appResult
   pure $ either ^. swapped
-  -- pure $ (runExceptT result) ^. swapped
 
 gameLoop :: IO ()
 gameLoop = do

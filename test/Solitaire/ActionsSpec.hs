@@ -24,8 +24,10 @@ spec = do
                   )
                 , _foundation = Foundation { _numSets = 0 }
                 }
-          let expected = Right (Game {_layout = Layout {unLayout = [(1,Pile {_faceUp = [One], _faceDown = []})]}, _foundation = Foundation {_numSets = 0}})
-          moveReducer move game `shouldBe` expected
+          let expected = Game {_layout = Layout {unLayout = [(1,Pile {_faceUp = [One], _faceDown = []})]}, _foundation = Foundation {_numSets = 0}}
+          result <- runApp $ moveReducer move game
+          result `shouldBe` expected
+
         it "marks flipping a face down card on an unexposed pile as invalid" $ do
           let move = flipCard 1
           let game = Game
@@ -195,6 +197,6 @@ spec = do
                 }
           let expected = Left $ MismatchingStacks 0 2
           let result = moveReducer move game
-          print (cardsInLayout)
+          -- print (cardsInLayout)
           printP result
           result `shouldBe` expected

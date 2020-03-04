@@ -13,4 +13,10 @@ newtype App e a = App { unApp :: ExceptT e IO a }
     )
 
 runApp :: Exception e => App e a -> IO a
-runApp = undefined
+runApp app =
+  app
+  & unApp
+  & runExceptT
+  >>= \case
+    Left e -> throwIO e
+    Right a -> pure a

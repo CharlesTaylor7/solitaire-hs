@@ -45,7 +45,7 @@ maybeToError e Nothing = throwError e
 maybeToError _ (Just a) = pure a
 
 moveReducer
-  :: (MonadError InvalidMove m, MonadIO m)
+  :: (MonadError InvalidMove m)
   => Move
   -> Game
   -> m Game
@@ -84,7 +84,7 @@ moveReducer move =
         ifThenError (null stack)
           $ EmptyStackSource i
         ifThenError (isNothing $ layout ^? ix j . faceUp . _head)
-          $ EmptyStackSource j
+          $ EmptyStackTarget j
 
         let t = layout ^? ix j . faceUp . _head
         let s = stack ^? _last

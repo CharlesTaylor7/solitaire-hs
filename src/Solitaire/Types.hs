@@ -64,6 +64,8 @@ data InvalidMove
   | EmptyStackTarget Int
   deriving (Read, Show, Eq)
 
+instance Exception InvalidMove
+
 flipCard = FlipCard . FC
 moveToFoundation = MoveToFoundation . MTF
 moveStack = (MoveStack .) . MS
