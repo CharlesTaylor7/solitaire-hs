@@ -1,3 +1,8 @@
+{--
+  Error is structurally identical to Either but with different semantics.
+  Either is error correcting in its semigroup instance.
+  Error propagates errors in its semigroup instance.
+--}
 module Solitaire.Error where
 
 import Solitaire.Imports
