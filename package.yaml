@@ -39,6 +39,7 @@ default-extensions:
   - RankNTypes
   - OverloadedLists
   - GADTs
+  - LambdaCase
 
 library:
   source-dirs: src

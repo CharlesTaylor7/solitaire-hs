@@ -33,6 +33,10 @@ data CardView
 class Pretty a where
   pretty :: a -> String
 
+instance (Pretty a, Pretty b) => Pretty (Either a b) where
+  pretty (Left x) = pretty x
+  pretty (Right x) = pretty x
+
 instance Pretty Char where
   pretty = pure
 
