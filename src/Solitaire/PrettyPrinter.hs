@@ -1,23 +1,18 @@
-module Solitaire.PrettyPrinter where
+module Solitaire.PrettyPrinter
+  ( printP
+  , Pretty(..)
+  ) where
 
--- base
-import Control.Applicative
-import Control.Arrow
-import Data.Either
-import Data.Foldable
-import Data.List
-
--- libraries
-import Data.IntMap (IntMap)
-import qualified Data.IntMap as M
-import Data.Vector (Vector)
-import qualified Data.Vector as V
-import Control.Lens hiding (Empty)
-
--- app
+import Solitaire.Imports hiding (Empty)
 import Solitaire.Types
 import Solitaire.Utils
 import Solitaire.Invariants
+
+import qualified Data.IntMap as M
+import qualified Data.Vector as V
+
+printP :: Pretty a => a -> IO ()
+printP = putStrLn . pretty
 
 newtype Row = Row
   { unRow :: [CardView]

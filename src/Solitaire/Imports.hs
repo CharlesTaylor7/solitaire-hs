@@ -1,12 +1,13 @@
 module Solitaire.Imports
   (
   -- base
-    module Data.Function
+    intercalate
+  , transpose
+  , module Data.Function
   , module Data.Foldable
   , module Data.Traversable
   , module Control.Applicative
   , module Control.Monad.Zip
-  , module Control.Monad.State.Strict
   -- containers
   , IntMap
   , Vector
@@ -21,6 +22,7 @@ module Solitaire.Imports
   ) where
 
 -- base
+import Data.List (intercalate, transpose)
 import Data.Function
 import Data.Foldable
 import Data.Traversable

@@ -7,8 +7,6 @@ import Solitaire
 import qualified Data.IntMap as M
 import qualified Data.Vector as V
 
-import Control.Lens
-
 spec = do
   describe "Actions" $ do
     describe "moveReducer" $ do
@@ -196,4 +194,7 @@ spec = do
                 , _foundation = Foundation { _numSets = 0 }
                 }
           let expected = Left $ MismatchingStacks 0 2
-          moveReducer move game `shouldBe` expected
+          let result = moveReducer move game
+          printP result
+          printP expected
+          result `shouldBe` expected

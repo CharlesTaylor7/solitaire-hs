@@ -6,42 +6,13 @@ There are 3 piles of 5 cards each with the top 2 rows face up.
 --}
 module Solitaire
   ( module Solitaire
-  , module Solitaire.Utils
-  , module Solitaire.Types
-  , module Solitaire.Actions
-  , module M
-  , module V
-  , module MV
+  , module Solitaire.Exports
   ) where
 
--- base
-import Data.Function
-import Data.Foldable
-import Data.Traversable
-import Control.Applicative
-import Control.Monad.Zip
-
--- libraries
-import Control.Lens
-
-import Data.IntMap (IntMap)
+import Solitaire.Exports
 import qualified Data.IntMap as M
-
-import Data.Vector (Vector)
 import qualified Data.Vector as V
-
-import Data.Vector.Mutable (IOVector)
 import qualified Data.Vector.Mutable as MV
-
-import System.Random
-
--- app
-import Solitaire.PrettyPrinter
-import Solitaire.Types
-import Solitaire.Utils
-import Solitaire.Actions
-
--- Pure declarations
 
 deck :: [Card]
 deck = enumFromTo One Five >>= replicate 3
