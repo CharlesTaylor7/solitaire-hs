@@ -47,23 +47,23 @@ initialPileSize :: Int
 initialPileSize = length deck `div` numPiles
 
 -- effectful
-shuffleIO :: Foldable f => f a -> IO [a]
+shuffleIO :: (MonadIO m, MonadRandom m, Foldable f) => f a -> m [a]
 shuffleIO coll = do
   let vector = V.fromList . toList $ coll
-  thawed <- V.thaw vector
+  thawed <- liftIO $ V.thaw vector
   shuffleIOVector thawed
-  frozen <- V.freeze thawed
+  frozen <- liftIO $ V.freeze thawed
   pure $ toList frozen
 
-shuffleIOVector :: IOVector a -> IO ()
+shuffleIOVector :: (MonadIO m, MonadRandom m) => IOVector a -> m ()
 shuffleIOVector vector =
   let
     n = MV.length vector
     indices = [0..(n-1)] :: [Int]
   in
     for_ indices $ \i ->
-    randomRIO (0, i) >>=
-    MV.swap vector i
+      getRandomR (0, i) >>=
+      liftIO . MV.swap vector i
 
 newGame :: IO Game
 newGame = do
@@ -73,16 +73,19 @@ newGame = do
   let foundation = Foundation 0
   pure $ Game layout foundation
 
+act :: Game -> IO (Either Game InvalidMove)
+act game = do
+  printP game
+  liftIO getLine
+  move <- getRandom
+  let appResult = moveReducer move game
+  either <- runExceptT . unApp $ appResult
+  pure $ either ^. swapped
+  -- pure $ (runExceptT result) ^. swapped
+
 gameLoop :: IO ()
-gameLoop =
-  let
-    act game = do
-      putStrLn $ pretty game
-      getLine
-      move <- randomIO
-      pure $ moveReducer move game ^. swapped
-  in do
-    game <- newGame
-    error <- runApp $ loopM act game
-    print error
-    pure ()
+gameLoop = do
+  game <- newGame
+  error <- loopM act game
+  print error
+  pure ()

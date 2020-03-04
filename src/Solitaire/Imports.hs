@@ -4,12 +4,12 @@ module Solitaire.Imports
   , module Control.Arrow
   , module Control.Lens
   , module Control.Monad.Except
+  , module Control.Monad.Random
   , module Control.Monad.State.Strict
   , module Control.Monad.Zip
   , module Data.Vector.Mutable
   , module Data.Monoid
   , module Data.List
-  , module System.Random
   ) where
 
 import Prelude (putStrLn, maximum, enumFromTo, getLine, print)
@@ -28,8 +28,8 @@ import Control.Lens
 import Control.Monad.Except
 import Control.Monad.State.Strict
 
--- random
-import System.Random
+-- MonadRandom
+import Control.Monad.Random
 
 -- vector
 import Data.Vector.Mutable (IOVector)

@@ -86,5 +86,5 @@ toRows (Layout layout) =
   in rows
 
 -- exports
-printP :: Pretty a => a -> IO ()
-printP = putStrLn . pretty
+printP :: (MonadIO m, Pretty a) => a -> m ()
+printP = liftIO . putStrLn . pretty
