@@ -49,7 +49,7 @@ moveReducer
   => Move
   -> Game
   -> m Game
-moveReducer m g = moveReducerWithLog m g
+moveReducer m = interpretWriter . moveReducerWithLog m
 
 moveReducerWithLog
   :: (MonadError InvalidMove m, MonadWriter String m)
