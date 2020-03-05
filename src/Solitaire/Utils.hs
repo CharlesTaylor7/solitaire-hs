@@ -1,7 +1,12 @@
 module Solitaire.Utils where
 
-import Solitaire.Imports
+import Solitaire.Imports hiding (toList)
+import qualified Data.Foldable as Foldable
 import GHC.Exts (IsList(..))
+
+import qualified Data.IntMap as M
+import qualified Data.Vector as V
+import qualified Data.Vector.Mutable as MV
 
 enumerate :: (Bounded a, Enum a, IsList l, Item l ~ a) => l
 enumerate = [minBound..maxBound]
@@ -32,7 +37,7 @@ maybeToError _ (Just a) = pure a
 
 shuffleIO :: (MonadIO m, MonadRandom m, Foldable f) => f a -> m [a]
 shuffleIO coll = do
-  let vector = V.fromList . toList $ coll
+  let vector = V.fromList . Foldable.toList $ coll
   thawed <- liftIO $ V.thaw vector
   shuffleIOVector thawed
   frozen <- liftIO $ V.freeze thawed

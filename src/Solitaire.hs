@@ -14,8 +14,8 @@ import qualified Data.IntMap as M
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as MV
 
-gameLoop :: IO ()
-gameLoop = do
+runGame :: IO ()
+runGame = do
   game <- newGame
   error <- loopM act game
   print error
@@ -23,6 +23,7 @@ gameLoop = do
 
 act :: Game -> IO (Either Game InvalidMove)
 act game = do
+  prettyPrint game
   getLine
   move <- getRandom
   let either = moveReducer move game

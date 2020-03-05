@@ -1,7 +1,6 @@
 module Main where
 
-import Prelude
-import Solitaire.Types
+import Solitaire
 
 main :: IO ()
-main = undefined
+main = runGame
