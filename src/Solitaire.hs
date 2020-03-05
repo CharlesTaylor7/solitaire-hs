@@ -14,6 +14,31 @@ import qualified Data.IntMap as M
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as MV
 
+gameLoop :: IO ()
+gameLoop = do
+  game <- newGame
+  error <- loopM act game
+  print error
+  pure ()
+
+act :: Game -> IO (Either Game InvalidMove)
+act game = do
+  getLine
+  move <- getRandom
+  let either = moveReducer move game
+  pure $ either ^. swapped
+
+newGame :: IO Game
+newGame = do
+  shuffled <- shuffleIO deck
+  let piles = toPile <$> chunksOf initialPileSize shuffled
+  let layout = Layout $ indexFrom 0 piles
+  let foundation = Foundation 0
+  pure $ Game layout foundation
+
+solve :: Game -> [Step]
+solve = undefined
+
 deck :: [Card]
 deck = enumFromTo One Five >>= replicate 3
 
@@ -25,9 +50,6 @@ toPile cards =
 indexFrom :: Int -> [a] -> IntMap a
 indexFrom offset = M.fromAscList . zip [offset..]
 
-solve :: Game -> [Step]
-solve = undefined
-
 numCardCopies :: Int
 numCardCopies = 3
 
@@ -36,44 +58,3 @@ numCards = enumSize @Card
 
 initialPileSize :: Int
 initialPileSize = length deck `div` numPiles
-
--- effectful
-shuffleIO :: (MonadIO m, MonadRandom m, Foldable f) => f a -> m [a]
-shuffleIO coll = do
-  let vector = V.fromList . toList $ coll
-  thawed <- liftIO $ V.thaw vector
-  shuffleIOVector thawed
-  frozen <- liftIO $ V.freeze thawed
-  pure $ toList frozen
-
-shuffleIOVector :: (MonadIO m, MonadRandom m) => IOVector a -> m ()
-shuffleIOVector vector =
-  let
-    n = MV.length vector
-    indices = [0..(n-1)] :: [Int]
-  in
-    for_ indices $ \i ->
-      getRandomR (0, i) >>=
-      liftIO . MV.swap vector i
-
-newGame :: IO Game
-newGame = do
-  shuffled <- shuffleIO deck
-  let piles = toPile <$> chunksOf initialPileSize shuffled
-  let layout = Layout $ indexFrom 0 piles
-  let foundation = Foundation 0
-  pure $ Game layout foundation
-
-act :: Game -> IO (Either Game InvalidMove)
-act game = do
-  getLine
-  move <- getRandom
-  let either = moveReducer move game
-  pure $ either ^. swapped
-
-gameLoop :: IO ()
-gameLoop = do
-  game <- newGame
-  error <- loopM act game
-  print error
-  pure ()

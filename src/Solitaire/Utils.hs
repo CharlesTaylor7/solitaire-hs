@@ -29,3 +29,21 @@ ifThenError False _ = pure ()
 maybeToError :: (MonadError e m) => e -> Maybe a -> m a
 maybeToError e Nothing = throwError e
 maybeToError _ (Just a) = pure a
+
+shuffleIO :: (MonadIO m, MonadRandom m, Foldable f) => f a -> m [a]
+shuffleIO coll = do
+  let vector = V.fromList . toList $ coll
+  thawed <- liftIO $ V.thaw vector
+  shuffleIOVector thawed
+  frozen <- liftIO $ V.freeze thawed
+  pure $ toList frozen
+
+shuffleIOVector :: (MonadIO m, MonadRandom m) => IOVector a -> m ()
+shuffleIOVector vector =
+  let
+    n = MV.length vector
+    indices = [0..(n-1)] :: [Int]
+  in
+    for_ indices $ \i ->
+      getRandomR (0, i) >>=
+      liftIO . MV.swap vector i
