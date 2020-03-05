@@ -1,5 +1,6 @@
 module Solitaire.PrettyPrinter
-  ( printP
+  ( prettyPrint
+  , tracePretty
   , Pretty(..)
   ) where
 
@@ -10,6 +11,7 @@ import Solitaire.Invariants
 
 import qualified Data.IntMap as M
 import qualified Data.Vector as V
+import qualified RIO.Text as T
 
 class Pretty a where
   pretty :: a -> String
@@ -17,9 +19,22 @@ class Pretty a where
 instance Pretty InvalidMove where
   pretty = show
 
+instance Pretty Bool where
+  pretty = show
+
+instance (Pretty a) => Pretty (Maybe a) where
+  pretty (Just x) = pretty x
+  pretty Nothing = "Nothing"
+
 instance (Pretty a, Pretty b) => Pretty (Either a b) where
   pretty (Left x) = pretty x
   pretty (Right x) = pretty x
+
+instance (Pretty a, Pretty b) => Pretty (a, b) where
+  pretty (a, b) = pretty a ++ "\n" ++ pretty b
+
+instance (Pretty a, Pretty b, Pretty c) => Pretty (a, b, c) where
+  pretty (a, b, c) = pretty a ++ "\n" ++ pretty b ++ "\n" ++ pretty c
 
 instance Pretty Char where
   pretty = pure
@@ -86,5 +101,9 @@ toRows (Layout layout) =
   in rows
 
 -- exports
-printP :: (MonadIO m, Pretty a) => a -> m ()
-printP = liftIO . putStrLn . pretty
+prettyPrint :: (MonadIO m, Pretty a) => a -> m ()
+prettyPrint = liftIO . putStrLn . pretty
+
+tracePretty :: Pretty a => a -> b -> b
+tracePretty a = trace $ T.pack . pretty $ a
+  where text = T.pack . pretty $ a

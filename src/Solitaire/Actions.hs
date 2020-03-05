@@ -4,6 +4,7 @@
 module Solitaire.Actions where
 
 import Solitaire.Imports
+import Solitaire.PrettyPrinter
 import Solitaire.Types
 import Solitaire.Utils
 import qualified Data.Vector as V
@@ -86,11 +87,10 @@ moveReducer move =
         ifThenError (isNothing $ layout ^? ix j . faceUp . _head)
           $ EmptyStackTarget j
 
-        let t = layout ^? ix j . faceUp . _head
-        let s = stack ^? _last
-        let match = (liftA2 isSuccessorOf) s t
-
-        ifThenError (maybe True id match)
+        let t = layout ^?! ix j . faceUp . _head
+        let s = stack ^?! _last
+        let match = t `isSuccessorOf` s
+        ifThenError (not match)
           $ MismatchingStacks i j
 
         pure $ layout & source' . target'

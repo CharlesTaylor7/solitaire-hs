@@ -75,7 +75,6 @@ newGame = do
 
 act :: Game -> IO (Either Game InvalidMove)
 act game = do
-  printP game
   liftIO getLine
   move <- getRandom
   let appResult = moveReducer move game
