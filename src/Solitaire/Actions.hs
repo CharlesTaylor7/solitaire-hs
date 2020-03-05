@@ -9,34 +9,6 @@ import Solitaire.Types
 import Solitaire.Utils
 import qualified Data.Vector as V
 
-setSize :: Int
-setSize = enumSize @Card
-
-isSuccessorOf :: Card -> Card -> Bool
-a `isSuccessorOf` b =
-  fromEnum a - fromEnum b == 1
-
-countWhile :: Foldable f => (a -> Bool) -> f a -> Int
-countWhile p =
-  let
-    reducer x acc
-      | p x = 1 + acc
-      | otherwise = acc
-  in foldr reducer 0
-
-splitAtStack :: Vector Card -> (Vector Card, Vector Card)
-splitAtStack cards =
-  maybe
-    (mempty, mempty)
-    (\(head, rest) ->
-      let
-        n =
-          mzip rest cards
-            & countWhile (uncurry isSuccessorOf)
-      in V.splitAt (n+1) cards
-    )
-    (uncons cards)
-
 moveReducer
   :: (MonadError InvalidMove m)
   => Move
@@ -74,6 +46,9 @@ moveReducer move =
           source' = ix i . faceUp .~ rest
           target' = ix j . faceUp %~ (stack <>)
 
+        ifThenError (i == j)
+          $ SourceIsTarget i
+
         ifThenError (null stack)
           $ EmptyStackSource i
         ifThenError (isNothing $ layout ^? ix j . faceUp . _head)
@@ -86,3 +61,31 @@ moveReducer move =
           $ MismatchingStacks i j
 
         pure $ layout & source' . target'
+
+setSize :: Int
+setSize = enumSize @Card
+
+isSuccessorOf :: Card -> Card -> Bool
+a `isSuccessorOf` b =
+  fromEnum a - fromEnum b == 1
+
+countWhile :: Foldable f => (a -> Bool) -> f a -> Int
+countWhile p =
+  let
+    reducer x acc
+      | p x = 1 + acc
+      | otherwise = acc
+  in foldr reducer 0
+
+splitAtStack :: Vector Card -> (Vector Card, Vector Card)
+splitAtStack cards =
+  maybe
+    (mempty, mempty)
+    (\(head, rest) ->
+      let
+        n =
+          mzip rest cards
+            & countWhile (uncurry isSuccessorOf)
+      in V.splitAt (n+1) cards
+    )
+    (uncons cards)

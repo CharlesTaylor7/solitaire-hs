@@ -45,12 +45,12 @@ data MoveStack = MS
   }
   deriving (Eq, Show, Read)
 
-data FlipCard = FC
+newtype FlipCard = FC
   { _fc_pileIndex :: Int
   }
   deriving (Eq, Show, Read)
 
-data MoveToFoundation = MTF
+newtype MoveToFoundation = MTF
   { _mtf_pileIndex :: Int
   }
   deriving (Eq, Show, Read)
@@ -62,6 +62,7 @@ data InvalidMove
   | MismatchingStacks Int Int
   | EmptyStackSource Int
   | EmptyStackTarget Int
+  | SourceIsTarget Int
   deriving (Read, Show, Eq)
 
 instance Exception InvalidMove

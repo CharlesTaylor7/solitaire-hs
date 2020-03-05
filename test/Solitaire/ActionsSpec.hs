@@ -198,3 +198,18 @@ spec = do
           let expected = Left $ MismatchingStacks 0 2
           let result = moveReducer move game
           result `shouldBe` expected
+
+      it "cannot move stack onto itself" $ do
+          let move = moveStack 1 1
+          let game = Game
+                { _layout = Layout
+                  [ (1, Pile
+                      { _faceUp = [Five]
+                      , _faceDown = [Three]
+                      })
+                  ]
+                , _foundation = Foundation { _numSets = 0 }
+                }
+          let expected = Left $ SourceIsTarget 1
+          let result = moveReducer move game
+          result `shouldBe` expected
