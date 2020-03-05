@@ -11,6 +11,12 @@ data Card
   | Five
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
+data Env = Env
+  { _env_numPiles :: Int
+  , _env_numSets :: Int
+  }
+  deriving (Eq, Show, Read)
+
 data Pile = Pile
   { _faceUp :: Vector Card
   , _faceDown :: Vector Card
@@ -69,7 +75,7 @@ data InvalidMove
   | EmptyStackSource Int
   | EmptyStackTarget Int
   | SourceIsTarget Int
-  deriving (Read, Show, Eq)
+  deriving (Eq, Show, Read)
 
 instance Exception InvalidMove
 
@@ -77,6 +83,7 @@ flipCard = FlipCard . FC
 moveToFoundation = MoveToFoundation . MTF
 moveStack = (MoveStack .) . MS
 
+makeLenses ''Env
 makePrisms ''Card
 makePrisms ''Layout
 makeLenses ''Foundation
@@ -88,22 +95,14 @@ makeLenses ''MoveStack
 makeLenses ''FlipCard
 makeLenses ''MoveToFoundation
 
--- ToDo: encode pile count at the type level in the move type, making this function obsolete
-normalize :: Int -> Move -> Move
-normalize n move =
-  case move of
-    MoveStack (MS i j) -> MoveStack $ MS (i `mod` n) (j `mod` n)
-    FlipCard (FC i) -> FlipCard $ FC (i `mod` n)
-    MoveToFoundation (MTF i) -> MoveToFoundation $ MTF (i `mod` n)
-
+-- random instances
 randomS :: (RandomGen g, Random a) => State g a
 randomS = state random
 
--- instances
 instance Random Move where
   random = runState $ do
-    let three = 3 :: Int
-    choice <- (`mod` three) <$> randomS
+    let numMoveTypes = 3 :: Int
+    choice <- (`mod` numMoveTypes) <$> randomS
     case choice of
       0 -> MoveStack <$> randomS
       1 -> FlipCard <$> randomS

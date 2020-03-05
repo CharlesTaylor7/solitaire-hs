@@ -15,41 +15,63 @@ import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as MV
 
 runGame :: IO ()
-runGame = do
-  game <- newGame
-  error <- loopM act game
-  putStrLn "done"
+runGame =
+  let
+    env = Env { _env_numSets = 2, _env_numPiles = 5 }
+  in
+    flip runReaderT env $
+      newGame >>= loopM act
 
-act :: Game -> IO (Either Game ())
+printS :: MonadIO m => String -> m ()
+printS = liftIO . putStrLn
+
+userConfirm :: (MonadIO m) => m ()
+userConfirm = liftIO getLine $> ()
+
+-- userInput :: (MonadIO m, Read a) => m a
+-- userInput = read <$> liftIO getLine
+
+act :: (MonadIO m, MonadReader Env m, MonadRandom m) => Game -> m (Either Game ())
 act game = do
   prettyPrint game
-  getLine
-  let steps = validSteps game
-  putStrLn "Valid moves:"
+  userConfirm
+  steps <- validSteps game
+  printS "Valid moves:"
   prettyPrint $ map _step_move steps
   next <- randomElem steps
   case next of
     Nothing -> do
-      putStrLn "No valid moves"
+      printS "No valid moves"
       pure $ Right ()
     Just (Step move game) -> do
-      putStrLn "Chose move: "
+      printS "Chose move: "
       prettyPrint move
       pure $ Left game
 
-newGame :: IO Game
+newGame :: (MonadIO m, MonadRandom m, MonadReader Env m) => m Game
 newGame = do
+  deck <- getDeck
   shuffled <- shuffleIO deck
-  let piles = toPile <$> chunksOf initialPileSize shuffled
+  size <- getPileSize
+  let piles = map toPile $ chunksOf size shuffled
   let layout = Layout $ indexFrom 0 piles
   let foundation = Foundation 0
   pure $ Game layout foundation
 
-solve :: Game -> [Step]
-solve = undefined
+getPileSize :: MonadReader Env m => m Int
+getPileSize = do
+  piles <- view env_numPiles
+  sets <- view env_numSets
+  let
+    numCards = enumSize @Card
+    (q, r) = (sets * numCards) `divMod` piles
+    n = q + if r /= 0 then 1 else 0
+  pure n
 
-deck :: [Card]
-deck = enumFromTo One Five >>= replicate 3
+getDeck :: (MonadReader Env m) => m [Card]
+getDeck = do
+  numSets <- view env_numSets
+  pure $ enumerate >>= replicate numSets
 
 toPile :: [Card] -> Pile
 toPile cards =
@@ -59,11 +81,20 @@ toPile cards =
 indexFrom :: Int -> [a] -> IntMap a
 indexFrom offset = M.fromAscList . zip [offset..]
 
-numCardCopies :: Int
-numCardCopies = 3
+shuffleIO :: (MonadIO m, MonadRandom m) => [Card] -> m [Card]
+shuffleIO coll = do
+  let vector = V.fromList coll
+  thawed <- liftIO $ V.thaw vector
+  shuffleIOVector thawed
+  frozen <- liftIO $ V.freeze thawed
+  pure $ V.toList (frozen :: Vector Card)
 
-numCards :: Int
-numCards = enumSize @Card
-
-initialPileSize :: Int
-initialPileSize = length deck `div` numPiles
+shuffleIOVector :: (MonadIO m, MonadRandom m) => IOVector a -> m ()
+shuffleIOVector vector =
+  let
+    n = MV.length vector
+    indices = [0..(n-1)] :: [Int]
+  in
+    for_ indices $ \i ->
+      getRandomR (0, i) >>=
+      liftIO . MV.swap vector i
