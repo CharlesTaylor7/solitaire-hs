@@ -37,14 +37,6 @@ splitAtStack cards =
     )
     (uncons cards)
 
-ifThenError :: (MonadError e m) => Bool -> e -> m ()
-ifThenError True  e = throwError e
-ifThenError False _ = pure ()
-
-maybeToError :: (MonadError e m) => e -> Maybe a -> m a
-maybeToError e Nothing = throwError e
-maybeToError _ (Just a) = pure a
-
 moveReducer
   :: (MonadError InvalidMove m)
   => Move

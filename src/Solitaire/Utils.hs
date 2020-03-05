@@ -21,3 +21,11 @@ chunksOf n xs
   | n <= 0 = error "Cannot take chunks of 0 or negative numbers"
   | otherwise = chunk : chunksOf n rest
     where (chunk, rest) = splitAt n xs
+
+ifThenError :: (MonadError e m) => Bool -> e -> m ()
+ifThenError True  e = throwError e
+ifThenError False _ = pure ()
+
+maybeToError :: (MonadError e m) => e -> Maybe a -> m a
+maybeToError e Nothing = throwError e
+maybeToError _ (Just a) = pure a

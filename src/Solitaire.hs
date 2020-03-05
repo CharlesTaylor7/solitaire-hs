@@ -75,10 +75,9 @@ newGame = do
 
 act :: Game -> IO (Either Game InvalidMove)
 act game = do
-  liftIO getLine
+  getLine
   move <- getRandom
-  let appResult = moveReducer move game
-  either <- runExceptT . unApp $ appResult
+  let either = moveReducer move game
   pure $ either ^. swapped
 
 gameLoop :: IO ()
