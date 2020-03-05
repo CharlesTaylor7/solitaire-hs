@@ -27,7 +27,6 @@ dependencies:
 - mtl
 - lens
 - MonadRandom
-- mmorph
 
 default-extensions:
   - NoImplicitPrelude
