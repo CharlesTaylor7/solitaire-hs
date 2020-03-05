@@ -20,6 +20,7 @@ repeat :: a -> [a]
 repeat a = list where list = a : list
 
 instance Pretty a => Pretty [a] where
+  pretty [] = "[]"
   pretty xs = "[" ++ space ++ join xs ++ "\n]"
     where
       space = '\n' : (take 2 $ repeat ' ')

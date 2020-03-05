@@ -25,7 +25,7 @@ act game = do
   prettyPrint game
   getLine
   let steps = validSteps game
-  putStrLn "Valid moves: "
+  putStrLn "Valid moves:"
   prettyPrint $ map _step_move steps
   next <- randomElem steps
   case next of
@@ -33,6 +33,7 @@ act game = do
       putStrLn "No valid moves"
       pure $ Right ()
     Just (Step move game) -> do
+      putStrLn "Chose move: "
       prettyPrint move
       pure $ Left game
 
