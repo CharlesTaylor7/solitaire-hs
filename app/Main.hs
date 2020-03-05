@@ -1,6 +1,7 @@
 module Main where
 
-import RIO
+import Prelude
+import Solitaire.Types
 
 main :: IO ()
 main = undefined

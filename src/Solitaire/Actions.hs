@@ -20,14 +20,19 @@ moves = moves ++ flips ++ sets
     flips = flipCard <$> range
     sets = moveToFoundation <$> range
 
-fromRight :: Either a b -> b
-fromRight (Right b) = b
+distributed :: (a, Either b c) -> Either (a, b) (a, c)
+distributed (a, Left b) = Left (a, b)
+distributed (a, Right c) = Right (a, c)
+
+type Error = Either InvalidMove
 
 validSteps :: Game -> [Step]
-validSteps g = moves
-  & map (\m -> (m, moveReducer m g))
-  & filter (\(_, either) -> isRight either)
-  & map (\(a, b) -> Step a $ fromRight b)
+validSteps g =
+  let
+    paired = id &&& flip (moveReducer @Error) g
+    step = Step ^. from curried
+  in
+    moves ^.. folded . to paired . to distributed . _Right . to step
 
 moveReducer
   :: (MonadError InvalidMove m)

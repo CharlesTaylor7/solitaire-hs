@@ -26,7 +26,6 @@ dependencies:
 - vector
 - mtl
 - lens
-# - random
 - MonadRandom
 
 default-extensions:
@@ -34,6 +33,9 @@ default-extensions:
   - AllowAmbiguousTypes
   - TypeApplications
   - GeneralizedNewtypeDeriving
+  - DeriveGeneric
+  - DeriveAnyClass
+  - MultiParamTypeClasses
   - PartialTypeSignatures
   - MonoLocalBinds
   - TupleSections
@@ -43,6 +45,7 @@ default-extensions:
   - GADTs
   - LambdaCase
   - FlexibleContexts
+  - ConstraintKinds
 
 library:
   source-dirs: src
