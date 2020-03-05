@@ -20,8 +20,14 @@ moves = moves ++ flips ++ sets
     flips = flipCard <$> range
     sets = moveToFoundation <$> range
 
-validMoves :: Game -> [Step]
-validMoves g = undefined
+fromRight :: Either a b -> b
+fromRight (Right b) = b
+
+validSteps :: Game -> [Step]
+validSteps g = moves
+  & map (\m -> (m, moveReducer m g))
+  & filter (\(_, either) -> isRight either)
+  & map (\(a, b) -> Step a $ fromRight b)
 
 moveReducer
   :: (MonadError InvalidMove m)
