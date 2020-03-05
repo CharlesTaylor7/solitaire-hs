@@ -49,51 +49,7 @@ moveReducer
   => Move
   -> Game
   -> m Game
-moveReducer move =
-  case normalize 3 move of
-    FlipCard (FC i) ->
-      layout . _Layout . ix i $ \pile -> do
-        if isJust $ pile ^? faceUp . _Cons
-        then throwError (CardFlipOnUnexposedPile i)
-        else pure ()
-
-        (head, rest) <- pile ^? faceDown . _Cons
-          & (maybeToError $ CardFlipOnEmptyPile i)
-
-        let faceUp' = faceUp .~ [head]
-        let faceDown' = faceDown .~ rest
-        pure $ pile & faceUp' . faceDown'
-    MoveToFoundation (MTF i) ->
-      foundation . numSets +~ 1 >>>
-      (layout . _Layout . ix i $ \pile ->
-        let
-          (set, leftover) = pile ^. faceUp . to splitAtStack
-          pile' = pile & faceUp .~ leftover
-        in do
-          ifThenError (length set /= setSize) $ IncompleteSet i
-          pure pile'
-      )
-    MoveStack (MS i j) ->
-      layout . _Layout $ \layout -> do
-        let
-          (stack, rest) =
-            layout ^?! ix i . faceUp . to splitAtStack
-          source' = ix i . faceUp .~ rest
-          target' = ix j . faceUp %~ (stack <>)
-
-        ifThenError (null stack)
-          $ EmptyStackSource i
-        ifThenError (isNothing $ layout ^? ix j . faceUp . _head)
-          $ EmptyStackTarget j
-
-        let t = layout ^? ix j . faceUp . _head
-        let s = stack ^? _last
-        let match = (liftA2 isSuccessorOf) s t
-
-        ifThenError (maybe True id match)
-          $ MismatchingStacks i j
-
-        pure $ layout & source' . target'
+moveReducer m g = moveReducerWithLog m g
 
 moveReducerWithLog
   :: (MonadError InvalidMove m, MonadWriter String m)
