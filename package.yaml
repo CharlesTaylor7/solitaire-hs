@@ -26,8 +26,8 @@ dependencies:
 - vector
 - mtl
 - lens
-# - random
 - MonadRandom
+- mmorph
 
 default-extensions:
   - NoImplicitPrelude

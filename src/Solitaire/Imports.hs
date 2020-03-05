@@ -6,6 +6,7 @@ module Solitaire.Imports
   , module Control.Monad.Except
   , module Control.Monad.Random
   , module Control.Monad.State.Strict
+  , module Control.Monad.Writer.Strict
   , module Control.Monad.Zip
   , module Data.Vector.Mutable
   , module Data.Monoid
@@ -27,6 +28,7 @@ import Control.Lens
 -- -- mtl
 import Control.Monad.Except
 import Control.Monad.State.Strict
+import Control.Monad.Writer.Strict
 
 -- MonadRandom
 import Control.Monad.Random

@@ -2,7 +2,8 @@ module Solitaire.App where
 
 import Solitaire.Imports
 
-newtype App e a = App { unApp :: ExceptT e IO a }
+type Log = String
+newtype App e a = App { unApp :: WriterT Log (ExceptT e IO) a }
   deriving
     ( Functor
     , Applicative
@@ -10,13 +11,17 @@ newtype App e a = App { unApp :: ExceptT e IO a }
     , MonadError e
     , MonadIO
     , MonadRandom
+    , MonadWriter Log
     )
 
 runApp :: Exception e => App e a -> IO a
 runApp app =
   app
   & unApp
+  & runWriterT
   & runExceptT
   >>= \case
     Left e -> throwIO e
-    Right a -> pure a
+    Right (a, w) -> do
+      putStrLn $ "Log: " ++ w
+      pure a
