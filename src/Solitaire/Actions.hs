@@ -20,9 +20,13 @@ moves = moves ++ flips ++ sets
     flips = flipCard <$> range
     sets = moveToFoundation <$> range
 
-distributed :: (a, Either b c) -> Either (a, b) (a, c)
-distributed (a, Left b) = Left (a, b)
-distributed (a, Right c) = Right (a, c)
+distributed :: Iso' (a, Either b c) (Either (a, b) (a, c))
+distributed = iso to from
+  where
+    to (a, Left b) = Left (a, b)
+    to (a, Right c) = Right (a, c)
+    from (Left (a, b)) = (a, Left b)
+    from (Right (a, c)) = (a, Right c)
 
 type Error = Either InvalidMove
 
@@ -32,7 +36,7 @@ validSteps g =
     paired = id &&& flip (moveReducer @Error) g
     step = Step ^. from curried
   in
-    moves ^.. folded . to paired . to distributed . _Right . to step
+    moves ^.. folded . to paired . distributed . _Right . to step
 
 moveReducer
   :: (MonadError InvalidMove m)

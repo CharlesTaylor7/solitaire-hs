@@ -18,16 +18,23 @@ runGame :: IO ()
 runGame = do
   game <- newGame
   error <- loopM act game
-  print error
-  pure ()
+  putStrLn "done"
 
-act :: Game -> IO (Either Game InvalidMove)
+act :: Game -> IO (Either Game ())
 act game = do
   prettyPrint game
   getLine
-  move <- getRandom
-  let either = moveReducer move game
-  pure $ either ^. swapped
+  let steps = validSteps game
+  putStrLn "Valid moves: "
+  prettyPrint $ map _step_move steps
+  next <- randomElem steps
+  case next of
+    Nothing -> do
+      putStrLn "No valid moves"
+      pure $ Right ()
+    Just (Step move game) -> do
+      prettyPrint move
+      pure $ Left game
 
 newGame :: IO Game
 newGame = do

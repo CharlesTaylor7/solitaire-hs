@@ -2,6 +2,7 @@ module Solitaire.Utils where
 
 import Solitaire.Imports hiding (toList)
 import qualified Data.Foldable as Foldable
+import Data.List ((!!))
 import GHC.Exts (IsList(..))
 
 import qualified Data.IntMap as M
@@ -52,3 +53,11 @@ shuffleIOVector vector =
     for_ indices $ \i ->
       getRandomR (0, i) >>=
       liftIO . MV.swap vector i
+
+randomElem
+  :: (MonadRandom m)
+  => [a]
+  -> m (Maybe a)
+randomElem [] = pure Nothing
+randomElem as = Just . (as !!) <$> getRandomR (0, n-1)
+  where n = length as

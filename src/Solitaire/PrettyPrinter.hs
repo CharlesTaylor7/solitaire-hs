@@ -16,6 +16,13 @@ import qualified RIO.Text as T
 class Pretty a where
   pretty :: a -> String
 
+instance Pretty a => Pretty [a] where
+  pretty xs = "[\n" ++ join xs ++ "\n]"
+    where join = intercalate "\n" . map pretty
+
+instance Pretty Move where
+  pretty = show
+
 instance Pretty InvalidMove where
   pretty = show
 
