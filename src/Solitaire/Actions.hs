@@ -9,13 +9,27 @@ import Solitaire.Types
 import Solitaire.Utils
 import qualified Data.Vector as V
 
+numPiles :: Int
+numPiles = 3
+
+moves :: [Move]
+moves = moves ++ flips ++ sets
+  where
+    range = [0..numPiles-1]
+    moves = moveStack <$> range <*> range
+    flips = flipCard <$> range
+    sets = moveToFoundation <$> range
+
+validMoves :: Game -> [Step]
+validMoves g = undefined
+
 moveReducer
   :: (MonadError InvalidMove m)
   => Move
   -> Game
   -> m Game
 moveReducer move =
-  case normalize 3 move of
+  case normalize numPiles move of
     FlipCard (FC i) ->
       layout . _Layout . ix i $ \pile -> do
         if isJust $ pile ^? faceUp . _Cons

@@ -39,6 +39,12 @@ data Move
   | MoveToFoundation MoveToFoundation
   deriving (Eq, Show, Read)
 
+data Step = Step
+  { _step_move :: Move
+  , _step_game :: Game
+  }
+  deriving (Eq, Read, Show)
+
 data MoveStack = MS
   { _ms_fromIndex :: Int
   , _ms_toIndex :: Int
@@ -77,6 +83,7 @@ makeLenses ''Foundation
 makeLenses ''Game
 makeLenses ''Pile
 makePrisms ''Move
+makeLenses ''Step
 makeLenses ''MoveStack
 makeLenses ''FlipCard
 makeLenses ''MoveToFoundation

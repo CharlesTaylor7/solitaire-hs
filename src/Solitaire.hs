@@ -25,17 +25,8 @@ toPile cards =
 indexFrom :: Int -> [a] -> IntMap a
 indexFrom offset = M.fromAscList . zip [offset..]
 
-data Step = Step
-  { step_move :: Move
-  , step_game :: Game
-  }
-  deriving (Eq, Read, Show)
-
 solve :: Game -> [Step]
 solve = undefined
-
-numPiles :: Int
-numPiles = 3
 
 numCardCopies :: Int
 numCardCopies = 3
