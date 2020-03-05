@@ -95,7 +95,7 @@ rightPad n filler list =
 toCardViews :: RowCount -> Pile -> [CardView]
 toCardViews (RowCount n) =
   let
-    getFaceUps = toList . fmap FaceUp . view faceUp
+    getFaceUps = reverse . toList . fmap FaceUp . view faceUp
     getFaceDowns = toList . fmap (const FaceDown) . view faceDown
   in
     rightPad n Empty . (getFaceDowns <> getFaceUps)
