@@ -25,8 +25,8 @@ printS = liftIO . putStrLn
 userConfirm :: (MonadIO m) => m ()
 userConfirm = liftIO getLine $> ()
 
--- userInput :: (MonadIO m, Read a) => m a
--- userInput = read <$> liftIO getLine
+userInput :: (MonadIO m, Read a) => m a
+userInput = read <$> liftIO getLine
 
 act :: (MonadIO m, MonadReader Env m, MonadRandom m) => Game -> m (Either Game ())
 act game = do
@@ -49,21 +49,27 @@ newGame :: (MonadIO m, MonadRandom m, MonadReader Env m) => m Game
 newGame = do
   deck <- getDeck
   shuffled <- shuffleIO deck
-  size <- getPileSize
-  let piles = map toPile $ chunksOf size shuffled
-  let layout = Layout $ indexFrom 0 piles
-  let foundation = Foundation 0
+  pileSizes <- getPileSizes
+  let
+    piles = fst $ foldl'
+      (\(ps, cs) size ->
+        let (p, cs') = splitAt size cs
+        in (toPile p : ps, cs'))
+      ([], deck)
+      pileSizes
+    layout = Layout $ indexFrom 0 piles
+    foundation = Foundation 0
   pure $ Game layout foundation
 
-getPileSize :: MonadReader Env m => m Int
-getPileSize = do
-  piles <- view env_numPiles
-  sets <- view env_numSets
+getPileSizes :: MonadReader Env m => m [Int]
+getPileSizes = do
+  p <- view env_numPiles
+  s <- view env_numSets
   let
-    numCards = enumSize @Card
-    (q, r) = (sets * numCards) `divMod` piles
-    n = q + if r /= 0 then 1 else 0
-  pure n
+    n = enumSize @Card
+    (q, r) = (s * n) `divMod` p
+    piles = replicate (p - r) q ++ replicate r (q + 1)
+  pure piles
 
 getDeck :: (MonadReader Env m) => m [Card]
 getDeck = do

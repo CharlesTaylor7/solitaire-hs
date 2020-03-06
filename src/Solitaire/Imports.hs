@@ -14,7 +14,7 @@ module Solitaire.Imports
   ) where
 
 import Utils
-import Prelude (putStrLn, maximum, enumFromTo, getLine, print)
+import Prelude (putStrLn, maximum, enumFromTo, getLine, print, read)
 import Data.Monoid
 import Data.List (intercalate, transpose, splitAt)
 import Control.Arrow
