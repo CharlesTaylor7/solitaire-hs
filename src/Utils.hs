@@ -1,6 +1,6 @@
 module Utils where
 
-import Prelude (putStrLn, maximum, enumFromTo, getLine, print)
+import Prelude (putStrLn, maximum, enumFromTo, getLine, print, read)
 import Data.Monoid
 import Data.List (intercalate, transpose, splitAt)
 import Control.Arrow
@@ -64,3 +64,33 @@ randomElem
 randomElem [] = pure Nothing
 randomElem as = Just . (as !!) <$> getRandomR (0, n-1)
   where n = length as
+
+printS :: MonadIO m => String -> m ()
+printS = liftIO . putStrLn
+
+userConfirm :: (MonadIO m) => m ()
+userConfirm = liftIO getLine $> ()
+
+userInput :: (MonadIO m, Read a) => m a
+userInput = read <$> liftIO getLine
+
+indexFrom :: Int -> [a] -> IntMap a
+indexFrom offset = M.fromAscList . zip [offset..]
+
+shuffleIO :: (MonadIO m, MonadRandom m) => [a] -> m [a]
+shuffleIO coll = do
+  let vector = V.fromList coll
+  thawed <- liftIO $ V.thaw vector
+  shuffleIOVector thawed
+  frozen <- liftIO $ V.freeze thawed
+  pure $ V.toList frozen
+
+shuffleIOVector :: (MonadIO m, MonadRandom m) => IOVector a -> m ()
+shuffleIOVector vector =
+  let
+    n = MV.length vector
+    indices = [0..(n-1)] :: [Int]
+  in
+    for_ indices $ \i ->
+      getRandomR (0, i) >>=
+      liftIO . MV.swap vector i
