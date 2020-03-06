@@ -8,7 +8,7 @@ import qualified Data.IntMap as M
 import qualified Data.Vector as V
 
 spec = do
-  let env = Env { _env_numSets = 3, _env_numPiles = 3 }
+  let env = envWith (NumSets 3) (NumPiles 3) (NumFaceDown 2)
   let runEnv = flip runReaderT env
   describe "Actions" $ do
     describe "moveReducer" $ do
@@ -18,7 +18,7 @@ spec = do
           let game = Game
                 { _layout = Layout
                   (M.empty & at 1 .~
-                    (Just (PileCards
+                    (Just (Pile
                       { _faceUp = []
                       , _faceDown = [One]
                       })
@@ -26,7 +26,7 @@ spec = do
                   )
                 , _foundation = Foundation { _numSets = 0 }
                 }
-          let expected = Game {_layout = Layout {unLayout = [(1,PileCards {_faceUp = [One], _faceDown = []})]}, _foundation = Foundation {_numSets = 0}}
+          let expected = Game {_layout = Layout {unLayout = [(1,Pile {_faceUp = [One], _faceDown = []})]}, _foundation = Foundation {_numSets = 0}}
           let result = runEnv $ moveReducer move game
           result `shouldBe` Right expected
         it "marks flipping a face down card on an unexposed pile as invalid" $ do
@@ -34,7 +34,7 @@ spec = do
           let game = Game
                 { _layout = Layout
                   (M.empty & at 1 .~
-                    (Just (PileCards
+                    (Just (Pile
                       { _faceUp = [Two]
                       , _faceDown = [One]
                       })))
@@ -48,7 +48,7 @@ spec = do
           let game = Game
                 { _layout = Layout
                   (M.empty & at 1 .~ (Just
-                    (PileCards
+                    (Pile
                       { _faceUp = []
                       , _faceDown = []
                       })
@@ -64,7 +64,7 @@ spec = do
           let game = Game
                 { _layout = Layout
                   (M.empty & at 2 .~ (Just
-                    (PileCards
+                    (Pile
                       { _faceUp = enumerate @Card
                       , _faceDown = []
                       })
@@ -74,7 +74,7 @@ spec = do
           let expected = Right $ Game
                 { _layout = Layout
                   (M.empty & at 2 .~ (Just
-                    (PileCards
+                    (Pile
                       { _faceUp = []
                       , _faceDown = []
                       })
@@ -88,7 +88,7 @@ spec = do
           let game = Game
                 { _layout = Layout
                   (M.empty & at 2 .~ (Just
-                    (PileCards
+                    (Pile
                       { _faceUp = enumerate @Card
                       , _faceDown = []
                       })
@@ -98,7 +98,7 @@ spec = do
           let expected = Right $ Game
                 { _layout = Layout
                   (M.empty & at 2 .~ (Just
-                    (PileCards
+                    (Pile
                       { _faceUp = []
                       , _faceDown = []
                       })
@@ -112,7 +112,7 @@ spec = do
           let game = Game
                 { _layout = Layout
                   (M.empty & at 2 .~ (Just
-                    (PileCards
+                    (Pile
                       { _faceUp = []
                       , _faceDown = [One]
                       })
@@ -127,11 +127,11 @@ spec = do
           let move = moveStack 0 2
           let game = Game
                 { _layout = Layout
-                  [ (0, PileCards
+                  [ (0, Pile
                       { _faceUp = [One, Two, Five]
                       , _faceDown = [Three]
                       })
-                  , (2, PileCards
+                  , (2, Pile
                       { _faceUp = [Three, Two, Five]
                       , _faceDown = [Two, One]
                       })
@@ -140,11 +140,11 @@ spec = do
                 }
           let expected = Right $ Game
                 { _layout = Layout
-                  [ (0, PileCards
+                  [ (0, Pile
                       { _faceUp = [Five]
                       , _faceDown = [Three]
                       })
-                  , (2, PileCards
+                  , (2, Pile
                       { _faceUp = [One, Two, Three, Two, Five]
                       , _faceDown = [Two, One]
                       })
@@ -157,11 +157,11 @@ spec = do
           let move = moveStack 0 2
           let game = Game
                 { _layout = Layout
-                  [ (0, PileCards
+                  [ (0, Pile
                       { _faceUp = []
                       , _faceDown = [Three]
                       })
-                  , (2, PileCards
+                  , (2, Pile
                       { _faceUp = [Three, Two, Five]
                       , _faceDown = [Two, One]
                       })
@@ -175,11 +175,11 @@ spec = do
           let move = moveStack 0 2
           let game = Game
                 { _layout = Layout
-                  [ (0, PileCards
+                  [ (0, Pile
                       { _faceUp = [Five]
                       , _faceDown = [Three]
                       })
-                  , (2, PileCards
+                  , (2, Pile
                       { _faceUp = []
                       , _faceDown = []
                       })
@@ -188,11 +188,11 @@ spec = do
                 }
           let expected = Right $  Game
                 { _layout = Layout
-                  [ (0, PileCards
+                  [ (0, Pile
                       { _faceUp = []
                       , _faceDown = [Three]
                       })
-                  , (2, PileCards
+                  , (2, Pile
                       { _faceUp = [Five]
                       , _faceDown = []
                       })
@@ -205,11 +205,11 @@ spec = do
           let move = moveStack 0 2
           let game = Game
                 { _layout = Layout
-                  [ (0, PileCards
+                  [ (0, Pile
                       { _faceUp = [Five]
                       , _faceDown = [Three]
                       })
-                  , (2, PileCards
+                  , (2, Pile
                       { _faceUp = []
                       , _faceDown = [Two, One]
                       })
@@ -224,11 +224,11 @@ spec = do
           let move = moveStack 0 2
           let game = Game
                 { _layout = Layout
-                  [ (0, PileCards
+                  [ (0, Pile
                       { _faceUp = [Five]
                       , _faceDown = [Three]
                       })
-                  , (2, PileCards
+                  , (2, Pile
                       { _faceUp = [One]
                       , _faceDown = [Two, One]
                       })
@@ -242,7 +242,7 @@ spec = do
           let move = moveStack 1 1
           let game = Game
                 { _layout = Layout
-                  [ (1, PileCards
+                  [ (1, Pile
                       { _faceUp = [Five]
                       , _faceDown = [Three]
                       })
