@@ -14,13 +14,10 @@ import qualified Data.IntMap as M
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as MV
 
-runGame :: IO ()
-runGame =
-  let
-    env = Env { _env_numSets = 2, _env_numPiles = 5 }
-  in
-    flip runReaderT env $
-      newGame >>= loopM act
+runGame :: Env -> IO ()
+runGame env =
+  flip runReaderT env $
+    newGame >>= loopM act
 
 printS :: MonadIO m => String -> m ()
 printS = liftIO . putStrLn
