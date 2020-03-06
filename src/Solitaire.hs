@@ -41,8 +41,7 @@ act game = do
       printS "No valid moves"
       pure $ Right ()
     Just (Step move game) -> do
-      printS "Chose move: "
-      prettyPrint move
+      printS $ "Chose move: " ++ pretty move
       pure $ Left game
 
 newGame :: (MonadIO m, MonadRandom m, MonadReader Env m) => m Game

@@ -27,7 +27,9 @@ instance Pretty a => Pretty [a] where
       join = intercalate space . map pretty
 
 instance Pretty Move where
-  pretty = show
+  pretty (MoveStack (MS i j)) = "moveStack" ++ " " ++ show i ++ " " ++ show j
+  pretty (MoveToFoundation (MTF i)) = "moveToFoundation" ++ " " ++ show i
+  pretty (FlipCard (FC i)) = "flipCard" ++ " " ++ show i
 
 instance Pretty InvalidMove where
   pretty = show
