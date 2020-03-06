@@ -19,14 +19,6 @@ moves = do
     sets = moveToFoundation <$> range
   pure $ moves ++ flips ++ sets
 
-distributed :: Iso' (a, Either b c) (Either (a, b) (a, c))
-distributed = iso to from
-  where
-    to (a, Left b) = Left (a, b)
-    to (a, Right c) = Right (a, c)
-    from (Left (a, b)) = (a, Left b)
-    from (Right (a, c)) = (a, Right c)
-
 type MonadStack = ReaderT Env (Either InvalidMove)
 
 validSteps :: MonadReader Env m => Game -> m [Step]
@@ -104,9 +96,6 @@ normalize move = do
     MoveStack (MS i j) -> moveStack (i `mod` n) (j `mod` n)
     FlipCard (FC i) -> flipCard (i `mod` n)
     MoveToFoundation (MTF i) -> moveToFoundation (i `mod` n)
-
-setSize :: Int
-setSize = enumSize @Card
 
 isSuccessorOf :: Card -> Card -> Bool
 isSuccessorOf a b =

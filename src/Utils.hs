@@ -94,3 +94,11 @@ shuffleIOVector vector =
     for_ indices $ \i ->
       getRandomR (0, i) >>=
       liftIO . MV.swap vector i
+
+distributed :: Iso' (a, Either b c) (Either (a, b) (a, c))
+distributed = iso to from
+  where
+    to (a, Left b) = Left (a, b)
+    to (a, Right c) = Right (a, c)
+    from (Left (a, b)) = (a, Left b)
+    from (Right (a, c)) = (a, Right c)

@@ -11,9 +11,6 @@ import Solitaire.Types
 import Solitaire.PrettyPrinter
 import Solitaire.Utils
 import Solitaire.Actions
-import qualified Data.IntMap as M
-import qualified Data.Vector as V
-import qualified Data.Vector.Mutable as MV
 
 runGame :: Env -> IO ()
 runGame env =
