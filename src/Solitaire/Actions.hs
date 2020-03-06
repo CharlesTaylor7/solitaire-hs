@@ -72,6 +72,10 @@ moveReducer move =
         let
           (stack, rest) =
             layout ^?! ix i . faceUp . to splitAtStack
+          target = layout ^?! ix j
+          target_faceUp = target ^. faceUp
+          target_faceDown = target ^. faceDown
+
           source' = ix i . faceUp .~ rest
           target' = ix j . faceUp %~ (stack <>)
 
@@ -80,13 +84,15 @@ moveReducer move =
 
         ifThenError (null stack)
           $ EmptyStackSource i
-        ifThenError (isNothing $ layout ^? ix j . faceUp . _head)
+        ifThenError (
+          (null . view faceUp) target &&
+          (not . V.null . cards) target )
           $ EmptyStackTarget j
 
-        let t = layout ^?! ix j . faceUp . _head
+        let t = layout ^? ix j . faceUp . _head
         let s = stack ^?! _last
-        let match = t `isSuccessorOf` s
-        ifThenError (not match)
+        let errorCondition = maybe False (not . flip isSuccessorOf s) t
+        ifThenError errorCondition
           $ MismatchingStacks i j
 
         pure $ layout & source' . target'
@@ -103,7 +109,7 @@ setSize :: Int
 setSize = enumSize @Card
 
 isSuccessorOf :: Card -> Card -> Bool
-a `isSuccessorOf` b =
+isSuccessorOf a b =
   fromEnum a - fromEnum b == 1
 
 countWhile :: Foldable f => (a -> Bool) -> f a -> Int

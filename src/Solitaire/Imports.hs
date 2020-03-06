@@ -10,8 +10,10 @@ module Solitaire.Imports
   , module Data.Vector.Mutable
   , module Data.Monoid
   , module Data.List
+  , module Utils
   ) where
 
+import Utils
 import Prelude (putStrLn, maximum, enumFromTo, getLine, print)
 import Data.Monoid
 import Data.List (intercalate, transpose, splitAt)

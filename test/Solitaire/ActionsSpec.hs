@@ -171,7 +171,37 @@ spec = do
           let expected = Left $ EmptyStackSource 0
           let result = runEnv $ moveReducer move game
           result `shouldBe` expected
-        it "cannot move onto an empty stack" $ do
+        it "can move onto an empty pile" $ do
+          let move = moveStack 0 2
+          let game = Game
+                { _layout = Layout
+                  [ (0, Pile
+                      { _faceUp = [Five]
+                      , _faceDown = [Three]
+                      })
+                  , (2, Pile
+                      { _faceUp = []
+                      , _faceDown = []
+                      })
+                  ]
+                , _foundation = Foundation { _numSets = 0 }
+                }
+          let expected = Right $  Game
+                { _layout = Layout
+                  [ (0, Pile
+                      { _faceUp = []
+                      , _faceDown = [Three]
+                      })
+                  , (2, Pile
+                      { _faceUp = [Five]
+                      , _faceDown = []
+                      })
+                  ]
+                , _foundation = Foundation { _numSets = 0 }
+                }
+          let result = runEnv $ moveReducer move game
+          result `shouldBe` expected
+        it "cannot move onto face down cards" $ do
           let move = moveStack 0 2
           let game = Game
                 { _layout = Layout
@@ -189,6 +219,7 @@ spec = do
           let expected = Left $ EmptyStackTarget 2
           let result = runEnv $ moveReducer move game
           result `shouldBe` expected
+
         it "cannot move stack onto a mismatching card" $ do
           let move = moveStack 0 2
           let game = Game
