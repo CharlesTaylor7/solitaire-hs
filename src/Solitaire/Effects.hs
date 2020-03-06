@@ -44,13 +44,13 @@ newGame :: (MonadIO m, MonadRandom m, MonadReader Env m) => m Game
 newGame = do
   shuffled <- getDeck >>= shuffleIO
   pileSizes <- getPileSizes
+  piles <- sequenceA . fst $ foldl'
+    (\(ps, cs) size ->
+      let (p, cs') = splitAt size cs
+      in (toPile p : ps, cs'))
+    ([], shuffled)
+    pileSizes
   let
-    piles = fst $ foldl'
-      (\(ps, cs) size ->
-        let (p, cs') = splitAt size cs
-        in (toPile p : ps, cs'))
-      ([], shuffled)
-      pileSizes
     layout = Layout $ indexFrom 0 piles
     foundation = Foundation 0
   pure $ Game layout foundation

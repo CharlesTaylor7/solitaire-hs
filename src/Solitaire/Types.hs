@@ -14,6 +14,7 @@ data Card
 data Env = Env
   { _env_numPiles :: Int
   , _env_numSets :: Int
+  , _env_numFaceUpPerPile :: Int
   }
   deriving (Eq, Show, Read)
 

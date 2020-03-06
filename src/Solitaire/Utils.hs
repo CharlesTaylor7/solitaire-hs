@@ -23,12 +23,15 @@ getPileSizes = do
     piles = replicate (p - r) q ++ replicate r (q + 1)
   pure piles
 
-getDeck :: (MonadReader Env m) => m [Card]
+getDeck :: MonadReader Env m => m [Card]
 getDeck = do
   numSets <- view env_numSets
   pure $ enumerate >>= replicate numSets
 
-toPile :: [Card] -> Pile
-toPile cards =
-  let (faceUp, faceDown) = splitAt 2 cards
-  in Pile (V.fromList faceUp) (V.fromList faceDown)
+toPile :: MonadReader Env m => [Card] -> m Pile
+toPile cards = do
+  numFaceUp <- view env_numFaceUpPerPile
+  let
+    (faceUp, faceDown) = splitAt numFaceUp cards
+    pile = Pile (V.fromList faceUp) (V.fromList faceDown)
+  pure pile
