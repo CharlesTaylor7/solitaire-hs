@@ -16,7 +16,7 @@ runGame env = do
 data GameEnd = GameWon | GameLost
   deriving (Eq, Show, Read)
 
-act :: (MonadIO m, MonadReader Env m, MonadRandom m, MonadError GameEnd m) => Game -> m Game
+act :: (MonadIO m, MonadRandom m, MonadReader Env m, MonadError GameEnd m) => Game -> m Game
 act game = do
   prettyPrint game
   if gameWon game
@@ -37,14 +37,17 @@ act game = do
 newGame :: (MonadIO m, MonadRandom m, MonadReader Env m) => m Game
 newGame = do
   shuffled <- getDeck >>= shuffleIO
-  pileSizes <- getPileSizes
-  piles <- sequenceA . fst $ foldl'
-    (\(ps, cs) size ->
-      let (p, cs') = splitAt size cs
-      in (toPile p : ps, cs'))
-    ([], shuffled)
-    pileSizes
+  pileCounts <- view env_piles
   let
+    piles = fst $ foldl'
+      (\(ps, cs) count ->
+        let
+          size = pileCountsSize count
+          (p, cs') = splitAt size cs
+        in
+          (toPile p count : ps, cs'))
+      ([], shuffled)
+      pileCounts
     layout = Layout $ indexFrom 0 piles
     foundation = Foundation 0
   pure $ Game layout foundation

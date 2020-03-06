@@ -8,10 +8,11 @@ import Solitaire.PrettyPrinter
 import Solitaire.Types
 import Solitaire.Utils
 import qualified Data.Vector as V
+import qualified Data.IntMap as M
 
 moves :: (MonadReader Env m) => m [Move]
 moves = do
-  numPiles <- view env_numPiles <$> ask
+  numPiles <- M.size <$> view env_piles
   let
     range = [0..numPiles-1]
     moves = moveStack <$> range <*> range
@@ -91,7 +92,7 @@ moveReducer move =
 
 normalize :: (MonadReader Env m) => Move -> m Move
 normalize move = do
-  n <- view env_numPiles
+  n <- M.size <$> view env_piles
   pure $ case move of
     MoveStack (MS i j) -> moveStack (i `mod` n) (j `mod` n)
     FlipCard (FC i) -> flipCard (i `mod` n)

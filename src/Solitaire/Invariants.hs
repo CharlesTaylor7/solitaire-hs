@@ -5,10 +5,10 @@ import Solitaire.Types
 import qualified Data.Set as Set
 import qualified Data.Vector as V
 
-pileSize :: Pile -> Int
+pileSize :: PileCards -> Int
 pileSize = (+) <$> V.length . view faceUp <*> V.length . view faceDown
 
-cardsInPile :: Pile -> Set Card
+cardsInPile :: PileCards -> Set Card
 cardsInPile =
   Set.fromList . (
     (V.toList . view faceUp) <>

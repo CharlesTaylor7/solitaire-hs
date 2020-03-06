@@ -12,20 +12,28 @@ data Card
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 data Env = Env
-  { _env_numPiles :: Int
-  , _env_numSets :: Int
-  , _env_numFaceUpPerPile :: Int
+  { _env_numSets :: Int
+  , _env_piles :: IntMap PileCounts
   }
   deriving (Eq, Show, Read)
 
-data Pile = Pile
-  { _faceUp :: Vector Card
-  , _faceDown :: Vector Card
+data Pile a = Pile
+  { _faceUp :: a
+  , _faceDown :: a
   }
   deriving (Eq, Show, Read)
+
+type PileCounts = Pile Int
+type PileCards = Pile (Vector Card)
+
+pileCounts :: Int -> Int -> PileCounts
+pileCounts = Pile
+
+pileCards :: Vector Card -> Vector Card -> PileCards
+pileCards = Pile
 
 newtype Layout = Layout
-  { unLayout :: IntMap Pile
+  { unLayout :: IntMap PileCards
   }
   deriving (Eq, Show, Read)
 
