@@ -15,5 +15,8 @@ cardsInPile =
     (V.toList . view faceDown)
   )
 
+totalCards :: Layout -> Int
+totalCards = alaf Sum foldMap pileSize . unLayout
+
 cardsInLayout :: Layout -> Set Card
 cardsInLayout = foldMap cardsInPile . unLayout

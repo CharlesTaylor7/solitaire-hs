@@ -1,6 +1,7 @@
 module Utils where
 
-import Prelude (putStrLn, maximum, enumFromTo, getLine, print, read)
+import Prelude (putStrLn, maximum, enumFromTo, getLine, read)
+import qualified Prelude
 import Data.Monoid
 import Data.List (intercalate, transpose, splitAt)
 import Control.Arrow
@@ -39,8 +40,8 @@ enumSize = hi - lo + 1
     hi = fromEnum (maxBound :: a)
     lo = fromEnum (minBound :: a)
 
-loopM :: Monad m => (a -> m (Either a b)) -> a -> m b
-loopM act x = act x >>= loopM act ||| pure
+loopM :: Monad m => (a -> m (Either end a)) -> a -> m end
+loopM act x = act x >>= pure ||| loopM act
 
 chunksOf :: Int -> [a] -> [[a]]
 chunksOf _ [] = []
@@ -64,6 +65,9 @@ randomElem
 randomElem [] = pure Nothing
 randomElem as = Just . (as !!) <$> getRandomR (0, n-1)
   where n = length as
+
+print :: (MonadIO m, Show a) => a -> m ()
+print = liftIO . Prelude.print
 
 printS :: MonadIO m => String -> m ()
 printS = liftIO . putStrLn

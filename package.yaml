@@ -47,6 +47,9 @@ default-extensions:
   - FlexibleContexts
   - ConstraintKinds
 
+ghc-options:
+  - -Wno-deprecations
+
 library:
   source-dirs: src
 

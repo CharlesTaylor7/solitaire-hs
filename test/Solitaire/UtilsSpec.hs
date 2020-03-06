@@ -29,25 +29,25 @@ spec = do
       it "enables while loops in the identity monad" $ do
         let factorial (product, n) =
              if n <= 0
-             then pure $ Right product
-             else pure $ Left (n * product, n - 1)
+             then pure $ Left product
+             else pure $ Right (n * product, n - 1)
         loopM factorial (1, 3) `shouldBe` Identity 6
       it "enables imperative style accumulation while loops in the writer monad" $ do
         let factorial x =
               if x <= 0
-              then pure $ Right ()
-              else (Product x, Left (x - 1))
+              then pure $ Left ()
+              else (Product x, Right (x - 1))
         loopM factorial 4 `shouldBe` (Product 24, ())
       it "enables branching in the list monad" $ do
         let
           act :: Int -> [Either Int Int]
           act x =
             if x <= 0
-            then [Right (x + 1)]
+            then [Left (x + 1)]
             else
-              [ Left (x - 1)
-              , Left (x - 2)
-              , Right (x + 1)
+              [ Right (x - 1)
+              , Right (x - 2)
+              , Left (x + 1)
               ]
         let expected = [1, 0, 2, 1, 3, 1, 0, 2, 4] :: [Int]
         loopM act 3 `shouldBe` expected

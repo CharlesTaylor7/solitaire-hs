@@ -56,7 +56,7 @@ moveReducer move =
           (set, leftover) = pile ^. faceUp . to splitAtStack
           pile' = pile & faceUp .~ leftover
         in do
-          ifThenError (length set /= setSize) $ IncompleteSet i
+          ifThenError (length set /= enumSize @Card) $ IncompleteSet i
           pure pile'
       )
     MoveStack (MS i j) ->
