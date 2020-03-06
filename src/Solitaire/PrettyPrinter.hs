@@ -5,7 +5,6 @@ module Solitaire.PrettyPrinter
   ) where
 
 import Solitaire.Imports hiding (Empty)
-import Solitaire.Types
 import Solitaire.Utils
 import Solitaire.Invariants
 
@@ -16,14 +15,11 @@ import qualified RIO.Text as T
 class Pretty a where
   pretty :: a -> String
 
-repeat :: a -> [a]
-repeat a = list where list = a : list
-
 instance Pretty a => Pretty [a] where
   pretty [] = "[]"
   pretty xs = "[" ++ space ++ join xs ++ "\n]"
     where
-      space = '\n' : (take 2 $ repeat ' ')
+      space = '\n' : (replicate 2 ' ')
       join = intercalate space . map pretty
 
 instance Pretty Move where
@@ -95,7 +91,7 @@ rightPad n filler list =
   in
     list <> replicate k filler
 
-toCardViews :: RowCount -> Pile -> [CardView]
+toCardViews :: RowCount -> PileCards -> [CardView]
 toCardViews (RowCount n) =
   let
     getFaceUps = reverse . toList . fmap FaceUp . view faceUp

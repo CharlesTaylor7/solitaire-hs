@@ -2,21 +2,20 @@ module Solitaire.Effects where
 
 import Solitaire.Imports
 import Solitaire.Invariants
-import Solitaire.Types
 import Solitaire.PrettyPrinter
 import Solitaire.Utils
 import Solitaire.Actions
 
-runGame :: Env -> IO ()
-runGame env = do
-  gameEnd <- flip runReaderT env $
+runGame :: Config -> IO ()
+runGame config = do
+  gameEnd <- flip runReaderT config $
     newGame >>= loopM (runExceptT . act)
   print gameEnd
 
 data GameEnd = GameWon | GameLost
   deriving (Eq, Show, Read)
 
-act :: (MonadIO m, MonadReader Env m, MonadRandom m, MonadError GameEnd m) => Game -> m Game
+act :: (MonadIO m, MonadRandom m, MonadReader Config m, MonadError GameEnd m) => Game -> m Game
 act game = do
   prettyPrint game
   if gameWon game
@@ -34,17 +33,20 @@ act game = do
       printS $ "Chose move: " ++ pretty move
       pure game
 
-newGame :: (MonadIO m, MonadRandom m, MonadReader Env m) => m Game
+newGame :: (MonadIO m, MonadRandom m, MonadReader Config m) => m Game
 newGame = do
   shuffled <- getDeck >>= shuffleIO
-  pileSizes <- getPileSizes
-  piles <- sequenceA . fst $ foldl'
-    (\(ps, cs) size ->
-      let (p, cs') = splitAt size cs
-      in (toPile p : ps, cs'))
-    ([], shuffled)
-    pileSizes
+  pileCounts <- view config_piles
   let
+    piles = fst $ foldl'
+      (\(ps, cs) count ->
+        let
+          size = pileCountsSize count
+          (p, cs') = splitAt size cs
+        in
+          (toPile p count : ps, cs'))
+      ([], shuffled)
+      pileCounts
     layout = Layout $ indexFrom 0 piles
     foundation = Foundation 0
   pure $ Game layout foundation

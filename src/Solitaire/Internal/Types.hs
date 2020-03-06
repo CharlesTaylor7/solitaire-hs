@@ -1,7 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Solitaire.Types where
+module Solitaire.Internal.Types where
 
-import Solitaire.Imports
+import RIO
+import Control.Exception
+import Control.Lens
+import Control.Monad.Random
+import Control.Monad.State.Strict
 
 data Card
   = One
@@ -11,21 +15,29 @@ data Card
   | Five
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
-data Env = Env
-  { _env_numPiles :: Int
-  , _env_numSets :: Int
-  , _env_numFaceUpPerPile :: Int
+data Config = Config
+  { _config_numSets :: Int
+  , _config_piles :: IntMap PileCounts
   }
   deriving (Eq, Show, Read)
 
-data Pile = Pile
-  { _faceUp :: Vector Card
-  , _faceDown :: Vector Card
+data Pile a = Pile
+  { _faceUp :: a
+  , _faceDown :: a
   }
   deriving (Eq, Show, Read)
+
+type PileCounts = Pile Int
+type PileCards = Pile (Vector Card)
+
+pileCounts :: Int -> Int -> PileCounts
+pileCounts = Pile
+
+pileCards :: Vector Card -> Vector Card -> PileCards
+pileCards = Pile
 
 newtype Layout = Layout
-  { unLayout :: IntMap Pile
+  { unLayout :: IntMap PileCards
   }
   deriving (Eq, Show, Read)
 
@@ -84,7 +96,7 @@ flipCard = FlipCard . FC
 moveToFoundation = MoveToFoundation . MTF
 moveStack = (MoveStack .) . MS
 
-makeLenses ''Env
+makeLensesWith (lensRules & generateUpdateableOptics .~ False) ''Config
 makePrisms ''Card
 makePrisms ''Layout
 makeLenses ''Foundation

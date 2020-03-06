@@ -8,13 +8,14 @@ spec = do
   describe "Solitaire" $ do
     describe "deck" $ do
       it "should have the right number of cards" $ do
-        let env = Env { _env_numSets = 3, _env_numPiles = 3}
-        let runEnv = flip runReader env
-        let numCards = enumSize @Card
+        config <- fromEither $ configWith (NumSets 3) (NumPiles 3) (NumFaceDown 2)
+
         let
-          (deckSize, numCardCopies) = runEnv $ do
+          runConfig = flip runReader config
+          numCards = enumSize @Card
+          (deckSize, numCardCopies) = runConfig $ do
             d <- length <$> getDeck
-            c <- view env_numSets
+            c <- view config_numSets
             pure (d, c)
-        let product = numCards * numCardCopies :: Int
+          product = numCards * numCardCopies :: Int
         deckSize `shouldBe` product
