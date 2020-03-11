@@ -8,8 +8,6 @@ import qualified Data.IntMap as M
 import qualified Data.Vector as V
 
 spec = do
-  let env = envWith (NumSets 3) (NumPiles 3) (NumFaceDown 2)
-  let runEnv = flip runReaderT env
   describe "Actions" $ do
     describe "moveReducer" $ do
       describe "FlipCard" $ do
@@ -41,7 +39,7 @@ spec = do
                 , _foundation = Foundation { _numSets = 0 }
                 }
           let expected = Left (CardFlipOnUnexposedPile 1)
-          let result = runEnv $ moveReducer move game
+          let result = moveReducer move game
           result `shouldBe` expected
         it "marks flipping a face down card on an empty pile as invalid" $ do
           let move = flipCard 1
@@ -56,7 +54,7 @@ spec = do
                 , _foundation = Foundation { _numSets = 0 }
                 }
           let expected = Left (CardFlipOnEmptyPile 1)
-          let result = runEnv $ moveReducer move game
+          let result = moveReducer move game
           result `shouldBe` expected
       describe "MoveToFoundation" $ do
         it "moves a complete set from the layout to the foundation" $ do
@@ -81,7 +79,7 @@ spec = do
                   ))
                 , _foundation = Foundation { _numSets = 1 }
                 }
-          let result = runEnv $ moveReducer move game
+          let result = moveReducer move game
           result `shouldBe` expected
         it "moves a complete set from the layout to the foundation" $ do
           let move = moveToFoundation 2
@@ -105,7 +103,7 @@ spec = do
                   ))
                 , _foundation = Foundation { _numSets = 1 }
                 }
-          let result = runEnv $ moveReducer move game
+          let result = moveReducer move game
           result `shouldBe` expected
         it "cannot move an incomplete set to the foundation" $ do
           let move = moveToFoundation 2
@@ -120,7 +118,7 @@ spec = do
                 , _foundation = Foundation { _numSets = 0 }
                 }
           let expected = Left $ IncompleteSet 2
-          let result = runEnv $ moveReducer move game
+          let result = moveReducer move game
           result `shouldBe` expected
       describe "MoveStack" $ do
         it "moves stacks of cards" $ do
@@ -151,7 +149,7 @@ spec = do
                   ]
                 , _foundation = Foundation { _numSets = 0 }
                 }
-          let result = runEnv $ moveReducer move game
+          let result = moveReducer move game
           result `shouldBe` expected
         it "cannot move an empty stack" $ do
           let move = moveStack 0 2
@@ -169,7 +167,7 @@ spec = do
                 , _foundation = Foundation { _numSets = 0 }
                 }
           let expected = Left $ EmptyStackSource 0
-          let result = runEnv $ moveReducer move game
+          let result = moveReducer move game
           result `shouldBe` expected
         it "can move onto an empty pile" $ do
           let move = moveStack 0 2
@@ -199,7 +197,7 @@ spec = do
                   ]
                 , _foundation = Foundation { _numSets = 0 }
                 }
-          let result = runEnv $ moveReducer move game
+          let result = moveReducer move game
           result `shouldBe` expected
         it "cannot move onto face down cards" $ do
           let move = moveStack 0 2
@@ -217,7 +215,7 @@ spec = do
                 , _foundation = Foundation { _numSets = 0 }
                 }
           let expected = Left $ EmptyStackTarget 2
-          let result = runEnv $ moveReducer move game
+          let result = moveReducer move game
           result `shouldBe` expected
 
         it "cannot move stack onto a mismatching card" $ do
@@ -236,7 +234,7 @@ spec = do
                 , _foundation = Foundation { _numSets = 0 }
                 }
           let expected = Left $ MismatchingStacks 0 2
-          let result = runEnv $ moveReducer move game
+          let result = moveReducer move game
           result `shouldBe` expected
       it "cannot move stack onto itself" $ do
           let move = moveStack 1 1
@@ -250,5 +248,5 @@ spec = do
                 , _foundation = Foundation { _numSets = 0 }
                 }
           let expected = Left $ SourceIsTarget 1
-          let result = runEnv $ moveReducer move game
+          let result = moveReducer move game
           result `shouldBe` expected
