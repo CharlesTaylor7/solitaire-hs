@@ -107,29 +107,3 @@ makeLenses ''Step
 makeLenses ''MoveStack
 makeLenses ''FlipCard
 makeLenses ''MoveToFoundation
-
--- random instances
-randomS :: (RandomGen g, Random a) => State g a
-randomS = state random
-
-instance Random Move where
-  random = runState $ do
-    let numMoveTypes = 3 :: Int
-    choice <- (`mod` numMoveTypes) <$> randomS
-    case choice of
-      0 -> MoveStack <$> randomS
-      1 -> FlipCard <$> randomS
-      2 -> MoveToFoundation <$> randomS
-  randomR _ = random
-
-instance Random MoveStack where
-  random = runState $ MS <$> randomS <*> randomS
-  randomR _ = random
-
-instance Random FlipCard where
-  random = runState $ FC <$> randomS
-  randomR _ = random
-
-instance Random MoveToFoundation where
-  random = runState $ MTF <$> randomS
-  randomR _ = random

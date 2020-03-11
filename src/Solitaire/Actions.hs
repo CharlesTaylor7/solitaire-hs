@@ -89,14 +89,6 @@ moveReducer move =
 
         pure $ layout & source' . target'
 
-normalize :: (MonadReader Config m) => Move -> m Move
-normalize move = do
-  n <- M.size <$> view config_piles
-  pure $ case move of
-    MoveStack (MS i j) -> moveStack (i `mod` n) (j `mod` n)
-    FlipCard (FC i) -> flipCard (i `mod` n)
-    MoveToFoundation (MTF i) -> moveToFoundation (i `mod` n)
-
 isSuccessorOf :: Card -> Card -> Bool
 isSuccessorOf a b =
   fromEnum a - fromEnum b == 1
