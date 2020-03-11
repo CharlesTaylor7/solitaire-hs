@@ -8,8 +8,9 @@ spec = do
   describe "Solitaire" $ do
     describe "deck" $ do
       it "should have the right number of cards" $ do
+        env <- fromEither $ envWith (NumSets 3) (NumPiles 3) (NumFaceDown 2)
+
         let
-          Just env = envWith (NumSets 3) (NumPiles 3) (NumFaceDown 2)
           runEnv = flip runReader env
           numCards = enumSize @Card
           (deckSize, numCardCopies) = runEnv $ do
