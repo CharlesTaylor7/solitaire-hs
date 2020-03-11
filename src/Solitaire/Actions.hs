@@ -31,7 +31,7 @@ validSteps game = do
   pure $ ms ^.. folded . to paired . distributed . _Right . to step
 
 moveReducer
-  :: (MonadReader Env m, MonadError InvalidMove m)
+  :: (MonadError InvalidMove m)
   => Move
   -> Game
   -> m Game

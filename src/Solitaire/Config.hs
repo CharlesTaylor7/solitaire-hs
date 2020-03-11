@@ -9,8 +9,8 @@ newtype NumFaceDown = NumFaceDown Int
 newtype NumSets = NumSets Int
 newtype Piles = Piles [PileCounts]
 
-envWith :: NumSets -> NumPiles -> NumFaceDown -> Env
-envWith (NumSets s) (NumPiles p) (NumFaceDown f) = Internal.Env {}
+envWith :: NumSets -> NumPiles -> NumFaceDown -> Maybe Env
+envWith (NumSets s) (NumPiles p) (NumFaceDown f) = Just Internal.Env {}
 
 mkEnv :: NumSets -> Piles -> Maybe Env
-mkEnv = undefined
+mkEnv (NumSets s) (Piles piles) = Just Internal.Env {}
