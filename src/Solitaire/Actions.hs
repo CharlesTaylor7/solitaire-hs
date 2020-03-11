@@ -9,9 +9,9 @@ import Solitaire.Utils
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
 
-moves :: (MonadReader Env m) => m [Move]
+moves :: (MonadReader Config m) => m [Move]
 moves = do
-  numPiles <- M.size <$> view env_piles
+  numPiles <- M.size <$> view config_piles
   let
     range = [0..numPiles-1]
     moves = moveStack <$> range <*> range
@@ -19,14 +19,14 @@ moves = do
     sets = moveToFoundation <$> range
   pure $ moves ++ flips ++ sets
 
-type MonadStack = ReaderT Env (Either InvalidMove)
+type MonadStack = ReaderT Config (Either InvalidMove)
 
-validSteps :: MonadReader Env m => Game -> m [Step]
+validSteps :: MonadReader Config m => Game -> m [Step]
 validSteps game = do
-  env <- ask
+  config <- ask
   let
-    ms = runReader moves env
-    paired = id &&& (\move -> runReaderT (moveReducer @MonadStack move game) env)
+    ms = runReader moves config
+    paired = id &&& (\move -> runReaderT (moveReducer @MonadStack move game) config)
     step = Step ^. from curried
   pure $ ms ^.. folded . to paired . distributed . _Right . to step
 
@@ -89,9 +89,9 @@ moveReducer move =
 
         pure $ layout & source' . target'
 
-normalize :: (MonadReader Env m) => Move -> m Move
+normalize :: (MonadReader Config m) => Move -> m Move
 normalize move = do
-  n <- M.size <$> view env_piles
+  n <- M.size <$> view config_piles
   pure $ case move of
     MoveStack (MS i j) -> moveStack (i `mod` n) (j `mod` n)
     FlipCard (FC i) -> flipCard (i `mod` n)

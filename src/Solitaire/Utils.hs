@@ -12,9 +12,9 @@ cards pile = up <> down
 emptyPile :: PileCards
 emptyPile = Pile V.empty V.empty
 
-getDeck :: MonadReader Env m => m [Card]
+getDeck :: MonadReader Config m => m [Card]
 getDeck = do
-  numSets <- view env_numSets
+  numSets <- view config_numSets
   pure $ enumerate >>= replicate numSets
 
 pileCountsSize :: PileCounts -> Int

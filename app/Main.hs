@@ -5,7 +5,7 @@ import qualified Data.IntMap as M
 
 main :: IO ()
 main = do
-  env <- fromEither $ mkEnv
+  config <- fromEither $ mkConfig
     (NumSets 2)
     (Piles
       [ pileCounts 1 0
@@ -14,4 +14,4 @@ main = do
       , pileCounts 1 3
       ]
     )
-  runGame env
+  runGame config

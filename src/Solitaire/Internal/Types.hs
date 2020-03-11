@@ -15,9 +15,9 @@ data Card
   | Five
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
-data Env = Env
-  { _env_numSets :: Int
-  , _env_piles :: IntMap PileCounts
+data Config = Config
+  { _config_numSets :: Int
+  , _config_piles :: IntMap PileCounts
   }
   deriving (Eq, Show, Read)
 
@@ -96,7 +96,7 @@ flipCard = FlipCard . FC
 moveToFoundation = MoveToFoundation . MTF
 moveStack = (MoveStack .) . MS
 
-makeLensesWith (lensRules & generateUpdateableOptics .~ False) ''Env
+makeLensesWith (lensRules & generateUpdateableOptics .~ False) ''Config
 makePrisms ''Card
 makePrisms ''Layout
 makeLenses ''Foundation

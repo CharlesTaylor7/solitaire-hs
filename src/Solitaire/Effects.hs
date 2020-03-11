@@ -6,16 +6,16 @@ import Solitaire.PrettyPrinter
 import Solitaire.Utils
 import Solitaire.Actions
 
-runGame :: Env -> IO ()
-runGame env = do
-  gameEnd <- flip runReaderT env $
+runGame :: Config -> IO ()
+runGame config = do
+  gameEnd <- flip runReaderT config $
     newGame >>= loopM (runExceptT . act)
   print gameEnd
 
 data GameEnd = GameWon | GameLost
   deriving (Eq, Show, Read)
 
-act :: (MonadIO m, MonadRandom m, MonadReader Env m, MonadError GameEnd m) => Game -> m Game
+act :: (MonadIO m, MonadRandom m, MonadReader Config m, MonadError GameEnd m) => Game -> m Game
 act game = do
   prettyPrint game
   if gameWon game
@@ -33,10 +33,10 @@ act game = do
       printS $ "Chose move: " ++ pretty move
       pure game
 
-newGame :: (MonadIO m, MonadRandom m, MonadReader Env m) => m Game
+newGame :: (MonadIO m, MonadRandom m, MonadReader Config m) => m Game
 newGame = do
   shuffled <- getDeck >>= shuffleIO
-  pileCounts <- view env_piles
+  pileCounts <- view config_piles
   let
     piles = fst $ foldl'
       (\(ps, cs) count ->

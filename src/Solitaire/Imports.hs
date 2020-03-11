@@ -15,7 +15,7 @@ module Solitaire.Imports
   , module Utils
   ) where
 
-import Solitaire.Internal.Types hiding (pattern Env)
+import Solitaire.Internal.Types hiding (pattern Config)
 
 import Utils
 import Prelude (putStrLn, maximum, enumFromTo, getLine, read, repeat, zipWith)
