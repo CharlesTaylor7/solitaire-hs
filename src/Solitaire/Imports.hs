@@ -18,7 +18,7 @@ module Solitaire.Imports
 import Solitaire.Internal.Types hiding (pattern Env)
 
 import Utils
-import Prelude (putStrLn, maximum, enumFromTo, getLine, read)
+import Prelude (putStrLn, maximum, enumFromTo, getLine, read, repeat, zipWith)
 import Data.Monoid
 import Data.List (intercalate, transpose, splitAt)
 import Control.Arrow
