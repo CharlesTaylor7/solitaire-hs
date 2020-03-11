@@ -1,16 +1,18 @@
+{-# LANGUAGE NoOverloadedLists #-}
 module Solitaire.UtilsSpec where
 
 import Data.Monoid
+import Data.String
+import Data.List ((\\))
 
 import Control.Monad.Identity
 import Control.Monad.State
 import Test.QuickCheck
 import Test.Hspec
-
 import Solitaire
 
-data DummyEnum = A | B | C
-  deriving (Enum, Bounded)
+data Token = A | B | C
+  deriving (Enum, Bounded, Eq, Show)
 
 spec = do
   describe "Utils" $ do
@@ -24,7 +26,7 @@ spec = do
         chunksOf 3 [1..5] `shouldBe` [[1, 2, 3], [4, 5]]
     describe "enumSize" $ do
       it "gets the size of a bounded enum" $ do
-        enumSize @DummyEnum `shouldBe` 3
+        enumSize @Token `shouldBe` 3
     describe "loopM" $ do
       it "enables while loops in the identity monad" $ do
         let factorial (product, n) =
@@ -51,3 +53,24 @@ spec = do
               ]
         let expected = [1, 0, 2, 1, 3, 1, 0, 2, 4] :: [Int]
         loopM act 3 `shouldBe` expected
+
+      it "performs a depth first search with a list monad transformer" $ do
+        let
+          act :: Monad m => [Token] -> ListT m (Either [Token] [Token])
+          act ts =
+            let
+              rest = enumerate @Token \\ ts
+            in
+              if null rest
+              then pure $ Left ts
+              else listT . map (pure . (ts ++) . pure) $ rest
+
+          ts = runList 10 $ loopM act []
+        ts `shouldBe` [
+            [A, B, C],
+            [A, C, B],
+            [B, A, C],
+            [B, C, A],
+            [C, A, B],
+            [C, B, A]
+          ]

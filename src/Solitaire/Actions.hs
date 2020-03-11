@@ -6,6 +6,8 @@ module Solitaire.Actions where
 import Solitaire.Imports
 import Solitaire.PrettyPrinter
 import Solitaire.Utils
+
+import qualified Data.List.NonEmpty as NE
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
 
@@ -17,7 +19,7 @@ moves = do
     moves = moveStack <$> range <*> range
     flips = flipCard <$> range
     sets = moveToFoundation <$> range
-  pure $ moves ++ flips ++ sets
+  pure $ sets ++ flips ++ moves
 
 type MonadStack = ReaderT Config (Either InvalidMove)
 
@@ -25,10 +27,54 @@ validSteps :: MonadReader Config m => Game -> m [Step]
 validSteps game = do
   config <- ask
   let
-    ms = runReader moves config
     paired = id &&& (\move -> runReaderT (moveReducer @MonadStack move game) config)
     step = Step ^. from curried
-  pure $ ms ^.. folded . to paired . distributed . _Right . to step
+    steps = runReader moves config
+      ^.. folded . to paired . distributed . _Right . to step
+      & sortOn (Down . scoreStep)
+  pure steps
+
+scoreStep :: Step -> (Score, Score)
+scoreStep (Step move game) = (scoreMove move,scoreByRuns game)
+  where
+    scoreMove :: Move -> Score
+    scoreMove (MoveToFoundation _) = 2
+    scoreMove (FlipCard _) = 1
+    scoreMove (MoveStack _) = 0
+
+newtype Run = Run (NonEmpty Card)
+
+data Accumulator = Acc
+  { _current_run :: ![Card]
+  , _runs :: ![Run]
+  }
+
+splitIntoRuns :: [Card] -> [Run]
+splitIntoRuns cards =
+  let
+    reducer :: Accumulator -> Card -> Accumulator
+    reducer (Acc [] rs) card = Acc [card] rs
+    reducer (Acc run@(c:_) rs) card
+      | card `isSuccessorOf` c = Acc (card:run) rs
+      | otherwise = Acc [card] (Run (NE.fromList run) : rs)
+    Acc run rs = foldl' reducer (Acc [] []) cards
+  in
+    case nonEmpty run of
+      Just r -> Run r : rs
+      Nothing -> rs
+
+scoreRun :: Run -> Score
+scoreRun (Run cards) = Score $ length cards - 1
+
+scorePile :: PileCards -> Score
+scorePile pile =
+  pile ^.. faceUp . to toList . to splitIntoRuns . traverse . to scoreRun
+  & sumOf folded
+
+scoreByRuns :: Game -> Score
+scoreByRuns game =
+  game ^.. layout . _Layout . traverse . to scorePile
+  & sumOf folded
 
 moveReducer
   :: (MonadError InvalidMove m)
@@ -90,7 +136,7 @@ moveReducer move =
         pure $ layout & source' . target'
 
 isSuccessorOf :: Card -> Card -> Bool
-isSuccessorOf a b =
+a `isSuccessorOf` b =
   fromEnum a - fromEnum b == 1
 
 countWhile :: Foldable f => (a -> Bool) -> f a -> Int

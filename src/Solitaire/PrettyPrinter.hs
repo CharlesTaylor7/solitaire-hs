@@ -15,6 +15,9 @@ import qualified RIO.Text as T
 class Pretty a where
   pretty :: a -> String
 
+instance Pretty Score where
+  pretty = show
+
 instance Pretty a => Pretty [a] where
   pretty [] = "[]"
   pretty xs = "[" ++ space ++ join xs ++ "\n]"

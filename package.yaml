@@ -27,6 +27,7 @@ dependencies:
 - mtl
 - lens
 - MonadRandom
+- pipes
 
 default-extensions:
   - NoImplicitPrelude
@@ -42,6 +43,7 @@ default-extensions:
   - ScopedTypeVariables
   - RankNTypes
   - OverloadedLists
+  - OverloadedStrings
   - GADTs
   - LambdaCase
   - FlexibleContexts

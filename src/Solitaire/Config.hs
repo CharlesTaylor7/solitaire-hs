@@ -17,6 +17,12 @@ newtype InvalidConfig = InvalidConfig Text
 
 instance Exception InvalidConfig
 
+boringSolitaireConfig :: Config
+boringSolitaireConfig =
+  let
+    Right config = configWith (NumSets 2) (NumPiles 5) (NumFaceDown 1)
+  in config
+
 configWith :: (MonadError InvalidConfig m) => NumSets -> NumPiles -> NumFaceDown -> m Config
 configWith (NumSets s) (NumPiles p) (NumFaceDown f)
   | s < 0 = throwError $ InvalidConfig "Number of sets should be non negative."
