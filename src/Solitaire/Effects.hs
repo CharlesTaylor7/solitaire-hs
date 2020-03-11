@@ -2,7 +2,6 @@ module Solitaire.Effects where
 
 import Solitaire.Imports
 import Solitaire.Invariants
-import Solitaire.Types
 import Solitaire.PrettyPrinter
 import Solitaire.Utils
 import Solitaire.Actions

@@ -5,7 +5,6 @@ module Solitaire.PrettyPrinter
   ) where
 
 import Solitaire.Imports hiding (Empty)
-import Solitaire.Types
 import Solitaire.Utils
 import Solitaire.Invariants
 

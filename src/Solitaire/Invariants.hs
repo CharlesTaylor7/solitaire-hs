@@ -1,7 +1,6 @@
 module Solitaire.Invariants where
 
 import Solitaire.Imports
-import Solitaire.Types
 import qualified Data.Set as Set
 import qualified Data.Vector as V
 

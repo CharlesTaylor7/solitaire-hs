@@ -1,7 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Solitaire.Types where
+module Solitaire.Internal.Types where
 
-import Solitaire.Imports
+import RIO
+import Control.Exception
+import Control.Lens
+import Control.Monad.Random
+import Control.Monad.State.Strict
 
 data Card
   = One
@@ -92,7 +96,7 @@ flipCard = FlipCard . FC
 moveToFoundation = MoveToFoundation . MTF
 moveStack = (MoveStack .) . MS
 
-makeLenses ''Env
+makeLensesWith (lensRules & generateUpdateableOptics .~ False) ''Env
 makePrisms ''Card
 makePrisms ''Layout
 makeLenses ''Foundation

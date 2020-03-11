@@ -1,7 +1,6 @@
 module Solitaire.Utils where
 
 import Solitaire.Imports
-import Solitaire.Types
 import qualified Data.Vector as V
 
 cards :: PileCards -> Vector Card

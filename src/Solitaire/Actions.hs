@@ -5,7 +5,6 @@ module Solitaire.Actions where
 
 import Solitaire.Imports
 import Solitaire.PrettyPrinter
-import Solitaire.Types
 import Solitaire.Utils
 import qualified Data.Vector as V
 import qualified Data.IntMap as M

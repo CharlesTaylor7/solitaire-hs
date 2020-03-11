@@ -1,5 +1,7 @@
+{-# LANGUAGE PatternSynonyms #-}
 module Solitaire.Imports
-  ( module Prelude
+  ( module Solitaire.Internal.Types
+  , module Prelude
   , module RIO
   , module Control.Arrow
   , module Control.Lens
@@ -12,6 +14,8 @@ module Solitaire.Imports
   , module Data.List
   , module Utils
   ) where
+
+import Solitaire.Internal.Types hiding (pattern Env)
 
 import Utils
 import Prelude (putStrLn, maximum, enumFromTo, getLine, read)
