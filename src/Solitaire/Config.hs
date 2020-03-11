@@ -33,4 +33,8 @@ mkEnv :: NumSets -> Piles -> Maybe Env
 mkEnv (NumSets s) (Piles piles)
   | s < 0 = Nothing
   | s * enumSize @Card /= (sum . map pileCountsSize) piles = Nothing
-  | otherwise = Just Internal.Env {}
+  | otherwise = Just Internal.Env
+    { _env_numSets = s
+    , _env_piles = M.fromAscList $ zip [0..p-1] piles
+    }
+    where p = length piles
