@@ -8,30 +8,33 @@ import Solitaire.Actions
 
 runGame :: Config -> IO ()
 runGame config = do
-  gameEnd <- flip runReaderT config $
-    newGame >>= loopM (runExceptT . act)
+  gameEnd <- flip runReaderT config . _ $ do
+    game <- newGame
+    let
+      fakeMove = moveStack 0 0
+      step = Step fakeMove game
+    loopM (runExceptT . act) step
   print gameEnd
 
 data GameEnd = GameWon | GameLost
   deriving (Eq, Show, Read)
 
-act :: (MonadIO m, MonadRandom m, MonadReader Config m, MonadError GameEnd m) => Game -> m Game
-act game = do
+fromList :: Monad m => [b] -> ListT m b
+fromList = Select . mapM_ yield
+
+act :: (MonadIO m, MonadReader Config m, MonadError GameEnd m) => Step -> ListT m Step
+act (Step move game) = do
+  printS $ "Chose move: " ++ pretty move
   prettyPrint game
-  if gameWon game
-    then throwError GameWon
-    else pure ()
+  ifThenError (gameWon game) $
+    GameWon
   userConfirm
   steps <- validSteps game
+  ifThenError (null steps) $
+    GameLost
   printS "Valid moves:"
-  prettyPrint $ map _step_move steps
-  next <- randomElem steps
-  case next of
-    Nothing -> do
-      throwError GameLost
-    Just (Step move game) -> do
-      printS $ "Chose move: " ++ pretty move
-      pure game
+  prettyPrint $ map (view step_move) steps
+  fromList steps
 
 newGame :: (MonadIO m, MonadRandom m, MonadReader Config m) => m Game
 newGame = do

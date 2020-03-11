@@ -3,6 +3,7 @@ module Solitaire.Imports
   ( module Solitaire.Internal.Types
   , module Prelude
   , module RIO
+  , module Pipes
   , module Control.Arrow
   , module Control.Lens
   , module Control.Monad.Except
@@ -27,6 +28,9 @@ import Control.Monad.Zip (mzip)
 -- rio
 import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets)
 
+-- pipes
+import Pipes (ListT(Select), Producer, Pipe, yield)
+
 -- lens
 import Control.Lens
 
@@ -35,7 +39,7 @@ import Control.Monad.Except
 import Control.Monad.State.Strict
 
 -- MonadRandom
-import Control.Monad.Random
+import Control.Monad.Random hiding (fromList)
 
 -- vector
 import Data.Vector.Mutable (IOVector)

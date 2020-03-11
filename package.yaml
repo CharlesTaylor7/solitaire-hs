@@ -27,6 +27,7 @@ dependencies:
 - mtl
 - lens
 - MonadRandom
+- pipes
 
 default-extensions:
   - NoImplicitPrelude
