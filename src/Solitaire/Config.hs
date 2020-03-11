@@ -2,6 +2,7 @@
 module Solitaire.Config where
 
 import Solitaire.Imports
+import Solitaire.Utils
 import qualified Solitaire.Internal.Types as Internal (pattern Env)
 import qualified Data.IntMap as M
 
@@ -15,7 +16,7 @@ envWith :: NumSets -> NumPiles -> NumFaceDown -> Maybe Env
 envWith (NumSets s) (NumPiles p) (NumFaceDown f)
   | s < 0 = Nothing
   | p < 0 = Nothing
-  | f * p > s * (enumSize @Card) = Nothing
+  | f * p > s * enumSize @Card = Nothing
   | otherwise =
     let
       deckSize = s * enumSize @Card
@@ -29,4 +30,7 @@ envWith (NumSets s) (NumPiles p) (NumFaceDown f)
       }
 
 mkEnv :: NumSets -> Piles -> Maybe Env
-mkEnv (NumSets s) (Piles piles) = Just Internal.Env {}
+mkEnv (NumSets s) (Piles piles)
+  | s < 0 = Nothing
+  | s * enumSize @Card /= (sum . map pileCountsSize) piles = Nothing
+  | otherwise = Just Internal.Env {}
