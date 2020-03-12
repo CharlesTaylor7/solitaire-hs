@@ -6,21 +6,29 @@ import Solitaire.PrettyPrinter
 import Solitaire.Utils
 import Solitaire.Actions
 
+yieldFirst :: Monad m => ListT m a -> m (Maybe a)
+yieldFirst list =
+  let
+    hoisted = hoist (First . Just) list
+    -- first = foldMap id list
+  in _ hoisted
+    -- case getFirst first of
+    --   Just a -> Just <$> a
+    --   Nothing -> pure Nothing
+
 runGame :: Config -> IO ()
 runGame config = do
-  gameEnd <- flip runReaderT config . _ $ do
+  Just gameEnd <- flip runReaderT config . yieldFirst $ do
     game <- newGame
-    let
-      fakeMove = moveStack 0 0
-      step = Step fakeMove game
-    loopM (runExceptT . act) step
-  print gameEnd
+    undefined
+    -- let
+    --   fakeMove = moveStack 0 0
+    --   step = Step fakeMove game
+    -- (loopM (runExceptT . act) step :: ListT (ReaderT Config IO) GameEnd)
+  print @_ @GameEnd gameEnd
 
 data GameEnd = GameWon | GameLost
   deriving (Eq, Show, Read)
-
-fromList :: Monad m => [b] -> ListT m b
-fromList = Select . mapM_ yield
 
 act :: (MonadIO m, MonadReader Config m, MonadError GameEnd m) => Step -> ListT m Step
 act (Step move game) = do
@@ -34,7 +42,7 @@ act (Step move game) = do
     GameLost
   printS "Valid moves:"
   prettyPrint $ map (view step_move) steps
-  fromList steps
+  Select $ each steps
 
 newGame :: (MonadIO m, MonadRandom m, MonadReader Config m) => m Game
 newGame = do

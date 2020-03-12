@@ -29,10 +29,10 @@ import Control.Monad.Zip (mzip)
 import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets)
 
 -- pipes
-import Pipes (ListT(Select), Producer, Pipe, yield)
+import Pipes (ListT(Select), Producer, Pipe, yield, each, await, hoist)
 
 -- lens
-import Control.Lens
+import Control.Lens hiding (each)
 
 -- -- mtl
 import Control.Monad.Except
