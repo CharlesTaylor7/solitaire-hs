@@ -32,10 +32,10 @@ validSteps game = do
       & sortOn scoreStep
   pure steps
 
-scoreStep :: Step -> (Int, Int)
+scoreStep :: Step -> (Score, Score)
 scoreStep (Step move game) = (- scoreMove move, - scoreByRuns game)
   where
-    scoreMove :: Move -> Int
+    scoreMove :: Move -> Score
     scoreMove (MoveToFoundation _) = 2
     scoreMove (FlipCard _) = 1
     scoreMove (MoveStack _) = 0
@@ -46,6 +46,8 @@ data Accumulator = Acc
   { _current_run :: ![Card]
   , _runs :: ![Run]
   }
+
+
 
 splitIntoRuns :: [Card] -> [Run]
 splitIntoRuns cards =
@@ -59,15 +61,15 @@ splitIntoRuns cards =
   in
     Run run : rs
 
-scoreRun :: Run -> Int
-scoreRun (Run cards) = length cards - 1
+scoreRun :: Run -> Score
+scoreRun (Run cards) = Score $ length cards - 1
 
-scorePile :: PileCards -> Int
+scorePile :: PileCards -> Score
 scorePile pile =
   pile ^.. faceUp . to toList . to splitIntoRuns . traverse . to scoreRun
   & sumOf folded
 
-scoreByRuns :: Game -> Int
+scoreByRuns :: Game -> Score
 scoreByRuns game =
   game ^.. layout . _Layout . traverse . to scorePile
   & sumOf folded

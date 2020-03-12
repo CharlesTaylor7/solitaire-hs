@@ -92,6 +92,9 @@ data InvalidMove
 
 instance Exception InvalidMove
 
+newtype Score = Score Int
+  deriving (Eq, Ord, Show, Num)
+
 flipCard = FlipCard . FC
 moveToFoundation = MoveToFoundation . MTF
 moveStack = (MoveStack .) . MS
