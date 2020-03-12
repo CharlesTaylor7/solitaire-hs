@@ -17,7 +17,7 @@ moves = do
     moves = moveStack <$> range <*> range
     flips = flipCard <$> range
     sets = moveToFoundation <$> range
-  pure $ moves ++ flips ++ sets
+  pure $ sets ++ flips ++ moves
 
 type MonadStack = ReaderT Config (Either InvalidMove)
 
@@ -29,6 +29,38 @@ validSteps game = do
     paired = id &&& (\move -> runReaderT (moveReducer @MonadStack move game) config)
     step = Step ^. from curried
   pure $ ms ^.. folded . to paired . distributed . _Right . to step
+
+newtype Run = Run [Card]
+
+data Accumulator = Acc
+  { _current_run :: ![Card]
+  , _runs :: ![Run]
+  }
+
+splitIntoRuns :: [Card] -> [Run]
+splitIntoRuns cards =
+  let
+    reducer :: Accumulator -> Card -> Accumulator
+    reducer (Acc [] rs) card = Acc [card] rs
+    reducer (Acc run@(c:_) rs) card
+      | card `isSuccessorOf` c = Acc (card:run) rs
+      | otherwise = Acc [card] (Run run : rs)
+    Acc run rs = foldl' reducer (Acc [] []) cards
+  in
+    Run run : rs
+
+scoreRun :: Run -> Int
+scoreRun (Run cards) = length cards - 1
+
+scorePile :: PileCards -> Int
+scorePile pile =
+  pile ^.. faceUp . to toList . to splitIntoRuns . traverse . to scoreRun
+  & sumOf folded
+
+scoreByRunSizes :: Game -> Int
+scoreByRunSizes game =
+  game ^.. layout . _Layout . traverse . to scorePile
+  & sumOf folded
 
 moveReducer
   :: (MonadError InvalidMove m)
@@ -90,7 +122,7 @@ moveReducer move =
         pure $ layout & source' . target'
 
 isSuccessorOf :: Card -> Card -> Bool
-isSuccessorOf a b =
+a `isSuccessorOf` b =
   fromEnum a - fromEnum b == 1
 
 countWhile :: Foldable f => (a -> Bool) -> f a -> Int
