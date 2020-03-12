@@ -33,7 +33,7 @@ validSteps game = do
   pure steps
 
 scoreStep :: Step -> (Int, Int)
-scoreStep (Step move game) = (- scoreMove move, - scoreByRunSizes game)
+scoreStep (Step move game) = (- scoreMove move, - scoreByRuns game)
   where
     scoreMove :: Move -> Int
     scoreMove (MoveToFoundation _) = 2
@@ -67,8 +67,8 @@ scorePile pile =
   pile ^.. faceUp . to toList . to splitIntoRuns . traverse . to scoreRun
   & sumOf folded
 
-scoreByRunSizes :: Game -> Int
-scoreByRunSizes game =
+scoreByRuns :: Game -> Int
+scoreByRuns game =
   game ^.. layout . _Layout . traverse . to scorePile
   & sumOf folded
 

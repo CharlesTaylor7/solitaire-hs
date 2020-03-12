@@ -42,7 +42,7 @@ act (Step move game) = do
   ifThenError (null steps) $
     GameLost
   printS "Valid moves:"
-  prettyPrint $ map (view step_move) steps
+  prettyPrint $ map (view step_move &&&  scoreByRuns . view step_game) steps
   Select $ each steps
 
 newGame :: (MonadIO m, MonadRandom m, MonadReader Config m) => m Game
