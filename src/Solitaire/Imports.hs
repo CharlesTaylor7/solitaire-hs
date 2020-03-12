@@ -29,7 +29,7 @@ import Control.Monad.Zip (mzip)
 import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets)
 
 -- pipes
-import Pipes (ListT(Select), Producer, Pipe, yield, each, await, hoist)
+import Pipes (ListT(Select), Producer, Pipe, yield, each, await, hoist, next)
 
 -- lens
 import Control.Lens hiding (each)
@@ -39,7 +39,13 @@ import Control.Monad.Except
 import Control.Monad.State.Strict
 
 -- MonadRandom
-import Control.Monad.Random hiding (fromList)
+import Control.Monad.Random hiding (fromList, next)
 
 -- vector
 import Data.Vector.Mutable (IOVector)
+
+instance MonadRandom m => MonadRandom (ListT m) where
+  getRandomR = lift . getRandomR
+  getRandom = lift getRandom
+  getRandomRs = lift . getRandomRs
+  getRandoms = lift getRandoms

@@ -7,14 +7,9 @@ import Solitaire.Utils
 import Solitaire.Actions
 
 yieldFirst :: Monad m => ListT m a -> m (Maybe a)
-yieldFirst list =
-  let
-    hoisted = hoist (First . Just) list
-    -- first = foldMap id list
-  in _ hoisted
-    -- case getFirst first of
-    --   Just a -> Just <$> a
-    --   Nothing -> pure Nothing
+yieldFirst (Select producer) = do
+  either <- next producer
+  pure $ either ^? _Right . _1
 
 runGame :: Config -> IO ()
 runGame config = do
