@@ -12,18 +12,24 @@ yieldFirst (Select producer) = do
   pure $ either ^? _Right . _1
 
 runGame :: Config -> IO ()
-runGame config = do
-  Just gameEnd <- flip runReaderT config . yieldFirst $ do
-    game <- newGame
-    undefined
-    -- let
-    --   fakeMove = moveStack 0 0
-    --   step = Step fakeMove game
-    -- (loopM (runExceptT . act) step :: ListT (ReaderT Config IO) GameEnd)
-  print @_ @GameEnd gameEnd
+runGame config =
+  let
+    runGameLoop = do
+      game <- newGame
+      let
+        fakeMove = moveStack 0 0
+        step = Step fakeMove game
+      loopM' act step
+  in do
+    ending <- runExceptT . flip runReaderT config . yieldFirst $ runGameLoop
+    let
+      gameEnd = ending ^?! _Right . _Just
+    print @_ @GameEnd gameEnd
 
 data GameEnd = GameWon | GameLost
   deriving (Eq, Show, Read)
+
+instance Exception GameEnd
 
 act :: (MonadIO m, MonadReader Config m, MonadError GameEnd m) => Step -> ListT m Step
 act (Step move game) = do
