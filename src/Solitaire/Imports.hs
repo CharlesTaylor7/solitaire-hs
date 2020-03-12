@@ -21,7 +21,7 @@ import Solitaire.Internal.Types hiding (pattern Config)
 import Utils
 import Prelude (putStrLn, maximum, enumFromTo, getLine, read, repeat, zipWith)
 import Data.Monoid
-import Data.List (intercalate, transpose, splitAt)
+import Data.List (intercalate, transpose, splitAt, sortOn)
 import Control.Arrow
 import Control.Monad.Zip (mzip)
 

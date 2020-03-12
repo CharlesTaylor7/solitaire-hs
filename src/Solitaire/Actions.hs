@@ -25,10 +25,20 @@ validSteps :: MonadReader Config m => Game -> m [Step]
 validSteps game = do
   config <- ask
   let
-    ms = runReader moves config
     paired = id &&& (\move -> runReaderT (moveReducer @MonadStack move game) config)
     step = Step ^. from curried
-  pure $ ms ^.. folded . to paired . distributed . _Right . to step
+    steps = runReader moves config
+      ^.. folded . to paired . distributed . _Right . to step
+      & sortOn scoreStep
+  pure steps
+
+scoreStep :: Step -> (Int, Int)
+scoreStep (Step move game) = (- scoreMove move, - scoreByRunSizes game)
+  where
+    scoreMove :: Move -> Int
+    scoreMove (MoveToFoundation _) = 2
+    scoreMove (FlipCard _) = 1
+    scoreMove (MoveStack _) = 0
 
 newtype Run = Run [Card]
 
