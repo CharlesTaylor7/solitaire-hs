@@ -47,8 +47,6 @@ data Accumulator = Acc
   , _runs :: ![Run]
   }
 
-
-
 splitIntoRuns :: [Card] -> [Run]
 splitIntoRuns cards =
   let
