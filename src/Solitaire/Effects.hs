@@ -59,7 +59,7 @@ newGame = do
           (toPile p count : ps, cs'))
       ([], shuffled)
       pileCounts
-    layout = Layout $ indexFrom 0 piles
+    layout = Layout $ indexFrom 0 $ reverse piles
     foundation = Foundation 0
   pure $ Game layout foundation
 
