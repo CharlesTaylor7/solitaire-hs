@@ -29,11 +29,11 @@ validSteps game = do
     step = Step ^. from curried
     steps = runReader moves config
       ^.. folded . to paired . distributed . _Right . to step
-      & sortOn scoreStep
+      & sortOn (Down . scoreStep)
   pure steps
 
 scoreStep :: Step -> (Score, Score)
-scoreStep (Step move game) = (- scoreMove move, - scoreByRuns game)
+scoreStep (Step move game) = (scoreMove move,scoreByRuns game)
   where
     scoreMove :: Move -> Score
     scoreMove (MoveToFoundation _) = 2
