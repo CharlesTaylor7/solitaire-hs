@@ -13,6 +13,7 @@ module Solitaire.Imports
   , module Data.Vector.Mutable
   , module Data.Monoid
   , module Data.List
+  , module Data.List.NonEmpty
   , module Data.Ord
   , module Utils
   ) where
@@ -24,6 +25,7 @@ import Prelude (putStrLn, maximum, enumFromTo, getLine, read, repeat, zipWith)
 import Data.Monoid
 import Data.Ord
 import Data.List (intercalate, transpose, splitAt, sortOn)
+import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import Control.Arrow
 import Control.Monad.Zip (mzip)
 

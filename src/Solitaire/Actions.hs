@@ -6,6 +6,8 @@ module Solitaire.Actions where
 import Solitaire.Imports
 import Solitaire.PrettyPrinter
 import Solitaire.Utils
+
+import qualified Data.List.NonEmpty as NE
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
 
@@ -40,7 +42,7 @@ scoreStep (Step move game) = (scoreMove move,scoreByRuns game)
     scoreMove (FlipCard _) = 1
     scoreMove (MoveStack _) = 0
 
-newtype Run = Run [Card]
+newtype Run = Run (NonEmpty Card)
 
 data Accumulator = Acc
   { _current_run :: ![Card]
@@ -54,10 +56,12 @@ splitIntoRuns cards =
     reducer (Acc [] rs) card = Acc [card] rs
     reducer (Acc run@(c:_) rs) card
       | card `isSuccessorOf` c = Acc (card:run) rs
-      | otherwise = Acc [card] (Run run : rs)
+      | otherwise = Acc [card] (Run (NE.fromList run) : rs)
     Acc run rs = foldl' reducer (Acc [] []) cards
   in
-    Run run : rs
+    case nonEmpty run of
+      Just r -> Run r : rs
+      Nothing -> rs
 
 scoreRun :: Run -> Score
 scoreRun (Run cards) = Score $ length cards - 1
