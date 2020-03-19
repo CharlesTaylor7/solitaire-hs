@@ -6,10 +6,15 @@ import Solitaire.PrettyPrinter
 import Solitaire.Utils
 import Solitaire.Actions
 
-yieldFirst :: Monad m => ListT m a -> m (Maybe a)
-yieldFirst (Select producer) = do
+first :: Monad m => (a -> Bool) -> ListT m a -> m (Maybe a)
+first predicate (Select producer) = do
   either <- next producer
-  pure $ either ^? _Right . _1
+  case either of
+    Left _ -> pure Nothing
+    Right (x, prod) ->
+      if predicate x
+        then pure . Just $ x
+        else first predicate (Select prod)
 
 runGame :: Config -> IO ()
 runGame config =
@@ -21,7 +26,7 @@ runGame config =
         step = Step fakeMove game
       loopM' act step
   in do
-    ending <- runExceptT . flip runReaderT config . yieldFirst $ runGameLoop
+    ending <- runExceptT . flip runReaderT config . (first (== GameWon)) $ runGameLoop
     let
       gameEnd = ending ^?! _Right . _Just
     print @_ @GameEnd gameEnd

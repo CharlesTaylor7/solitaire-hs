@@ -26,11 +26,11 @@ import Data.Monoid
 import Data.Ord
 import Data.List (intercalate, transpose, splitAt, sortOn)
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
-import Control.Arrow
+import Control.Arrow ((&&&), (|||))
 import Control.Monad.Zip (mzip)
 
 -- rio
-import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets)
+import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets, first)
 
 -- pipes
 import Pipes (ListT(Select), Producer, Pipe, yield, each, await, hoist, next)
