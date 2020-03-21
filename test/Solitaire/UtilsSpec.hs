@@ -27,12 +27,6 @@ instance Semigroup Log where
 instance Monoid Log where
   mempty = Log ""
 
-newtype Ledger = Ledger (Log, Sum Int)
-  deriving (Semigroup, Monoid)
-
-ledger :: Log -> Int -> Ledger
-ledger log x = Ledger (log, Sum x)
-
 runN :: Monad m => Int -> ListT m a -> m [a]
 runN 0 _ = pure []
 runN n (Select producer) = do
@@ -90,7 +84,7 @@ spec = do
           sequenceL :: Monad m => [ListT m a] -> ListT m a
           sequenceL = join . Select . each
 
-          act :: (MonadError Int m, MonadWriter Ledger m)
+          act :: (MonadError Int m, MonadWriter Log m)
               => Int
               -> ListT m Int
           act n | n <= 0 = throwError n
