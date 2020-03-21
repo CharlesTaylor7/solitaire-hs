@@ -3,6 +3,7 @@ module Solitaire.UtilsSpec where
 
 import Data.Monoid
 import Data.String
+import Data.List ((\\))
 
 import Control.Monad.Identity
 import Control.Monad.State
@@ -26,6 +27,9 @@ instance Semigroup Log where
 
 instance Monoid Log where
   mempty = Log ""
+
+data Token = Alpha | Beta | Gamma
+  deriving (Bounded, Enum, Ord, Show, Eq)
 
 runN :: Monad m => Int -> ListT m a -> m [a]
 runN 0 _ = pure []
@@ -84,24 +88,18 @@ spec = do
           sequenceL :: Monad m => [ListT m a] -> ListT m a
           sequenceL = join . Select . each
 
-          act :: (MonadError Int m, MonadWriter Log m)
-              => Int
-              -> ListT m Int
-          act n | n <= 0 = throwError n
-          act x = sequenceL
-            [
-              sequenceL
-                [
-                  writeLine "x - 5" >> pure (x - 5),
-                  writeLine "x / 2" >> pure (x `div` 2)
-                ],
-              sequenceL
-                [
-                  writeLine "x mod 7" >> pure (x `mod` 7),
-                  throwError 2
-                ]
-            ]
+          act :: Monad m => [Token] -> ListT m (Either [Token] [Token])
+          act ts =
+            let
+              rest = [Alpha, Beta, Gamma] \\ ts
+            in
+              if null rest
+              then throwError ts
+              else listT . map ((ts ++) . pure) $ rest
 
-          (Right xs, log) =  runWriter . runExceptT . runN 10 $ loopM' act 550
+
         xs `shouldBe` [0, -3, -4, 0, -4, 0, -4, 0, -4, 0]
         log `shouldBe` mconcat ["hello"]
+
+listT :: [a] -> ListT m a
+listT = Select . each
