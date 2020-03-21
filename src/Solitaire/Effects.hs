@@ -25,7 +25,7 @@ runGame config =
       let
         fakeMove = moveStack 0 0
         step = Step fakeMove game
-      loopM @LoopMonad (harderSurgery . act) step
+      loopM @LoopMonad (weaveList . act) step
   in do
     Just gameEnd <- flip runReaderT config . find (== GameWon) $ runGameLoop
     print @_ @GameEnd gameEnd
@@ -37,12 +37,13 @@ instance Exception GameEnd
 
 type LoopMonad = ListT (ReaderT Config IO)
 
-harderSurgery :: ExceptT GameEnd (ReaderT Config IO) [Step]
-              -> ListT (ReaderT Config IO) (Either GameEnd Step)
-harderSurgery = listT . fmap surgery . runExceptT
-
-surgery :: Either a [b] -> [Either a b]
-surgery = uncozip . first singleton
+weaveList :: Monad m
+              => ExceptT e m [a]
+              -> ListT m (Either e a)
+weaveList = listT . fmap distribute . runExceptT
+  where
+    distribute :: Either a [b] -> [Either a b]
+    distribute = uncozip . first singleton
 
 singleton :: a -> [a]
 singleton = pure @[]
