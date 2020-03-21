@@ -1,6 +1,7 @@
 module Solitaire.Effects where
 
 import Solitaire.Imports
+import Solitaire.Internal.OrdOrphans
 import Solitaire.Invariants
 import Solitaire.PrettyPrinter
 import Solitaire.Utils
