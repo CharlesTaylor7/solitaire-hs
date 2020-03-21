@@ -19,7 +19,7 @@ find predicate (Select producer) = do
 runGame :: Config -> IO ()
 runGame config =
   let
-    runGameLoop :: ListT (ReaderT Config IO) GameEnd
+    runGameLoop :: LoopMonad GameEnd
     runGameLoop = do
       game <- newGame
       let
@@ -27,7 +27,11 @@ runGame config =
         step = Step fakeMove game
       loopM @LoopMonad (weaveList . act) step
   in do
-    Just gameEnd <- flip runReaderT config . find (== GameWon) $ runGameLoop
+    Just gameEnd <-
+      flip runReaderT config .
+      flip evalStateT mempty .
+      find (== GameWon) $
+        runGameLoop
     print @_ @GameEnd gameEnd
 
 data GameEnd = GameWon | GameLost
@@ -35,7 +39,7 @@ data GameEnd = GameWon | GameLost
 
 instance Exception GameEnd
 
-type LoopMonad = ListT (ReaderT Config IO)
+type LoopMonad = ListT (StateT (Set Game) (ReaderT Config IO))
 
 weaveList :: Monad m
               => ExceptT e m [a]
@@ -51,7 +55,9 @@ singleton = pure @[]
 uncozip :: Functor f => Either (f a) (f b) -> f (Either a b)
 uncozip = fmap Left ||| fmap Right
 
-act :: (MonadIO m, MonadReader Config m, MonadError GameEnd m) => Step -> m [Step]
+act :: (MonadIO m, MonadReader Config m, MonadError GameEnd m, MonadCache Game m)
+    => Step
+    -> m [Step]
 act (Step move game) = do
   printS $ "Chose move: " ++ pretty move
   prettyPrint game
