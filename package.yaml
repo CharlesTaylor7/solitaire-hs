@@ -43,6 +43,7 @@ default-extensions:
   - ScopedTypeVariables
   - RankNTypes
   - OverloadedLists
+  - OverloadedStrings
   - GADTs
   - LambdaCase
   - FlexibleContexts

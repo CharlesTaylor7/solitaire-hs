@@ -2,29 +2,44 @@
 module Solitaire.UtilsSpec where
 
 import Data.Monoid
+import Data.String
 
 import Control.Monad.Identity
 import Control.Monad.State
 import Test.QuickCheck
 import Test.Hspec
-
 import Solitaire
 
 data DummyEnum = A | B | C
   deriving (Enum, Bounded)
 
-newtype Line = Line String
+newtype Log = Log String
+  deriving (Show, Eq)
 
-instance Semigroup Line where
-  Line "" <> x = x
-  x <> Line "" = x
-  Line x <> Line y = Line $ x <> y
+instance IsString Log where
+  fromString = Log
 
-instance Monoid Line where
-  mempty = Line ""
+instance Semigroup Log where
+  Log "" <> x = x
+  x <> Log "" = x
+  Log x <> Log y = Log $ x <> "\n" <> y
 
-take :: Int -> ListT m a -> m [a]
-take = undefined
+instance Monoid Log where
+  mempty = Log ""
+
+newtype Ledger = Ledger (Log, Sum Int)
+  deriving (Semigroup, Monoid)
+
+ledger :: Log -> Int -> Ledger
+ledger log x = Ledger (log, Sum x)
+
+runN :: Monad m => Int -> ListT m a -> m [a]
+runN 0 _ = pure []
+runN n (Select producer) = do
+  either <- next producer
+  case either of
+    Left _ -> pure []
+    Right (x, prod) -> (x : ) <$> runN (n-1) (Select prod)
 
 spec = do
   describe "Utils" $ do
@@ -69,34 +84,30 @@ spec = do
     describe "loopM'" $ do
       it "enables backtracking with a list monad transformer" $ do
         let
-          writeLine :: MonadWriter Line m => String -> m ()
-          writeLine = tell . Line
+          writeLine :: MonadWriter Log m => String -> m ()
+          writeLine = tell . Log
 
           sequenceL :: Monad m => [ListT m a] -> ListT m a
           sequenceL = join . Select . each
 
-          act :: (MonadError Int m, MonadWriter Line m)
+          act :: (MonadError Int m, MonadWriter Ledger m)
               => Int
               -> ListT m Int
-          act x =
-            let
-              case1 = sequenceL
+          act n | n <= 0 = throwError n
+          act x = sequenceL
+            [
+              sequenceL
                 [
-                  writeLine "Try x-1" >> pure (x-1),
-                  writeLine "Try 4*x" >> pure (4*x)
-                ]
-              case2 = sequenceL
+                  writeLine "x - 5" >> pure (x - 5),
+                  writeLine "x / 2" >> pure (x `div` 2)
+                ],
+              sequenceL
                 [
-                  writeLine "Try x + 10" >> pure (x + 10),
-                  writeLine "Try x / 30" >> pure (x `div` 30)
+                  writeLine "x mod 7" >> pure (x `mod` 7),
+                  throwError 2
                 ]
-              case3 = sequenceL
-                [
-                  writeLine "Try x*1337 mod 779" >> pure ( x *1337 `mod` 779)
-                ]
-            in
-              sequenceL [case1, case2, case3]
+            ]
 
-          result = loopM' act 0
-          r' = runErrorT result
-        2 `shouldBe` 2
+          (Right xs, log) =  runWriter . runExceptT . runN 10 $ loopM' act 550
+        xs `shouldBe` [0, -3, -4, 0, -4, 0, -4, 0, -4, 0]
+        log `shouldBe` mconcat ["hello"]
