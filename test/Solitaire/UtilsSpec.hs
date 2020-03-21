@@ -1,3 +1,4 @@
+{-# LANGUAGE NoOverloadedLists #-}
 module Solitaire.UtilsSpec where
 
 import Data.Monoid
@@ -11,6 +12,19 @@ import Solitaire
 
 data DummyEnum = A | B | C
   deriving (Enum, Bounded)
+
+newtype Line = Line String
+
+instance Semigroup Line where
+  Line "" <> x = x
+  x <> Line "" = x
+  Line x <> Line y = Line $ x <> y
+
+instance Monoid Line where
+  mempty = Line ""
+
+take :: Int -> ListT m a -> m [a]
+take = undefined
 
 spec = do
   describe "Utils" $ do
@@ -51,3 +65,38 @@ spec = do
               ]
         let expected = [1, 0, 2, 1, 3, 1, 0, 2, 4] :: [Int]
         loopM act 3 `shouldBe` expected
+
+    describe "loopM'" $ do
+      it "enables backtracking with a list monad transformer" $ do
+        let
+          writeLine :: MonadWriter Line m => String -> m ()
+          writeLine = tell . Line
+
+          sequenceL :: Monad m => [ListT m a] -> ListT m a
+          sequenceL = join . Select . each
+
+          act :: (MonadError Int m, MonadWriter Line m)
+              => Int
+              -> ListT m Int
+          act x =
+            let
+              case1 = sequenceL
+                [
+                  writeLine "Try x-1" >> pure (x-1),
+                  writeLine "Try 4*x" >> pure (4*x)
+                ]
+              case2 = sequenceL
+                [
+                  writeLine "Try x + 10" >> pure (x + 10),
+                  writeLine "Try x / 30" >> pure (x `div` 30)
+                ]
+              case3 = sequenceL
+                [
+                  writeLine "Try x*1337 mod 779" >> pure ( x *1337 `mod` 779)
+                ]
+            in
+              sequenceL [case1, case2, case3]
+
+          result = loopM' act 0
+          r' = runErrorT result
+        2 `shouldBe` 2

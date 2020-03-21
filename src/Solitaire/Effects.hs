@@ -26,7 +26,7 @@ runGame config =
         step = Step fakeMove game
       loopM' act step
   in do
-    ending <- runExceptT . flip runReaderT config . (first (== GameWon)) $ runGameLoop
+    ending <- runExceptT . flip runReaderT config . first (== GameWon) $ runGameLoop
     let
       gameEnd = ending ^?! _Right . _Just
     print @_ @GameEnd gameEnd
