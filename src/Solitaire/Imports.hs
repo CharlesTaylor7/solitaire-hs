@@ -31,7 +31,7 @@ import Control.Arrow ((&&&), (|||))
 import Control.Monad.Zip (mzip)
 
 -- rio
-import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets, first)
+import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets, first, log)
 
 -- pipes
 import Pipes (ListT(Select), Producer, Pipe, yield, each, await, hoist, next)

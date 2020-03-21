@@ -70,3 +70,11 @@ newGame = do
 
 gameWon :: Game -> Bool
 gameWon game = game ^. layout . to totalCards . to (== 0)
+
+runListT :: Monad m => Int -> ListT m a -> m [a]
+runListT 0 _ = pure []
+runListT n (Select producer) = do
+  either <- next producer
+  case either of
+    Left _ -> pure []
+    Right (x, prod) -> (x : ) <$> runListT (n-1) (Select prod)

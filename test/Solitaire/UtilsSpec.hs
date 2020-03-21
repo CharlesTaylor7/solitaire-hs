@@ -1,45 +1,41 @@
 {-# LANGUAGE NoOverloadedLists #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 module Solitaire.UtilsSpec where
 
 import Data.Monoid
 import Data.String
 
 import Control.Monad.Identity
-import Control.Monad.State
 import Test.QuickCheck
 import Test.Hspec
 import Solitaire
+import Data.List ((\\))
 
 data DummyEnum = A | B | C
   deriving (Enum, Bounded)
 
-newtype Log = Log String
-  deriving (Show, Eq)
+-- newtype Log = Log String
+--   deriving (Show, Eq)
 
-instance IsString Log where
-  fromString = Log
+newtype Log a = Log [a]
+  deriving (Show, Semigroup, Monoid, Foldable)
 
-instance Semigroup Log where
-  Log "" <> x = x
-  x <> Log "" = x
-  Log x <> Log y = Log $ x <> "\n" <> y
+log :: a -> Log a
+log = Log . pure
 
-instance Monoid Log where
-  mempty = Log ""
+-- instance IsString Log where
+--   fromString = Log
 
-newtype Ledger = Ledger (Log, Sum Int)
-  deriving (Semigroup, Monoid)
+-- instance Semigroup Log where
+--   Log "" <> x = x
+--   x <> Log "" = x
+--   Log x <> Log y = Log $ x <> "\n" <> y
 
-ledger :: Log -> Int -> Ledger
-ledger log x = Ledger (log, Sum x)
+-- instance Monoid Log where
+--   mempty = Log ""
 
-runN :: Monad m => Int -> ListT m a -> m [a]
-runN 0 _ = pure []
-runN n (Select producer) = do
-  either <- next producer
-  case either of
-    Left _ -> pure []
-    Right (x, prod) -> (x : ) <$> runN (n-1) (Select prod)
+data Token = Alpha | Beta | Gamma
+  deriving (Bounded, Enum, Eq, Ord, Show)
 
 spec = do
   describe "Utils" $ do
@@ -84,30 +80,33 @@ spec = do
     describe "loopM'" $ do
       it "enables backtracking with a list monad transformer" $ do
         let
-          writeLine :: MonadWriter Log m => String -> m ()
-          writeLine = tell . Log
-
           sequenceL :: Monad m => [ListT m a] -> ListT m a
           sequenceL = join . Select . each
 
-          act :: (MonadError Int m, MonadWriter Ledger m)
-              => Int
-              -> ListT m Int
-          act n | n <= 0 = throwError n
-          act x = sequenceL
-            [
-              sequenceL
-                [
-                  writeLine "x - 5" >> pure (x - 5),
-                  writeLine "x / 2" >> pure (x `div` 2)
-                ],
-              sequenceL
-                [
-                  writeLine "x mod 7" >> pure (x `mod` 7),
-                  throwError 2
-                ]
-            ]
+          append :: MonadState (Log a) m => a -> m ()
+          append a = do
+            Log as <- get
+            put $ Log (a : as)
 
-          (Right xs, log) =  runWriter . runExceptT . runN 10 $ loopM' act 550
-        xs `shouldBe` [0, -3, -4, 0, -4, 0, -4, 0, -4, 0]
-        log `shouldBe` mconcat ["hello"]
+          act :: (MonadError e m, MonadState (Log Tok
+              => ()
+              -> ListT m ()
+          act ts = do
+            ts <- get
+            if Alpha `elem` ts
+            then pure ()
+            else append Alpha
+            if Beta `elem` ts
+            then pure ()
+            else append Beta
+            if Gamma `elem` ts
+            then pure ()
+            else append Gamma
+            pure ()
+
+
+        xs <- flip runStateT (Log []) . runListT (-1) $ loopM' act ()
+        length xs `shouldBe` 6
+
+listT :: Monad m => [a] -> ListT m a
+listT = Select . each
