@@ -43,10 +43,6 @@ enumSize = hi - lo + 1
 loopM :: Monad m => (a -> m (Either end a)) -> a -> m end
 loopM act x = act x >>= pure ||| loopM act
 
-loopM' :: MonadError e m => (a -> m a) -> a -> m e
-loopM' act x = (Right <$> act x) `catchError` (pure . Left)
-  >>= pure ||| loopM' act
-
 chunksOf :: Int -> [a] -> [[a]]
 chunksOf _ [] = []
 chunksOf n xs

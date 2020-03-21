@@ -24,7 +24,7 @@ runGame config =
       let
         fakeMove = moveStack 0 0
         step = Step fakeMove game
-      loopM' act step
+      loopM act step
   in do
     ending <- runExceptT . flip runReaderT config . first (== GameWon) $ runGameLoop
     let
@@ -36,7 +36,7 @@ data GameEnd = GameWon | GameLost
 
 instance Exception GameEnd
 
-act :: (MonadIO m, MonadReader Config m, MonadError GameEnd m) => Step -> ListT m Step
+act :: (MonadIO m, MonadReader Config m, MonadError GameEnd m) => Step -> m [Step]
 act (Step move game) = do
   printS $ "Chose move: " ++ pretty move
   prettyPrint game
@@ -47,8 +47,8 @@ act (Step move game) = do
   ifThenError (null steps) $
     GameLost
   printS "Valid moves:"
-  prettyPrint $ map (view step_move &&&  scoreByRuns . view step_game) steps
-  Select $ each steps
+  prettyPrint $ map (view step_move &&& scoreByRuns . view step_game) steps
+  pure steps
 
 newGame :: (MonadIO m, MonadRandom m, MonadReader Config m) => m Game
 newGame = do
