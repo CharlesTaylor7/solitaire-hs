@@ -17,20 +17,18 @@ find predicate (Select producer) = do
         else find predicate (Select prod)
 
 runGame :: Config -> IO ()
-runGame config = undefined
-  -- let
-  --   runGameLoop :: ListT (ReaderT Config IO) GameEnd
-  --   runGameLoop = do
-  --     game <- newGame
-  --     let
-  --       fakeMove = moveStack 0 0
-  --       step = Step fakeMove game
-  --     loopM @LoopMonad (runExceptT . act) step
-  -- in do
-  --   ending <- flip runReaderT config . first (== GameWon) $ runGameLoop
-  --   let
-  --     gameEnd = ending ^?! _Right . _Just
-  --   print @_ @GameEnd gameEnd
+runGame config =
+  let
+    runGameLoop :: ListT (ReaderT Config IO) GameEnd
+    runGameLoop = do
+      game <- newGame
+      let
+        fakeMove = moveStack 0 0
+        step = Step fakeMove game
+      loopM @LoopMonad (harderSurgery . act) step
+  in do
+    Just gameEnd <- flip runReaderT config . find (== GameWon) $ runGameLoop
+    print @_ @GameEnd gameEnd
 
 data GameEnd = GameWon | GameLost
   deriving (Eq, Show, Read)
@@ -38,6 +36,10 @@ data GameEnd = GameWon | GameLost
 instance Exception GameEnd
 
 type LoopMonad = ListT (ReaderT Config IO)
+
+harderSurgery :: ExceptT GameEnd (ReaderT Config IO) [Step]
+              -> ListT (ReaderT Config IO) (Either GameEnd Step)
+harderSurgery = listT . fmap surgery . runExceptT
 
 surgery :: Either a [b] -> [Either a b]
 surgery = uncozip . first singleton
