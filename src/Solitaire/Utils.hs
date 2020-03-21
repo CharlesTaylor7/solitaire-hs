@@ -29,3 +29,17 @@ toPile cards counts =
     (up, down) = splitAt n cards
   in
     Pile (V.fromList up) (V.fromList down)
+
+listT :: Monad m => [a] -> ListT m a
+listT = Select . each
+
+runListT :: Monad m => Int -> ListT m a -> m [a]
+runListT 0 _ = pure []
+runListT n (Select producer) = do
+  either <- next producer
+  case either of
+    Left _ -> pure []
+    Right (x, prod) -> (x : ) <$> runListT (n-1) (Select prod)
+
+runList :: Int -> ListT Identity a -> [a]
+runList = (runIdentity .) . runListT
