@@ -56,7 +56,12 @@ singleton = pure @[]
 uncozip :: Functor f => Either (f a) (f b) -> f (Either a b)
 uncozip = fmap Left ||| fmap Right
 
-act :: (MonadIO m, MonadReader Config m, MonadError GameEnd m, MonadCache Game m)
+act ::
+    ( MonadIO m
+    , MonadReader Config m
+    , MonadError GameEnd m
+    , MonadCache Game m
+    )
     => Step
     -> m [Step]
 act (Step move game) = do
