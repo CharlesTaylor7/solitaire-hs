@@ -1,6 +1,6 @@
 module Utils where
 
-import Prelude (putStrLn, maximum, enumFromTo, getLine, read)
+import Prelude (putStrLn, maximum, enumFromTo, getLine, read, reads)
 import qualified Prelude
 import Data.Monoid
 import Data.List (intercalate, transpose, splitAt)
@@ -50,10 +50,6 @@ chunksOf n xs
   | otherwise = chunk : chunksOf n rest
     where (chunk, rest) = splitAt n xs
 
-ifThenError :: (MonadError e m) => Bool -> e -> m ()
-ifThenError True  e = throwError e
-ifThenError False _ = pure ()
-
 maybeToError :: (MonadError e m) => e -> Maybe a -> m a
 maybeToError e Nothing = throwError e
 maybeToError _ (Just a) = pure a
@@ -75,8 +71,17 @@ printS = liftIO . putStrLn
 userConfirm :: (MonadIO m) => m ()
 userConfirm = liftIO getLine $> ()
 
-userInput :: (MonadIO m, Read a) => m a
-userInput = read <$> liftIO getLine
+newtype Input = Input String
+  deriving Eq
+
+userInput :: (MonadIO m, Read a) => m (Either Input a)
+userInput = safeRead <$> liftIO getLine
+  where
+    safeRead :: Read a => String -> Either Input a
+    safeRead s =
+      case reads s of
+        [(a, "")] -> Right a
+        _ -> Left . Input $ s
 
 indexFrom :: Int -> [a] -> IntMap a
 indexFrom offset = M.fromAscList . zip [offset..]

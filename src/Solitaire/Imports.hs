@@ -8,6 +8,7 @@ module Solitaire.Imports
   , module Control.Lens
   , module Control.Monad.Except
   , module Control.Monad.Random
+  , module Control.Monad.Cache
   , module Control.Monad.State.Strict
   , module Control.Monad.Writer.Strict
   , module Control.Monad.Zip
@@ -31,6 +32,7 @@ import Data.List (intercalate, transpose, splitAt, sortOn)
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import Control.Arrow ((&&&), (|||))
 import Control.Monad.Zip (mzip)
+import Control.Monad.Cache
 
 -- rio
 import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets, first, second)
