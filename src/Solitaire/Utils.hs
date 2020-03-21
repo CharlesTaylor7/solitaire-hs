@@ -30,8 +30,11 @@ toPile cards counts =
   in
     Pile (V.fromList up) (V.fromList down)
 
-listT :: Monad m => [a] -> ListT m a
-listT = Select . each
+list :: Monad m => [a] -> ListT m a
+list = Select . each
+
+listT :: Monad m => m [a] -> ListT m a
+listT xs = lift xs >>= list
 
 runListT :: Monad m => Int -> ListT m a -> m [a]
 runListT 0 _ = pure []

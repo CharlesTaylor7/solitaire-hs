@@ -12,6 +12,7 @@ module Solitaire.Imports
   , module Control.Monad.Writer.Strict
   , module Control.Monad.Zip
   , module Data.Vector.Mutable
+  , module Data.Bifunctor
   , module Data.Monoid
   , module Data.List
   , module Data.List.NonEmpty
@@ -25,13 +26,14 @@ import Utils
 import Prelude (putStrLn, maximum, enumFromTo, getLine, read, repeat, zipWith)
 import Data.Monoid
 import Data.Ord
+import Data.Bifunctor
 import Data.List (intercalate, transpose, splitAt, sortOn)
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import Control.Arrow ((&&&), (|||))
 import Control.Monad.Zip (mzip)
 
 -- rio
-import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets, first)
+import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets, first, second)
 
 -- pipes
 import Pipes (ListT(Select), Producer, Pipe, yield, each, await, hoist, next)

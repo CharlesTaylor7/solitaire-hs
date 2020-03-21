@@ -6,35 +6,47 @@ import Solitaire.PrettyPrinter
 import Solitaire.Utils
 import Solitaire.Actions
 
-first :: Monad m => (a -> Bool) -> ListT m a -> m (Maybe a)
-first predicate (Select producer) = do
+find :: Monad m => (a -> Bool) -> ListT m a -> m (Maybe a)
+find predicate (Select producer) = do
   either <- next producer
   case either of
     Left _ -> pure Nothing
     Right (x, prod) ->
       if predicate x
         then pure . Just $ x
-        else first predicate (Select prod)
+        else find predicate (Select prod)
 
 runGame :: Config -> IO ()
-runGame config =
-  let
-    runGameLoop = do
-      game <- newGame
-      let
-        fakeMove = moveStack 0 0
-        step = Step fakeMove game
-      loopM act step
-  in do
-    ending <- runExceptT . flip runReaderT config . first (== GameWon) $ runGameLoop
-    let
-      gameEnd = ending ^?! _Right . _Just
-    print @_ @GameEnd gameEnd
+runGame config = undefined
+  -- let
+  --   runGameLoop :: ListT (ReaderT Config IO) GameEnd
+  --   runGameLoop = do
+  --     game <- newGame
+  --     let
+  --       fakeMove = moveStack 0 0
+  --       step = Step fakeMove game
+  --     loopM @LoopMonad (runExceptT . act) step
+  -- in do
+  --   ending <- flip runReaderT config . first (== GameWon) $ runGameLoop
+  --   let
+  --     gameEnd = ending ^?! _Right . _Just
+  --   print @_ @GameEnd gameEnd
 
 data GameEnd = GameWon | GameLost
   deriving (Eq, Show, Read)
 
 instance Exception GameEnd
+
+type LoopMonad = ListT (ReaderT Config IO)
+
+surgery :: Either a [b] -> [Either a b]
+surgery = uncozip . first singleton
+
+singleton :: a -> [a]
+singleton = pure @[]
+
+uncozip :: Functor f => Either (f a) (f b) -> f (Either a b)
+uncozip = fmap Left ||| fmap Right
 
 act :: (MonadIO m, MonadReader Config m, MonadError GameEnd m) => Step -> m [Step]
 act (Step move game) = do
