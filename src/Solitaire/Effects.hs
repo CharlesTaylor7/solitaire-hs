@@ -28,7 +28,7 @@ runGame config =
       let
         fakeMove = moveStack 0 0
         step = Step fakeMove game
-      loopM (separateErrors . act) step
+      loopM (surgery . act) step
   in do
     result <-
       flip runReaderT config .
@@ -53,10 +53,22 @@ gameWon = GameConclusion GameWon
 gameLost = GameConclusion GameLost
 gameQuit = GameQuit UserQuit
 
+surgery :: Monad m
+        => ExceptT GameEnd m [a]
+        -> ListT (ExceptT GameQuit m) (Either GameConclusion a)
+surgery = undefined
+
 separateErrors :: Monad m
-               => ExceptT GameEnd m [a]
-              -> ListT (ExceptT GameQuit m) (Either GameConclusion a)
-separateErrors = undefined
+               => ExceptT GameEnd m a
+               -> ExceptT GameQuit m (Either GameConclusion a)
+separateErrors ex = ExceptT $ do
+  either <- runExceptT ex
+  case either of
+    Left (GameConclusion conclusion) -> pure . Right . Left $ conclusion
+    Left (GameQuit quit) -> pure . Left $ quit
+    Right y -> pure . Right . Right $ y
+
+  -- weaveList =
   -- listT . fmap distribute . runExceptT
   -- where
   --   distribute :: Either a [b] -> [Either a b]
