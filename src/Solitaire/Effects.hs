@@ -35,7 +35,10 @@ runGame config =
         runGameLoop
     print @_ @GameEnd gameEnd
 
-data GameEnd = GameWon | GameLost
+data UserInput = Quit | Dump
+  deriving (Eq, Show, Read)
+
+data GameEnd = GameWon | GameLost | GameQuit
   deriving (Eq, Show, Read)
 
 instance Exception GameEnd
@@ -68,12 +71,16 @@ act (Step move game) = do
   saveToCache game
   printS $ "Chose move: " ++ pretty move
   prettyPrint game
-  ifThenError (gameWon game) $
-    GameWon
-  userConfirm
+  when (gameWon game) $
+    throwError GameWon
+  input <- userInput
+  when (input == Quit) $
+    throwError GameQuit
+  when (input == Dump) $
+    print game
   steps <- nextSteps game
-  ifThenError (null steps) $
-    GameLost
+  when (null steps) $
+    throwError GameLost
   printS "Valid moves:"
   prettyPrint $ map (view step_move &&& scoreByRuns . view step_game) steps
   pure steps

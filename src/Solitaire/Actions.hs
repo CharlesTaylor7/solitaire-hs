@@ -111,7 +111,7 @@ moveReducer move =
           (set, leftover) = pile ^. faceUp . to splitAtStack
           pile' = pile & faceUp .~ leftover
         in do
-          ifThenError (length set /= enumSize @Card) $ IncompleteSet i
+          when (length set /= enumSize @Card) $ throwError $ IncompleteSet i
           pure pile'
       )
     MoveStack (MS i j) ->
@@ -126,21 +126,24 @@ moveReducer move =
           source' = ix i . faceUp .~ rest
           target' = ix j . faceUp %~ (stack <>)
 
-        ifThenError (i == j)
-          $ SourceIsTarget i
+        when (i == j) $
+          throwError $ SourceIsTarget i
 
-        ifThenError (null stack)
-          $ EmptyStackSource i
-        ifThenError (
-          (null . view faceUp) target &&
-          (not . V.null . cards) target )
-          $ EmptyStackTarget j
+        when (null stack) $
+          throwError $ EmptyStackSource i
+
+        when (
+            (null . view faceUp) target &&
+            (not . V.null . cards) target
+          ) $
+          throwError $ EmptyStackTarget j
 
         let t = layout ^? ix j . faceUp . _head
         let s = stack ^?! _last
-        let errorCondition = maybe False (not . flip isSuccessorOf s) t
-        ifThenError errorCondition
-          $ MismatchingStacks i j
+        let mismatchError = maybe False (not . flip isSuccessorOf s) t
+
+        when mismatchError $
+          throwError $ MismatchingStacks i j
 
         pure $ layout & source' . target'
 
