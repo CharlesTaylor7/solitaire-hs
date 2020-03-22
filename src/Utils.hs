@@ -1,6 +1,6 @@
 module Utils where
 
-import Prelude (putStrLn, maximum, enumFromTo, getLine, read)
+import Prelude (putStrLn, maximum, enumFromTo, getLine, read, reads)
 import qualified Prelude
 import Data.Monoid
 import Data.List (intercalate, transpose, splitAt)
@@ -71,8 +71,17 @@ printS = liftIO . putStrLn
 userConfirm :: (MonadIO m) => m ()
 userConfirm = liftIO getLine $> ()
 
-userInput :: (MonadIO m, Read a) => m a
-userInput = read <$> liftIO getLine
+newtype Input = Input String
+  deriving Eq
+
+userInput :: (MonadIO m, Read a) => m (Either Input a)
+userInput = safeRead <$> liftIO getLine
+  where
+    safeRead :: Read a => String -> Either Input a
+    safeRead s =
+      case reads s of
+        [(a, "")] -> Right a
+        _ -> Left . Input $ s
 
 indexFrom :: Int -> [a] -> IntMap a
 indexFrom offset = M.fromAscList . zip [offset..]

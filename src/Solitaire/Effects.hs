@@ -73,17 +73,28 @@ act (Step move game) = do
   prettyPrint game
   when (gameWon game) $
     throwError GameWon
-  input <- userInput
-  when (input == Quit) $
-    throwError GameQuit
-  when (input == Dump) $
-    print game
+  runUserInput game
   steps <- nextSteps game
   when (null steps) $
     throwError GameLost
   printS "Valid moves:"
   prettyPrint $ map (view step_move &&& scoreByRuns . view step_game) steps
   pure steps
+
+runUserInput ::
+             ( MonadIO m
+             , MonadError GameEnd m
+             )
+             => Game
+             -> m ()
+runUserInput game =
+  userInput >>= \case
+    Right Quit -> throwError GameQuit
+    Right Dump -> print game
+    Left (Input "") -> pure ()
+    Left (Input input) -> do
+      print $ "Invalid command of: " <> input
+      runUserInput game
 
 newGame :: (MonadIO m, MonadRandom m, MonadReader Config m) => m Game
 newGame = do
