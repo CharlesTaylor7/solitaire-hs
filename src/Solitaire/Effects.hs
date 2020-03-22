@@ -65,12 +65,12 @@ separateErrors :: Functor m
                => ExceptT GameEnd m a
                -> ExceptT GameQuit m (Either GameConclusion a)
 separateErrors ex = ExceptT $ splitGameEnd <$> runExceptT ex
-
-splitGameEnd :: Either GameEnd a -> Either GameQuit (Either GameConclusion a)
-splitGameEnd = \case
-  Left (GameConclusion conclusion) -> Right . Left $ conclusion
-  Left (GameQuit quit) -> Left quit
-  Right y -> Right . Right $ y
+  where
+    splitGameEnd :: Either GameEnd a -> Either GameQuit (Either GameConclusion a)
+    splitGameEnd = \case
+      Left (GameConclusion conclusion) -> Right . Left $ conclusion
+      Left (GameQuit quit) -> Left quit
+      Right y -> Right . Right $ y
 
 weaveList :: Monad m
          => m (Either GameConclusion [a])
