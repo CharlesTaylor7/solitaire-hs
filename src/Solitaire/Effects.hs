@@ -56,7 +56,7 @@ gameQuit = GameQuit UserQuit
 surgery :: Monad m
         => ExceptT GameEnd m [a]
         -> ListT (ExceptT GameQuit m) (Either GameConclusion a)
-surgery = undefined
+surgery = weaveList . separateErrors
 
 separateErrors :: Monad m
                => ExceptT GameEnd m a
@@ -68,11 +68,13 @@ separateErrors ex = ExceptT $ do
     Left (GameQuit quit) -> pure . Left $ quit
     Right y -> pure . Right . Right $ y
 
-  -- weaveList =
-  -- listT . fmap distribute . runExceptT
-  -- where
-  --   distribute :: Either a [b] -> [Either a b]
-  --   distribute = uncozip . first singleton
+weaveList :: Monad m
+         => m (Either GameConclusion [a])
+         -> ListT m (Either GameConclusion a)
+weaveList = listT . fmap distribute
+  where
+    distribute :: Either a [b] -> [Either a b]
+    distribute = uncozip . first singleton
 
 singleton :: a -> [a]
 singleton = pure @[]
