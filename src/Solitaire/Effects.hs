@@ -17,7 +17,7 @@ find predicate (Select producer) = do
         then pure . Just $ x
         else find predicate (Select prod)
 
-type LoopMonad = ListT (ReaderT Config IO)
+type LoopMonad = ListT (ExceptT GameQuit (StateT (Set Game) (ReaderT Config IO)))
 
 runGame :: Config -> IO ()
 runGame config =
@@ -28,11 +28,12 @@ runGame config =
       let
         fakeMove = moveStack 0 0
         step = Step fakeMove game
-      loopM (weaveList . act) step
+      loopM (separateErrors . act) step
   in do
     result <-
-      flip evalStateT mempty
       flip runReaderT config .
+      flip evalStateT mempty .
+      runExceptT .
       find (== GameWon) $
         runGameLoop
     print result
@@ -41,18 +42,21 @@ data UserInput = Quit | Dump
   deriving (Eq, Show, Read)
 
 data GameEnd = GameConclusion GameConclusion | GameQuit GameQuit
+  deriving Show
 data GameConclusion = GameWon | GameLost
+  deriving (Eq, Show)
 data GameQuit = UserQuit
+  deriving Show
 
 gameWon, gameLost, gameQuit :: GameEnd
 gameWon = GameConclusion GameWon
 gameLost = GameConclusion GameLost
 gameQuit = GameQuit UserQuit
 
-weaveList :: Monad m
-              => ExceptT GameEnd m [a]
-              -> ExceptT GameQuit (ListT m) (Either GameConclusion a)
-weaveList = undefined
+separateErrors :: Monad m
+               => ExceptT GameEnd m [a]
+              -> ListT (ExceptT GameQuit m) (Either GameConclusion a)
+separateErrors = undefined
   -- listT . fmap distribute . runExceptT
   -- where
   --   distribute :: Either a [b] -> [Either a b]
