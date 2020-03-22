@@ -28,12 +28,12 @@ runGame config =
         step = Step fakeMove game
       loopM @LoopMonad (weaveList . act) step
   in do
-    Just gameEnd <-
+    result <-
       flip runReaderT config .
       flip evalStateT mempty .
       find (== GameWon) $
         runGameLoop
-    print @_ @GameEnd gameEnd
+    print result
 
 data UserInput = Quit | Dump
   deriving (Eq, Show, Read)
@@ -89,9 +89,11 @@ runUserInput ::
              -> m ()
 runUserInput game =
   userInput >>= \case
-    Right Quit -> throwError GameQuit
-    Right Dump -> print game
     Left (Input "") -> pure ()
+    Right Quit -> throwError GameQuit
+    Right Dump -> do
+      print game
+      runUserInput game
     Left (Input input) -> do
       print $ "Invalid command of: " <> input
       runUserInput game

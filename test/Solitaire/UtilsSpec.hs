@@ -63,7 +63,7 @@ spec = do
             in
               if null rest
               then pure $ Left ts
-              else listT . map (pure . (ts ++) . pure) $ rest
+              else list . map (pure . (ts ++) . pure) $ rest
 
           ts = runList 10 $ loopM act []
         ts `shouldBe` [
