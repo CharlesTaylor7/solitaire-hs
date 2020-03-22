@@ -65,12 +65,13 @@ act ::
     => Step
     -> m [Step]
 act (Step move game) = do
+  saveToCache game
   printS $ "Chose move: " ++ pretty move
   prettyPrint game
   ifThenError (gameWon game) $
     GameWon
   userConfirm
-  steps <- validSteps game
+  steps <- nextSteps game
   ifThenError (null steps) $
     GameLost
   printS "Valid moves:"

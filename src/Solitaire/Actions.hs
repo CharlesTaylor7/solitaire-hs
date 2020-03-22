@@ -6,10 +6,12 @@ module Solitaire.Actions where
 import Solitaire.Imports
 import Solitaire.PrettyPrinter
 import Solitaire.Utils
+import Solitaire.Internal.OrdOrphans
 
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
+import qualified Data.Set as Set
 
 moves :: (MonadReader Config m) => m [Move]
 moves = do
@@ -23,14 +25,21 @@ moves = do
 
 type MonadStack = ReaderT Config (Either InvalidMove)
 
-validSteps :: MonadReader Config m => Game -> m [Step]
-validSteps game = do
+nextSteps ::
+          ( MonadReader Config m
+          , MonadCache Game m
+          )
+          => Game
+          -> m [Step]
+nextSteps game = do
   config <- ask
+  cache <- getCache
   let
     paired = id &&& (\move -> runReaderT (moveReducer @MonadStack move game) config)
     step = Step ^. from curried
+    unvisited = flip Set.notMember cache . view step_game
     steps = runReader moves config
-      ^.. folded . to paired . distributed . _Right . to step
+      ^.. folded . to paired . distributed . _Right . to step . filtered unvisited
       & sortOn (Down . scoreStep)
   pure steps
 
