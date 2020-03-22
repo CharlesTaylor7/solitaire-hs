@@ -22,18 +22,16 @@ type LoopMonad = ListT (ReaderT Config IO)
 runGame :: Config -> IO ()
 runGame config =
   let
-    runGameLoop :: LoopMonad GameEnd
+    runGameLoop :: LoopMonad GameConclusion
     runGameLoop = do
       game <- newGame
       let
         fakeMove = moveStack 0 0
         step = Step fakeMove game
-        surgery =
-          weaveList .
-          flip evalStateT mempty
-      loopM @LoopMonad (surgery . act) step
+      loopM (weaveList . act) step
   in do
     result <-
+      flip evalStateT mempty
       flip runReaderT config .
       find (== GameWon) $
         runGameLoop
@@ -42,15 +40,18 @@ runGame config =
 data UserInput = Quit | Dump
   deriving (Eq, Show, Read)
 
-data GameEnd = GameConclusion | GameQuit GameQuit
+data GameEnd = GameConclusion GameConclusion | GameQuit GameQuit
 data GameConclusion = GameWon | GameLost
 data GameQuit = UserQuit
 
-instance Exception GameEnd
+gameWon, gameLost, gameQuit :: GameEnd
+gameWon = GameConclusion GameWon
+gameLost = GameConclusion GameLost
+gameQuit = GameQuit UserQuit
 
 weaveList :: Monad m
               => ExceptT GameEnd m [a]
-              -> ExceptT GameQuit (ListT m (Either GameConclusion a))
+              -> ExceptT GameQuit (ListT m) (Either GameConclusion a)
 weaveList = undefined
   -- listT . fmap distribute . runExceptT
   -- where
@@ -75,12 +76,12 @@ act (Step move game) = do
   saveToCache game
   printS $ "Chose move: " ++ pretty move
   prettyPrint game
-  when (gameWon game) $
-    throwError GameWon
+  when (gameIsWon game) $
+    throwError gameWon
   runUserInput game
   steps <- nextSteps game
   when (null steps) $
-    throwError GameLost
+    throwError gameLost
   printS "Valid moves:"
   prettyPrint $ map (view step_move &&& scoreByRuns . view step_game) steps
   pure steps
@@ -94,7 +95,7 @@ runUserInput ::
 runUserInput game =
   userInput >>= \case
     Left (Input "") -> pure ()
-    Right Quit -> throwError GameQuit
+    Right Quit -> throwError gameQuit
     Right Dump -> do
       print game
       runUserInput game
@@ -120,5 +121,5 @@ newGame = do
     foundation = Foundation 0
   pure $ Game layout foundation
 
-gameWon :: Game -> Bool
-gameWon game = game ^. layout . to totalCards . to (== 0)
+gameIsWon :: Game -> Bool
+gameIsWon game = game ^. layout . to totalCards . to (== 0)
