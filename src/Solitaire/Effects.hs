@@ -61,15 +61,16 @@ surgery :: Monad m
         -> ListT (ExceptT GameQuit m) (Either GameConclusion a)
 surgery = weaveList . separateErrors
 
-separateErrors :: Monad m
+separateErrors :: Functor m
                => ExceptT GameEnd m a
                -> ExceptT GameQuit m (Either GameConclusion a)
-separateErrors ex = ExceptT $ do
-  either <- runExceptT ex
-  case either of
-    Left (GameConclusion conclusion) -> pure . Right . Left $ conclusion
-    Left (GameQuit quit) -> pure . Left $ quit
-    Right y -> pure . Right . Right $ y
+separateErrors ex = ExceptT $ splitGameEnd <$> runExceptT ex
+
+splitGameEnd :: Either GameEnd a -> Either GameQuit (Either GameConclusion a)
+splitGameEnd = \case
+  Left (GameConclusion conclusion) -> Right . Left $ conclusion
+  Left (GameQuit quit) -> Left quit
+  Right y -> Right . Right $ y
 
 weaveList :: Monad m
          => m (Either GameConclusion [a])
