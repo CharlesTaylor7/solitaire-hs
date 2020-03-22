@@ -42,18 +42,20 @@ runGame config =
 data UserInput = Quit | Dump
   deriving (Eq, Show, Read)
 
-data GameEnd = GameWon | GameLost | GameQuit
-  deriving (Eq, Show, Read)
+data GameEnd = GameConclusion | GameQuit GameQuit
+data GameConclusion = GameWon | GameLost
+data GameQuit = UserQuit
 
 instance Exception GameEnd
 
 weaveList :: Monad m
-              => ExceptT e m [a]
-              -> ListT m (Either e a)
-weaveList = listT . fmap distribute . runExceptT
-  where
-    distribute :: Either a [b] -> [Either a b]
-    distribute = uncozip . first singleton
+              => ExceptT GameEnd m [a]
+              -> ExceptT GameQuit (ListT m (Either GameConclusion a))
+weaveList = undefined
+  -- listT . fmap distribute . runExceptT
+  -- where
+  --   distribute :: Either a [b] -> [Either a b]
+  --   distribute = uncozip . first singleton
 
 singleton :: a -> [a]
 singleton = pure @[]
