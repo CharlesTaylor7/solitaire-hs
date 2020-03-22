@@ -36,7 +36,10 @@ runGame config =
       runExceptT .
       find (== GameWon) $
         runGameLoop
-    print result
+    case result of
+      Left quit -> print quit
+      Right (Just won) -> print gameWon
+      Right Nothing -> print gameLost
 
 data UserInput = Quit | Dump
   deriving (Eq, Show, Read)
