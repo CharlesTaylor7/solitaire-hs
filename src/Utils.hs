@@ -6,6 +6,7 @@ import Data.Monoid
 import Data.List (intercalate, transpose, splitAt)
 import Control.Arrow
 import Control.Monad.Zip (mzip)
+import Data.Coerce (coerce)
 
 -- rio
 import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets)

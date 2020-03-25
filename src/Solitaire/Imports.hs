@@ -12,17 +12,20 @@ module Solitaire.Imports
   , module Control.Monad.State.Strict
   , module Control.Monad.Writer.Strict
   , module Control.Monad.Zip
+  , module Control.Monad.Trans.Maybe
   , module Data.Vector.Mutable
   , module Data.Bifunctor
   , module Data.Monoid
   , module Data.List
   , module Data.List.NonEmpty
   , module Data.Ord
+  , module ListT
   , module Utils
   ) where
 
 import Solitaire.Internal.Types hiding (pattern Config)
 
+import ListT
 import Utils
 import Prelude (putStrLn, maximum, enumFromTo, getLine, read, repeat, zipWith)
 import Data.Monoid
@@ -33,20 +36,24 @@ import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import Control.Arrow ((&&&), (|||))
 import Control.Monad.Zip (mzip)
 import Control.Monad.Cache
+import Data.Coerce(coerce)
 
 -- rio
 import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets, first, second)
 
 -- pipes
-import Pipes (ListT(Select), Producer, Pipe, yield, each, await, hoist, next)
+import Pipes (ListT(Select), Producer, Pipe, yield, each, await, hoist)
 
 -- lens
 import Control.Lens hiding (each)
 
--- -- mtl
+-- mtl
 import Control.Monad.Except
 import Control.Monad.State.Strict
 import Control.Monad.Writer.Strict
+
+-- transformers
+import Control.Monad.Trans.Maybe
 
 -- MonadRandom
 import Control.Monad.Random hiding (fromList, next)

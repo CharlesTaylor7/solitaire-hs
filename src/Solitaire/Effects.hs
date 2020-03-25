@@ -7,15 +7,13 @@ import Solitaire.PrettyPrinter
 import Solitaire.Utils
 import Solitaire.Actions
 
-find :: Monad m => (a -> Bool) -> ListT m a -> m (Maybe a)
-find predicate (Select producer) = do
-  either <- next producer
-  case either of
-    Left _ -> pure Nothing
-    Right (x, prod) ->
-      if predicate x
-        then pure . Just $ x
-        else find predicate (Select prod)
+
+find :: Monad m => (a -> Bool) -> ListT m a -> MaybeT m a
+find predicate producer = do
+  (x, prod) <- MaybeT $ next producer
+  if predicate x
+  then pure x
+  else find predicate prod
 
 type LoopMonad = ListT (ExceptT GameQuit (StateT (Set Game) (ReaderT Config IO)))
 
@@ -34,6 +32,7 @@ runGame config =
       flip runReaderT config .
       flip evalStateT mempty .
       runExceptT .
+      runMaybeT .
       find (== GameWon) $
         runGameLoop
     case result of
