@@ -18,11 +18,13 @@ module Solitaire.Imports
   , module Data.List
   , module Data.List.NonEmpty
   , module Data.Ord
+  , module ListT
   , module Utils
   ) where
 
 import Solitaire.Internal.Types hiding (pattern Config)
 
+import ListT
 import Utils
 import Prelude (putStrLn, maximum, enumFromTo, getLine, read, repeat, zipWith)
 import Data.Monoid
@@ -33,12 +35,13 @@ import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import Control.Arrow ((&&&), (|||))
 import Control.Monad.Zip (mzip)
 import Control.Monad.Cache
+import Data.Coerce(coerce)
 
 -- rio
 import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets, first, second)
 
 -- pipes
-import Pipes (ListT(Select), Producer, Pipe, yield, each, await, hoist, next)
+import Pipes (ListT(Select), Producer, Pipe, yield, each, await, hoist)
 
 -- lens
 import Control.Lens hiding (each)
