@@ -1,5 +1,8 @@
+# stack
 .stack-work/
-*~
-.vscode/
 
+# cabal file is auto generated from package.yaml
 *.cabal
+
+# vim
+*.swp
