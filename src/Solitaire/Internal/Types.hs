@@ -25,7 +25,7 @@ data Pile a = Pile
   { _faceUp :: a
   , _faceDown :: a
   }
-  deriving (Eq, Show, Read)
+  deriving (Eq, Ord, Show, Read)
 
 type PileCounts = Pile Int
 type PileCards = Pile (Vector Card)
@@ -39,18 +39,18 @@ pileCards = Pile
 newtype Layout = Layout
   { unLayout :: IntMap PileCards
   }
-  deriving (Eq, Show, Read)
+  deriving (Eq, Ord, Show, Read)
 
 data Foundation = Foundation
   { _numSets :: Int
   }
-  deriving (Eq, Show, Read)
+  deriving (Eq, Ord, Show, Read)
 
 data Game = Game
   { _layout :: Layout
   , _foundation :: Foundation
   }
-  deriving (Eq, Show, Read)
+  deriving (Eq, Ord, Show, Read)
 
 data Move
   = MoveStack MoveStack

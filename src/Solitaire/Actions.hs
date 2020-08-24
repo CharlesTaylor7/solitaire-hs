@@ -6,7 +6,6 @@ module Solitaire.Actions where
 import Solitaire.Imports
 import Solitaire.PrettyPrinter
 import Solitaire.Utils
-import Solitaire.Internal.OrdOrphans
 
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Vector as V
