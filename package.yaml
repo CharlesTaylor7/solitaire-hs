@@ -51,8 +51,9 @@ default-extensions:
   - ConstraintKinds
 
 ghc-options:
-  - -Wno-deprecations
-  - -fwarn-incomplete-patterns
+  - -Wall
+  - -Werror
+
 library:
   source-dirs: src
 
