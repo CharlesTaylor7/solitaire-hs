@@ -4,7 +4,6 @@
 module Solitaire.Actions where
 
 import Solitaire.Imports
-import Solitaire.PrettyPrinter
 import Solitaire.Utils
 
 import qualified Data.List.NonEmpty as NE
@@ -119,8 +118,8 @@ moveReducer move =
           (stack, rest) =
             layout ^?! ix i . faceUp . to splitAtStack
           target = layout ^?! ix j
-          target_faceUp = target ^. faceUp
-          target_faceDown = target ^. faceDown
+          -- target_faceUp = target ^. faceUp
+          -- target_faceDown = target ^. faceDown
 
           source' = ix i . faceUp .~ rest
           target' = ix j . faceUp %~ (stack <>)
@@ -162,7 +161,7 @@ splitAtStack :: Vector Card -> (Vector Card, Vector Card)
 splitAtStack cards =
   maybe
     (mempty, mempty)
-    (\(head, rest) ->
+    (\(_, rest) ->
       let
         n =
           mzip rest cards

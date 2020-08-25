@@ -36,7 +36,6 @@ import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import Control.Arrow ((&&&), (|||))
 import Control.Monad.Zip (mzip)
 import Control.Monad.Cache
-import Data.Coerce(coerce)
 
 -- rio
 import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets, first, second)
@@ -62,8 +61,8 @@ import Control.Monad.Random hiding (fromList, next)
 import Data.Vector.Mutable (IOVector)
 
 -- Some Orphans
-instance MonadRandom m => MonadRandom (ListT m) where
-  getRandomR = lift . getRandomR
-  getRandom = lift getRandom
-  getRandomRs = lift . getRandomRs
-  getRandoms = lift getRandoms
+-- instance MonadRandom m => MonadRandom (ListT m) where
+--   getRandomR = lift . getRandomR
+--   getRandom = lift getRandom
+--   getRandomRs = lift . getRandomRs
+--   getRandoms = lift getRandoms

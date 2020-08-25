@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-deprecations #-}
 module Solitaire.PrettyPrinter
   ( prettyPrint
   , tracePretty
@@ -5,11 +6,8 @@ module Solitaire.PrettyPrinter
   ) where
 
 import Solitaire.Imports hiding (Empty)
-import Solitaire.Utils
 import Solitaire.Invariants
 
-import qualified Data.IntMap as M
-import qualified Data.Vector as V
 import qualified RIO.Text as T
 
 class Pretty a where
@@ -114,10 +112,8 @@ toRows (Layout layout) =
     rows = transpose columns & map Row
   in rows
 
--- exports
 prettyPrint :: (MonadIO m, Pretty a) => a -> m ()
 prettyPrint = liftIO . putStrLn . pretty
 
 tracePretty :: Pretty a => a -> b -> b
 tracePretty a = trace $ T.pack . pretty $ a
-  where text = T.pack . pretty $ a

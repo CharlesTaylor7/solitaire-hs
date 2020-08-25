@@ -53,6 +53,9 @@ default-extensions:
 ghc-options:
   - -Wall
   - -Werror
+  - -Wno-name-shadowing
+  - -freverse-errors
+
 
 library:
   source-dirs: src

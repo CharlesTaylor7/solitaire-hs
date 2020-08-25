@@ -1,7 +1,6 @@
 module Main where
 
 import Solitaire
-import qualified Data.IntMap as M
 
 main :: IO ()
 main = do

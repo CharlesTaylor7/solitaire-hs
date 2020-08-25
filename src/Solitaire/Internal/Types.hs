@@ -2,10 +2,8 @@
 module Solitaire.Internal.Types where
 
 import RIO
-import Control.Exception
 import Control.Lens
-import Control.Monad.Random
-import Control.Monad.State.Strict
+
 
 data Card
   = One
@@ -95,8 +93,13 @@ instance Exception InvalidMove
 newtype Score = Score Int
   deriving (Eq, Ord, Show, Num)
 
+flipCard :: Int -> Move
 flipCard = FlipCard . FC
+
+moveToFoundation :: Int -> Move
 moveToFoundation = MoveToFoundation . MTF
+
+moveStack :: Int -> Int -> Move
 moveStack = (MoveStack .) . MS
 
 makeLensesWith (lensRules & generateUpdateableOptics .~ False) ''Config
