@@ -44,7 +44,7 @@ import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view
 import Pipes (ListT(Select), Producer, Pipe, yield, each, await, hoist)
 
 -- lens
-import Control.Lens hiding (each)
+import Control.Lens hiding (each, (<|))
 
 -- mtl
 import Control.Monad.Except

@@ -6,10 +6,11 @@ module Solitaire.Actions where
 import Solitaire.Imports
 import Solitaire.Utils
 
-import qualified Data.List.NonEmpty as NE
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
 import qualified Data.Set as Set
+
+import Data.List.NonEmpty ((<|))
 
 moves :: (MonadReader Config m) => m [Move]
 moves = do
@@ -51,24 +52,16 @@ scoreStep (Step move game) = (scoreMove move,scoreByRuns game)
 
 newtype Run = Run (NonEmpty Card)
 
-data Accumulator = Acc
-  { _current_run :: ![Card]
-  , _runs :: ![Run]
-  }
-
 splitIntoRuns :: [Card] -> [Run]
 splitIntoRuns cards =
   let
-    reducer :: Accumulator -> Card -> Accumulator
-    reducer (Acc [] rs) card = Acc [card] rs
-    reducer (Acc run@(c:_) rs) card
-      | card `isSuccessorOf` c = Acc (card:run) rs
-      | otherwise = Acc [card] (Run (NE.fromList run) : rs)
-    Acc run rs = foldl' reducer (Acc [] []) cards
+    reducer :: [Run] -> Card -> [Run]
+    reducer [] card = [Run $ card :| []]
+    reducer runs@(Run run@(c:|_) : rest) card
+      | card `isSuccessorOf` c = (Run $ card <| run) : rest
+      | otherwise = (Run $ card :| []) : runs
   in
-    case nonEmpty run of
-      Just r -> Run r : rs
-      Nothing -> rs
+    foldl' reducer [] cards
 
 scoreRun :: Run -> Score
 scoreRun (Run cards) = Score $ length cards - 1
@@ -118,8 +111,6 @@ moveReducer move =
           (stack, rest) =
             layout ^?! ix i . faceUp . to splitAtStack
           target = layout ^?! ix j
-          -- target_faceUp = target ^. faceUp
-          -- target_faceDown = target ^. faceDown
 
           source' = ix i . faceUp .~ rest
           target' = ix j . faceUp %~ (stack <>)
