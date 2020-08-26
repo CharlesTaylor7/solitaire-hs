@@ -5,7 +5,7 @@ import RIO hiding (over)
 import Pipes (ListT(..))
 import qualified Pipes
 
-import Control.Lens (over, _Just, _2)
+import Control.Lens (over, _Just, _2, preview, _Right)
 
 list :: Monad m => [a] -> ListT m a
 list = Select . Pipes.each
@@ -26,9 +26,5 @@ runListT n list = do
 runList :: Int -> ListT Identity a -> [a]
 runList = (runIdentity .) . runListT
 
-eitherToMaybe :: Either a b -> Maybe b
-eitherToMaybe (Left a) = Nothing
-eitherToMaybe (Right b) = Just b
-
 next :: Monad m => ListT m a -> m (Maybe (a, ListT m a))
-next = fmap (over (_Just . _2) Select . eitherToMaybe) . Pipes.next . coerce
+next = fmap (over (_Just . _2) Select . preview _Right) . Pipes.next . coerce

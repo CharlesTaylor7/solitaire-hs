@@ -60,9 +60,3 @@ import Control.Monad.Random hiding (fromList, next)
 -- vector
 import Data.Vector.Mutable (IOVector)
 
--- Some Orphans
--- instance MonadRandom m => MonadRandom (ListT m) where
---   getRandomR = lift . getRandomR
---   getRandom = lift getRandom
---   getRandomRs = lift . getRandomRs
---   getRandoms = lift getRandoms

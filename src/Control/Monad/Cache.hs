@@ -8,7 +8,7 @@ module Control.Monad.Cache
   )
   where
 
-import Prelude ((.), Ord)
+import Prelude (Ord)
 import Control.Monad.State.Strict
 import Data.Set
 
@@ -22,5 +22,8 @@ instance (Ord a, Monad m, MonadState (Set a) m) => MonadCache a m where
   getCache = get
   saveToCache x = modify (insert x)
 
+runCache :: State s a -> s -> (a, s)
 runCache = runState
+
+runCacheT :: StateT s m a -> s -> m (a, s)
 runCacheT = runStateT

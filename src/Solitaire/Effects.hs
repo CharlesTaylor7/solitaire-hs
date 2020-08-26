@@ -14,7 +14,23 @@ find predicate producer = do
   then pure x
   else find predicate prod
 
-type LoopMonad = ListT (ExceptT GameQuit (StateT (Set Game) (ReaderT Config IO)))
+newtype LoopMonad a = LoopMonad
+  { unLoopMonad :: ListT (ExceptT GameQuit (StateT (Set Game) (ReaderT Config IO))) a
+  }
+  deriving
+    ( Functor
+    , Applicative
+    , Monad
+    , MonadCache Game
+    , MonadReader Config
+    , MonadError GameQuit
+    )
+
+instance MonadRandom LoopMonad where
+  getRandomR = LoopMonad . lift . getRandomR
+  getRandom = LoopMonad $ lift getRandom
+  getRandomRs = LoopMonad . lift . getRandomRs
+  getRandoms = LoopMonad $ lift getRandoms
 
 runGame :: Config -> IO ()
 runGame config =

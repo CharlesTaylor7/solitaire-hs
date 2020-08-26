@@ -1,12 +1,9 @@
 module Utils where
 
-import Prelude (putStrLn, maximum, enumFromTo, getLine, read, reads)
+import Prelude (putStrLn, getLine, reads)
 import qualified Prelude
-import Data.Monoid
-import Data.List (intercalate, transpose, splitAt)
+import Data.List (splitAt)
 import Control.Arrow
-import Control.Monad.Zip (mzip)
-import Data.Coerce (coerce)
 
 -- rio
 import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets)
@@ -16,7 +13,6 @@ import Control.Lens
 
 -- -- mtl
 import Control.Monad.Except
-import Control.Monad.State.Strict
 
 -- MonadRandom
 import Control.Monad.Random
@@ -24,7 +20,6 @@ import Control.Monad.Random
 -- vector
 import Data.Vector.Mutable (IOVector)
 
-import qualified Data.Foldable as Foldable
 import Data.List ((!!))
 import GHC.Exts (IsList(..))
 
