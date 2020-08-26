@@ -1,12 +1,11 @@
 module Solitaire.PrettyPrinterSpec where
 
 import Solitaire
-import Solitaire.PrettyPrinter
-
-import qualified Data.Vector as V
 
 import Test.Hspec
 
+
+spec :: Spec
 spec = do
   describe "Pretty typeclass; it prints ascii art of the game state" $ do
     it "prints the game" $ do

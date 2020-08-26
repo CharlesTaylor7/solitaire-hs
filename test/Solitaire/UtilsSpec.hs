@@ -1,19 +1,19 @@
 {-# LANGUAGE NoOverloadedLists #-}
+{-# OPTIONS_GHC -Wno-type-defaults #-}
 module Solitaire.UtilsSpec where
 
 import Data.Monoid
-import Data.String
 import Data.List ((\\))
 
 import Control.Monad.Identity
-import Control.Monad.State
-import Test.QuickCheck
 import Test.Hspec
 import Solitaire
+
 
 data Token = A | B | C
   deriving (Enum, Bounded, Eq, Show)
 
+spec :: Spec
 spec = do
   describe "Utils" $ do
     describe "chunksOf" $ do

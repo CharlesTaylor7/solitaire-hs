@@ -1,9 +1,10 @@
 module SolitaireSpec where
 
 import Solitaire
-import Test.QuickCheck
 import Test.Hspec
 
+
+spec :: Spec
 spec = do
   describe "Solitaire" $ do
     describe "deck" $ do

@@ -1,12 +1,11 @@
 module Solitaire.ActionsSpec where
 
-import Test.QuickCheck
 import Test.Hspec
 
 import Solitaire
 import qualified Data.IntMap as M
-import qualified Data.Vector as V
 
+spec :: Spec
 spec = do
   describe "Actions" $ do
     describe "scorePile" $ do

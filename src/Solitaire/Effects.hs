@@ -21,6 +21,7 @@ newtype LoopMonad a = LoopMonad
     ( Functor
     , Applicative
     , Monad
+    , MonadIO
     , MonadCache Game
     , MonadReader Config
     , MonadError GameQuit
@@ -41,18 +42,19 @@ runGame config =
       let
         fakeMove = moveStack 0 0
         step = Step fakeMove game
-      loopM (surgery . act) step
+      loopM (LoopMonad . surgery . act) step
   in do
     result <-
       flip runReaderT config .
       flip evalStateT mempty .
       runExceptT .
       runMaybeT .
-      find (== GameWon) $
+      find (== GameWon) .
+      unLoopMonad $
         runGameLoop
     case result of
       Left quit -> print quit
-      Right (Just won) -> print gameWon
+      Right (Just _) -> print gameWon
       Right Nothing -> print gameLost
 
 data UserInput = Quit | Dump
@@ -92,13 +94,13 @@ weaveList :: Monad m
 weaveList = listT . fmap distribute
   where
     distribute :: Either a [b] -> [Either a b]
-    distribute = uncozip . first singleton
+    distribute = cozip . first singleton
 
 singleton :: a -> [a]
 singleton = pure @[]
 
-uncozip :: Functor f => Either (f a) (f b) -> f (Either a b)
-uncozip = fmap Left ||| fmap Right
+cozip :: Functor f => Either (f a) (f b) -> f (Either a b)
+cozip = fmap Left ||| fmap Right
 
 act ::
     ( MonadIO m
