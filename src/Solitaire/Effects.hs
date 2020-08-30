@@ -6,16 +6,9 @@ import Solitaire.PrettyPrinter
 import Solitaire.Utils
 import Solitaire.Actions
 
-
-find :: Monad m => (a -> Bool) -> ListT m a -> MaybeT m a
-find predicate producer = do
-  (x, prod) <- MaybeT $ next producer
-  if predicate x
-  then pure x
-  else find predicate prod
-
-newtype LoopMonad a = LoopMonad
-  { unLoopMonad :: ListT (ExceptT GameQuit (StateT (Set Game) (ReaderT Config IO))) a
+-- types
+newtype App a = App
+  { unApp :: ListT (ExceptT GameQuit (StateT (Set Game) (ReaderT Config IO))) a
   }
   deriving
     ( Functor
@@ -27,35 +20,11 @@ newtype LoopMonad a = LoopMonad
     , MonadError GameQuit
     )
 
-instance MonadRandom LoopMonad where
-  getRandomR = LoopMonad . lift . getRandomR
-  getRandom = LoopMonad $ lift getRandom
-  getRandomRs = LoopMonad . lift . getRandomRs
-  getRandoms = LoopMonad $ lift getRandoms
-
-runGame :: Config -> IO ()
-runGame config =
-  let
-    runGameLoop :: LoopMonad GameConclusion
-    runGameLoop = do
-      game <- newGame
-      let
-        fakeMove = moveStack 0 0
-        step = Step fakeMove game
-      loopM (LoopMonad . surgery . act) step
-  in do
-    result <-
-      flip runReaderT config .
-      flip evalStateT mempty .
-      runExceptT .
-      runMaybeT .
-      find (== GameWon) .
-      unLoopMonad $
-        runGameLoop
-    case result of
-      Left quit -> print quit
-      Right (Just _) -> print gameWon
-      Right Nothing -> print gameLost
+instance MonadRandom App where
+  getRandomR = App . lift . getRandomR
+  getRandom = App $ lift getRandom
+  getRandomRs = App . lift . getRandomRs
+  getRandoms = App $ lift getRandoms
 
 data UserInput = Quit | Dump
   deriving (Eq, Show, Read)
@@ -67,40 +36,33 @@ data GameConclusion = GameWon | GameLost
 data GameQuit = UserQuit
   deriving Show
 
+-- convenience constructors
 gameWon, gameLost, gameQuit :: GameEnd
 gameWon = GameConclusion GameWon
 gameLost = GameConclusion GameLost
 gameQuit = GameQuit UserQuit
 
-surgery :: Monad m
-        => ExceptT GameEnd m [a]
-        -> ListT (ExceptT GameQuit m) (Either GameConclusion a)
-surgery = weaveList . separateErrors
+runGameLoop :: App GameConclusion
+runGameLoop = do
+  game <- newGame
+  let
+    fakeMove = moveStack 0 0
+    step = Step fakeMove game
+  loopM (App . surgery . act) step
 
-separateErrors :: Functor m
-               => ExceptT GameEnd m a
-               -> ExceptT GameQuit m (Either GameConclusion a)
-separateErrors ex = ExceptT $ splitGameEnd <$> runExceptT ex
-  where
-    splitGameEnd :: Either GameEnd a -> Either GameQuit (Either GameConclusion a)
-    splitGameEnd = \case
-      Left (GameConclusion conclusion) -> Right . Left $ conclusion
-      Left (GameQuit quit) -> Left quit
-      Right y -> Right . Right $ y
-
-weaveList :: Monad m
-         => m (Either GameConclusion [a])
-         -> ListT m (Either GameConclusion a)
-weaveList = listT . fmap distribute
-  where
-    distribute :: Either a [b] -> [Either a b]
-    distribute = cozip . first singleton
-
-singleton :: a -> [a]
-singleton = pure @[]
-
-cozip :: Functor f => Either (f a) (f b) -> f (Either a b)
-cozip = fmap Left ||| fmap Right
+runGame :: Config -> IO ()
+runGame config = do
+  result <- runGameLoop
+    & unApp
+    & find (== GameWon)
+    & runMaybeT
+    & runExceptT
+    & flip evalStateT mempty
+    & flip runReaderT config
+  case result of
+    Left quit -> print quit
+    Right (Just _) -> print gameWon
+    Right Nothing -> print gameLost
 
 act ::
     ( MonadIO m
@@ -161,3 +123,43 @@ newGame = do
 
 gameIsWon :: Game -> Bool
 gameIsWon game = game ^. layout . to totalCards . to (== 0)
+
+surgery :: Monad m
+        => ExceptT GameEnd m [a]
+        -> ListT (ExceptT GameQuit m) (Either GameConclusion a)
+surgery = weaveList . separateErrors
+
+separateErrors :: Functor m
+               => ExceptT GameEnd m a
+               -> ExceptT GameQuit m (Either GameConclusion a)
+separateErrors ex = ExceptT $ splitGameEnd <$> runExceptT ex
+  where
+    splitGameEnd :: Either GameEnd a -> Either GameQuit (Either GameConclusion a)
+    splitGameEnd = \case
+      Left (GameConclusion conclusion) -> Right . Left $ conclusion
+      Left (GameQuit quit) -> Left quit
+      Right y -> Right . Right $ y
+
+weaveList :: Monad m
+         => m (Either GameConclusion [a])
+         -> ListT m (Either GameConclusion a)
+weaveList = listT . fmap distribute
+  where
+    distribute :: Either a [b] -> [Either a b]
+    distribute = cozip . first singleton
+
+-- utils
+singleton :: a -> [a]
+singleton = pure @[]
+
+cozip :: Functor f => Either (f a) (f b) -> f (Either a b)
+cozip = fmap Left ||| fmap Right
+
+find :: Monad m => (a -> Bool) -> ListT m a -> MaybeT m a
+find predicate producer = do
+  (x, prod) <- MaybeT $ next producer
+  if predicate x
+  then pure x
+  else find predicate prod
+
+

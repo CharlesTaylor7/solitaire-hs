@@ -29,6 +29,7 @@ dependencies:
 - MonadRandom
 - pipes
 - transformers
+- pqueue
 
 default-extensions:
   - NoImplicitPrelude
