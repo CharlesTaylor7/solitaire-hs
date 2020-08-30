@@ -16,6 +16,7 @@ import Control.Arrow as X ((&&&), (|||))
 import Control.Monad.Zip as X (mzip)
 import Control.Monad.History as X
 import Control.Monad.PQueue as X
+import Control.Monad.RandomInstances ()
 
 -- rio
 import RIO as X hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets, first, second)

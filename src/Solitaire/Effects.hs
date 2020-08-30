@@ -1,14 +1,15 @@
+{-# options_ghc -Wwarn #-}
 module Solitaire.Effects where
 
 import Solitaire.Imports
 import Solitaire.Invariants
-import Solitaire.PrettyPrinter
+import Solitaire.PrettyPrinter ()
 import Solitaire.Utils
-import Solitaire.Actions
+import Solitaire.Actions ()
 
 -- types
 newtype App a = App
-  { unApp :: ExceptT GameQuit (StateT (PQueue MoveCount Game) (StateT (Set Game) (ReaderT Config IO))) a
+  { unApp :: ExceptT GameQuit (PQueueT MoveCount Game (StateT (Set Game) (ReaderT Config IO))) a
   }
   deriving
     ( Functor
@@ -19,13 +20,8 @@ newtype App a = App
     , MonadPQueue MoveCount Game
     , MonadReader Config
     , MonadError GameQuit
+    , MonadRandom
     )
-
-instance MonadRandom App where
-  getRandomR = App . lift . getRandomR
-  getRandom = App $ lift getRandom
-  getRandomRs = App . lift . getRandomRs
-  getRandoms = App $ lift getRandoms
 
 data UserInput = Quit | Dump
   deriving (Eq, Show, Read)
@@ -49,35 +45,31 @@ gameQuit = GameQuit UserQuit
 runGameLoop :: App GameConclusion
 runGameLoop = do
   game <- newGame
-  let
-    fakeMove = moveStack 0 0
-    step = Step fakeMove game
-  loopM (App . separateErrors . act) step
+  loopM (\_ -> App . separateErrors $ step) ()
 
 runGame :: Config -> IO ()
 runGame config = do
   result <- runGameLoop
     & unApp
     & runExceptT
-    & flip evalStateT mempty
+    & runPQueueT
     & flip evalStateT mempty
     & flip runReaderT config
   case result of
     Left quit -> print quit
-    Right (Just _) -> print gameWon
-    Right Nothing -> print gameLost
+    Right (gameConclusion) -> print gameWon
+    Right _ -> print gameLost
 
-act ::
-    ( MonadIO m
-    , MonadReader Config m
-    , MonadError GameEnd m
-    , MonadHistory Game m
-    , MonadPQueue MoveCount Game m
-    )
-    => Step
-    -> m ()
-act (Step move game) = do
-  pure ()
+step
+  ::
+  ( MonadIO m
+  , MonadReader Config m
+  , MonadError GameEnd m
+  , MonadHistory Game m
+  , MonadPQueue MoveCount Game m
+  )
+  => m ()
+step = pure ()
 --  saveToHistory game
 --  printS $ "Chose move: " ++ pretty move
 --  prettyPrint game
