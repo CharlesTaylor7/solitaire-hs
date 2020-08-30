@@ -52,15 +52,14 @@ runGameLoop = do
   let
     fakeMove = moveStack 0 0
     step = Step fakeMove game
-  loopM (App . surgery . act) step
+  loopM (App . separateErrors . act) step
 
 runGame :: Config -> IO ()
 runGame config = do
   result <- runGameLoop
     & unApp
-    & find (== GameWon)
-    & runMaybeT
     & runExceptT
+    & flip evalStateT mempty
     & flip evalStateT mempty
     & flip runReaderT config
   case result of
@@ -73,22 +72,24 @@ act ::
     , MonadReader Config m
     , MonadError GameEnd m
     , MonadHistory Game m
+    , MonadPQueue MoveCount Game m
     )
     => Step
-    -> m [Step]
+    -> m ()
 act (Step move game) = do
-  saveToCache game
-  printS $ "Chose move: " ++ pretty move
-  prettyPrint game
-  when (gameIsWon game) $
-    throwError gameWon
-  runUserInput game
-  steps <- nextSteps game
-  when (null steps) $
-    throwError gameLost
-  printS "Valid moves:"
-  prettyPrint $ map (view step_move &&& scoreByRuns . view step_game) steps
-  pure steps
+  pure ()
+--  saveToHistory game
+--  printS $ "Chose move: " ++ pretty move
+--  prettyPrint game
+--  when (gameIsWon game) $
+--    throwError gameWon
+--  runUserInput game
+--  steps <- nextSteps game
+--  when (null steps) $
+--    throwError gameLost
+--  printS "Valid moves:"
+--  prettyPrint $ map (view step_move &&& scoreByRuns . view step_game) steps
+--  pure steps
 
 runUserInput ::
              ( MonadIO m
@@ -128,14 +129,10 @@ newGame = do
 gameIsWon :: Game -> Bool
 gameIsWon game = game ^. layout . to totalCards . to (== 0)
 
-surgery :: Monad m
-        => ExceptT GameEnd m [a]
-        -> ListT (ExceptT GameQuit m) (Either GameConclusion a)
-surgery = weaveList . separateErrors
-
-separateErrors :: Functor m
-               => ExceptT GameEnd m a
-               -> ExceptT GameQuit m (Either GameConclusion a)
+separateErrors
+  :: Functor m
+  => ExceptT GameEnd m a
+  -> ExceptT GameQuit m (Either GameConclusion a)
 separateErrors ex = ExceptT $ splitGameEnd <$> runExceptT ex
   where
     splitGameEnd :: Either GameEnd a -> Either GameQuit (Either GameConclusion a)
@@ -143,14 +140,6 @@ separateErrors ex = ExceptT $ splitGameEnd <$> runExceptT ex
       Left (GameConclusion conclusion) -> Right . Left $ conclusion
       Left (GameQuit quit) -> Left quit
       Right y -> Right . Right $ y
-
-weaveList :: Monad m
-         => m (Either GameConclusion [a])
-         -> ListT m (Either GameConclusion a)
-weaveList = listT . fmap distribute
-  where
-    distribute :: Either a [b] -> [Either a b]
-    distribute = cozip . first singleton
 
 -- utils
 singleton :: a -> [a]
