@@ -2,14 +2,15 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 module Control.Monad.History
-  ( runHistory
+  ( MonadHistory(..)
+  , HistoryT
   , runHistoryT
-  , MonadHistory(..)
   )
   where
 
-import Prelude (Ord, (.))
+import Prelude
 import Control.Monad.State.Strict
+import Control.Monad.Reader
 import Data.Set
 
 -- A monad with capabilities that are more permissive than Writer, but less capable than State.
@@ -18,9 +19,29 @@ class Monad m => MonadHistory a m | m -> a where
   getHistory :: m (Set a)
   saveToHistory :: a -> m ()
 
-instance (Ord a, Monad m) => MonadHistory a (StateT (Set a) m) where
-  getHistory = get
-  saveToHistory = modify . insert
+newtype HistoryT s m a = HistoryT
+  { toStateT :: StateT (Set s) m a }
+  deriving
+    ( Functor
+    , Applicative
+    , Monad
+    , MonadIO
+    , MonadTrans
+    )
+
+runHistoryT :: (Ord s, Monad m) => HistoryT s m a -> m a
+runHistoryT = flip evalStateT mempty . toStateT
+
+instance (Ord s, Monad m) => MonadHistory s (HistoryT s m) where
+  getHistory = HistoryT get
+  saveToHistory = HistoryT . modify . insert
+
+instance MonadReader r m => MonadReader r (HistoryT s m) where
+  ask = lift ask
+  local f = HistoryT . localState f .  toStateT
+    where
+      localState = mapStateT . local
+
 
 instance {-# OVERLAPPABLE #-}
   ( Monad (t m)
@@ -31,8 +52,3 @@ instance {-# OVERLAPPABLE #-}
   getHistory = lift getHistory
   saveToHistory = lift . saveToHistory
 
-runHistory :: State s a -> s -> (a, s)
-runHistory = runState
-
-runHistoryT :: StateT s m a -> s -> m (a, s)
-runHistoryT = runStateT

@@ -35,31 +35,21 @@ newtype PQueueT k v m a = PQueueT
     , MonadIO
     )
 
--- state methods not to be exported
-putQueue :: Monad m => MinPQueue k v -> PQueueT k v m ()
-putQueue = PQueueT . put
-
-getQueue :: Monad m => PQueueT k v m (MinPQueue k v)
-getQueue = PQueueT get
-
-modifyQueue :: Monad m => (MinPQueue k v -> MinPQueue k v) -> PQueueT k v m ()
-modifyQueue = PQueueT . modify
-
 -- run the computation starting with an empty queue
 runPQueueT :: (Ord k, Monad m) => PQueueT k v m a -> m a
 runPQueueT = flip evalStateT mempty . toStateT
 
 instance (Ord k, Monad m) => MonadPQueue k v (PQueueT k v m) where
-  deleteMin = do
-    queue <- getQueue
+  deleteMin = PQueueT $ do
+    queue <- get
     case Pri.minViewWithKey queue of
       Just ((k, v), queue) -> do
-        putQueue queue
+        put queue
         pure $ Just (k, v)
       Nothing ->
         pure Nothing
 
-  insert key value = modifyQueue $ Pri.insert key value
+  insert key value = PQueueT . modify $ Pri.insert key value
 
 instance MonadReader r m => MonadReader r (PQueueT k v m) where
   ask = lift ask

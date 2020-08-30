@@ -9,7 +9,7 @@ import Solitaire.Actions ()
 
 -- types
 newtype App a = App
-  { unApp :: ExceptT GameQuit (PQueueT MoveCount Game (StateT (Set Game) (ReaderT Config IO))) a
+  { unApp :: ExceptT GameQuit (PQueueT MoveCount Game (HistoryT Game (ReaderT Config IO))) a
   }
   deriving
     ( Functor
@@ -53,7 +53,7 @@ runGame config = do
     & unApp
     & runExceptT
     & runPQueueT
-    & flip evalStateT mempty
+    & runHistoryT
     & flip runReaderT config
   case result of
     Left quit -> print quit
