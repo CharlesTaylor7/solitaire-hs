@@ -20,7 +20,7 @@ class Monad m => MonadHistory a m | m -> a where
 
 instance (Ord a, Monad m) => MonadHistory a (StateT (Set a) m) where
   getHistory = get
-  saveToHistory x = modify (insert x)
+  saveToHistory = modify . insert
 
 instance {-# OVERLAPPABLE #-}
   ( Monad (t m)

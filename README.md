@@ -10,4 +10,5 @@ A vastly simplified Spider solitaire:
 
 # To Do
 - Implement Dijkstra's algorithm
+- Upgrade to A-star pathfinding
 - Make search deterministic
