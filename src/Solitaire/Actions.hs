@@ -26,17 +26,17 @@ type MonadStack = ReaderT Config (Either InvalidMove)
 
 nextSteps ::
           ( MonadReader Config m
-          , MonadCache Game m
+          , MonadHistory Game m
           )
           => Game
           -> m [Step]
 nextSteps game = do
   config <- ask
-  cache <- getCache
+  history <- getHistory
   let
     paired = id &&& (\move -> runReaderT (moveReducer @MonadStack move game) config)
     step = Step ^. from curried
-    unvisited = flip Set.notMember cache . view step_game
+    unvisited = flip Set.notMember history . view step_game
     steps = runReader moves config
       ^.. folded . to paired . distributed . _Right . to step . filtered unvisited
       & sortOn (Down . scoreStep)

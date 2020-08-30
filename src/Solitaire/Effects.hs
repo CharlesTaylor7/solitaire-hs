@@ -8,14 +8,15 @@ import Solitaire.Actions
 
 -- types
 newtype App a = App
-  { unApp :: ListT (ExceptT GameQuit (StateT (Set Game) (ReaderT Config IO))) a
+  { unApp :: ExceptT GameQuit (StateT (PQueue MoveCount Game) (StateT (Set Game) (ReaderT Config IO))) a
   }
   deriving
     ( Functor
     , Applicative
     , Monad
     , MonadIO
-    , MonadCache Game
+    , MonadHistory Game
+    , MonadPQueue MoveCount Game
     , MonadReader Config
     , MonadError GameQuit
     )
@@ -35,6 +36,9 @@ data GameConclusion = GameWon | GameLost
   deriving (Eq, Show)
 data GameQuit = UserQuit
   deriving Show
+
+newtype MoveCount = MoveCount Int
+  deriving (Eq, Ord)
 
 -- convenience constructors
 gameWon, gameLost, gameQuit :: GameEnd
@@ -68,7 +72,7 @@ act ::
     ( MonadIO m
     , MonadReader Config m
     , MonadError GameEnd m
-    , MonadCache Game m
+    , MonadHistory Game m
     )
     => Step
     -> m [Step]

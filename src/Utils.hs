@@ -1,4 +1,17 @@
-module Utils where
+{-# options_ghc -Wwarn #-}
+module Utils
+  ( enumerate
+  , enumSize
+  , maybeToError
+  , distributed
+  , Input(..)
+  , userInput
+  , print
+  , printS
+  , loopM
+  , indexFrom
+  , shuffleIO
+  ) where
 
 import Prelude (putStrLn, getLine, reads)
 import qualified Prelude
@@ -39,24 +52,9 @@ enumSize = hi - lo + 1
 loopM :: Monad m => (a -> m (Either end a)) -> a -> m end
 loopM act x = act x >>= pure ||| loopM act
 
-chunksOf :: Int -> [a] -> [[a]]
-chunksOf _ [] = []
-chunksOf n xs
-  | n <= 0 = error "Cannot take chunks of 0 or negative numbers"
-  | otherwise = chunk : chunksOf n rest
-    where (chunk, rest) = splitAt n xs
-
 maybeToError :: (MonadError e m) => e -> Maybe a -> m a
 maybeToError e Nothing = throwError e
 maybeToError _ (Just a) = pure a
-
-randomElem
-  :: (MonadRandom m)
-  => [a]
-  -> m (Maybe a)
-randomElem [] = pure Nothing
-randomElem as = Just . (as !!) <$> getRandomR (0, n-1)
-  where n = length as
 
 print :: (MonadIO m, Show a) => a -> m ()
 print = liftIO . Prelude.print
@@ -64,7 +62,7 @@ print = liftIO . Prelude.print
 printS :: MonadIO m => String -> m ()
 printS = liftIO . putStrLn
 
-userConfirm :: (MonadIO m) => m ()
+userConfirm :: MonadIO m => m ()
 userConfirm = liftIO getLine $> ()
 
 newtype Input = Input String
@@ -72,12 +70,12 @@ newtype Input = Input String
 
 userInput :: (MonadIO m, Read a) => m (Either Input a)
 userInput = safeRead <$> liftIO getLine
-  where
-    safeRead :: Read a => String -> Either Input a
-    safeRead s =
-      case reads s of
-        [(a, "")] -> Right a
-        _ -> Left . Input $ s
+
+safeRead :: Read a => String -> Either Input a
+safeRead s =
+  case reads s of
+    [(a, "")] -> Right a
+    _ -> Left . Input $ s
 
 indexFrom :: Int -> [a] -> IntMap a
 indexFrom offset = M.fromAscList . zip [offset..]
