@@ -9,9 +9,16 @@ module Control.Monad.History
   where
 
 import Prelude
+
 import Control.Monad.State.Strict
 import Control.Monad.Reader
-import Data.Set
+
+import Data.HashSet
+import Data.Hashable
+
+type Set = HashSet
+type ItemConstraint s = (Hashable s, Eq s)
+
 
 -- A monad with capabilities that are more permissive than Writer, but less capable than State.
 -- Allows viewing a set & appending items to it, but disallows deleting from it
@@ -29,10 +36,10 @@ newtype HistoryT s m a = HistoryT
     , MonadTrans
     )
 
-runHistoryT :: (Ord s, Monad m) => HistoryT s m a -> m a
+runHistoryT :: (ItemConstraint s, Monad m) => HistoryT s m a -> m a
 runHistoryT = flip evalStateT mempty . toStateT
 
-instance (Ord s, Monad m) => MonadHistory s (HistoryT s m) where
+instance (ItemConstraint s, Monad m) => MonadHistory s (HistoryT s m) where
   getHistory = HistoryT get
   saveToHistory = HistoryT . modify . insert
 

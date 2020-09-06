@@ -48,7 +48,7 @@ data Game = Game
   { _layout :: Layout
   , _foundation :: Foundation
   }
-  deriving (Eq, Ord, Show, Read)
+  deriving (Eq, Ord, Show, Read, Hashable)
 
 data Move
   = MoveStack MoveStack

@@ -8,7 +8,7 @@ import Solitaire.Utils
 
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
-import qualified Data.Set as Set
+import qualified Data.HashSet as Set
 
 import Data.List.NonEmpty ((<|))
 
@@ -36,7 +36,7 @@ nextSteps game = do
   let
     paired = id &&& (\move -> runReaderT (moveReducer @MonadStack move game) config)
     step = Step ^. from curried
-    unvisited = flip Set.notMember history . view step_game
+    unvisited = not . flip Set.member history . view step_game
     steps = runReader moves config
       ^.. folded . to paired . distributed . _Right . to step . filtered unvisited
       & sortOn (Down . scoreStep)

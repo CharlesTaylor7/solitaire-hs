@@ -30,6 +30,8 @@ dependencies:
 - pipes
 - transformers
 - pqueue
+- unordered-containers
+- hashable >= 1.3
 
 default-extensions:
   - NoImplicitPrelude
