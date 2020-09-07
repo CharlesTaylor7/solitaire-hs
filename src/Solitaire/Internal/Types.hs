@@ -96,7 +96,7 @@ data InvalidMove
   | IncompleteSet Int
   | MismatchingStacks Int Int
   | EmptyStackSource Int
-  | EmptyStackTarget Int
+  | MoveStackOntoFaceDownCards Int
   | SourceIsTarget Int
   deriving (Eq, Show, Read)
 

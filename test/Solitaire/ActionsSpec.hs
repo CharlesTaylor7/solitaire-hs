@@ -224,7 +224,7 @@ spec = do
                     ]
                 , _foundation = Foundation { _numSets = 0 }
                 }
-          let expected = Left $ EmptyStackTarget 2
+          let expected = Left $ MoveStackOntoFaceDownCards 2
           let result = moveReducer move game
           result `shouldBe` expected
 
@@ -265,7 +265,7 @@ spec = do
           let game = Game
                 { _layout = Layout
                   [ (1, Pile
-                      { _faceUp = [Four, Five]
+                      { _faceUp = [Four, Five, One, Two]
                       , _faceDown = []
                       })
                   , (2, Pile
@@ -282,7 +282,7 @@ spec = do
                       , _faceDown = []
                       })
                   , (1, Pile
-                      { _faceUp = [Four, Five]
+                      { _faceUp = [Four, Five, One, Two]
                       , _faceDown = [Two, One]
                       })
                   ]

@@ -109,36 +109,40 @@ moveReducer move =
     MoveStack (MS i j) ->
       layout . _Layout $ \layout -> do
         let
-          (stack, rest) =
+          (stack, sourcePileRest) =
             layout ^?! ix i . faceUp . to splitAtStack
           target = layout ^?! ix j
 
---          source' = ix i . faceUp .~ rest
---          target' = ix j . faceUp %~ (stack <>)
-
+        -- sanity checking
         when (i == j) $
           throwError $ SourceIsTarget i
 
         when (null stack) $
           throwError $ EmptyStackSource i
 
-        when (
-            (null . view faceUp) target &&
-            (not . V.null . cards) target
-          ) $
-          throwError $ EmptyStackTarget j
+        -- short circuit case where you move a stack onto an empty pile
+        if V.null . cards $ target
+        then error "todo"
+        else do
+          -- Can never move a stack onto facedown cards
+          when (is _Empty $ target ^. faceUp) $
+            throwError $ MoveStackOntoFaceDownCards  j
 
         let targetCard = layout ^?! ix j . faceUp . _head
         let stackBottomCard = stack ^?! _last
         let stackSize = length stack
         let diff = fromEnum targetCard - fromEnum stackBottomCard
         let splitStackAt = length stack + fromEnum targetCard - fromEnum stackBottomCard
+        when (splitStackAt < 0 || splitStackAt >= stackSize) $
+          throwError $ MismatchingStacks i j
 
+        let
+          (stackPartToMove, stackPartToLeave) = V.splitAt splitStackAt stack
 
---        when mismatchError $
- --         throwError $ MismatchingStacks i j
-        pure layout & traceShow (stackSize, diff)
-        --pure $ layout & source' . target'
+          sourceUpdate = ix i . faceUp .~ (stackPartToLeave <> sourcePileRest)
+          targetUpdate = ix j . faceUp %~ (stackPartToMove <>)
+
+        pure $ layout & sourceUpdate . targetUpdate
 
 isSuccessorOf :: Card -> Card -> Bool
 a `isSuccessorOf` b =
