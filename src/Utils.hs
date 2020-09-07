@@ -58,8 +58,8 @@ enumSize = hi - lo + 1
     hi = fromEnum (maxBound :: a)
     lo = fromEnum (minBound :: a)
 
-loopM :: Monad m => (a -> m (Either end a)) -> a -> m end
-loopM act x = act x >>= pure ||| loopM act
+loopM :: Monad m => (a -> ExceptT end m a) -> a -> m end
+loopM act x = (runExceptT $ act x) >>= pure ||| loopM act
 
 maybeToError :: (MonadError e m) => e -> Maybe a -> m a
 maybeToError e Nothing = throwError e

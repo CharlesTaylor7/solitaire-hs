@@ -23,19 +23,21 @@ spec = do
       it "enables while loops in the identity monad" $ do
         let factorial (product, n) =
              if n <= 0
-             then pure $ Left product
-             else pure $ Right (n * product, n - 1)
+             then throwError product
+             else pure (n * product, n - 1)
         loopM factorial (1, 3) `shouldBe` Identity 6
       it "enables imperative style accumulation while loops in the writer monad" $ do
         let factorial x =
               if x <= 0
-              then pure $ Left ()
-              else (Product x, Right (x - 1))
+              then throwError ()
+              else do
+                tell $ Product x
+                pure (x - 1)
         loopM factorial 4 `shouldBe` (Product 24, ())
       it "enables branching in the list monad" $ do
         let
-          act :: Int -> [Either Int Int]
-          act x =
+          act :: Int -> ExceptT Int [] Int
+          act x = ExceptT $
             if x <= 0
             then [Left (x + 1)]
             else
@@ -48,8 +50,8 @@ spec = do
 
       it "performs a depth first search with a list monad transformer" $ do
         let
-          act :: Monad m => [Token] -> ListT m (Either [Token] [Token])
-          act ts =
+          act :: Monad m => [Token] -> ExceptT [Token] (ListT m) [Token]
+          act ts = ExceptT $
             let
               rest = enumerate @Token \\ ts
             in

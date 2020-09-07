@@ -11,7 +11,7 @@ import Solitaire.Actions
 type PriorityQueuePayload = ([Move], Game)
 
 newtype App a = App
-  { unApp :: ExceptT GameQuit (PQueueT MoveCount PriorityQueuePayload (HistoryT Game (ReaderT Config IO))) a
+  { unApp ::  (PQueueT MoveCount PriorityQueuePayload (HistoryT Game (ReaderT Config IO))) a
   }
   deriving
     ( Functor
@@ -21,17 +21,14 @@ newtype App a = App
     , MonadHistory Game
     , MonadPQueue MoveCount PriorityQueuePayload
     , MonadReader Config
-    , MonadError GameQuit
-    , MonadRandom
     )
 
 data UserInput = Quit | Dump
   deriving (Eq, Show, Read)
 
-data GameEnd = GameConclusion GameConclusion | GameQuit GameQuit
-  deriving Show
 data GameConclusion = GameWon [Move] | GameLost
   deriving (Eq, Show)
+
 data GameQuit = UserQuit
   deriving Show
 
@@ -39,38 +36,33 @@ newtype MoveCount = MoveCount Int
   deriving (Eq, Ord, Num)
 
 -- convenience constructors
-gameWon :: [Move] -> GameEnd
-gameWon = GameConclusion . GameWon
+gameWon :: [Move] -> GameConclusion
+gameWon =  GameWon
 
-gameLost, gameQuit :: GameEnd
-gameLost = GameConclusion GameLost
-gameQuit = GameQuit UserQuit
+gameLost :: GameConclusion
+gameLost =  GameLost
 
 runGameLoop :: App (Game, GameConclusion)
 runGameLoop = do
   game <- newGame
   queueInsert 0 ([], game)
-  conclusion <- loopM (\_ -> App . separateErrors $ step) ()
+  conclusion <- App $ loopM (\_ -> step) ()
   pure (game, conclusion)
 
 runGame :: Config -> IO ()
 runGame config = do
   result <- runGameLoop
     & unApp
-    & runExceptT
     & runPQueueT
     & runHistoryT
     & flip runReaderT config
   case result  of
-    Left quit ->
-      print quit
-
-    Right (game, GameLost) -> do
+    (game, GameLost) -> do
       prettyPrint game
 
       putStrLn "GameLost"
 
-    Right (game, GameWon moves) -> do
+    (game, GameWon moves) -> do
       prettyPrint game
       liftIO $ putStrLn ""
       throwInIO $ void $ foldM observeGameStep game (reverse moves)
@@ -94,7 +86,7 @@ step
   ::
   ( MonadIO m
   , MonadReader Config m
-  , MonadError GameEnd m
+  , MonadError GameConclusion m
   , MonadHistory Game m
   , MonadPQueue MoveCount PriorityQueuePayload m
   )
@@ -135,6 +127,7 @@ step = do
 --  prettyPrint $ map (view step_move &&& scoreByRuns . view step_game) steps
 --  pure steps
 
+{--
 runUserInput ::
              ( MonadIO m
              , MonadError GameEnd m
@@ -151,7 +144,7 @@ runUserInput game =
     Left (Input input) -> do
       print $ "Invalid command of: " <> input
       runUserInput game
-
+--}
 newGame :: (MonadIO m, MonadReader Config m) => m Game
 newGame = do
   shuffled <- getDeck >>= shuffle
