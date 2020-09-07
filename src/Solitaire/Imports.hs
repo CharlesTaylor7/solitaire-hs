@@ -9,7 +9,6 @@ import Utils as X
 
 import Control.Monad.History as X
 import Control.Monad.PQueue as X
-import Control.Monad.RandomInstances ()
 
 -- base
 import Prelude as X hiding (print)

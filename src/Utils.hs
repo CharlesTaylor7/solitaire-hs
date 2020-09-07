@@ -11,7 +11,7 @@ module Utils
   , printS
   , loopM
   , indexFrom
-  , shuffleIO
+  , shuffle
   ) where
 
 -- base
@@ -86,15 +86,15 @@ safeRead s =
 indexFrom :: Int -> [a] -> IntMap a
 indexFrom offset = M.fromAscList . zip [offset..]
 
-shuffleIO :: (MonadIO m, MonadRandom m) => [a] -> m [a]
-shuffleIO coll = do
+shuffle :: MonadIO m => [a] -> m [a]
+shuffle coll = do
   let vector = V.fromList coll
   thawed <- liftIO $ V.thaw vector
-  shuffleIOVector thawed
+  liftIO $ shuffleIOVector thawed
   frozen <- liftIO $ V.freeze thawed
   pure $ V.toList frozen
 
-shuffleIOVector :: (MonadIO m, MonadRandom m) => IOVector a -> m ()
+shuffleIOVector :: IOVector a -> IO ()
 shuffleIOVector vector =
   let
     n = MV.length vector

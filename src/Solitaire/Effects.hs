@@ -152,9 +152,9 @@ runUserInput game =
       print $ "Invalid command of: " <> input
       runUserInput game
 
-newGame :: (MonadIO m, MonadRandom m, MonadReader Config m) => m Game
+newGame :: (MonadIO m, MonadReader Config m) => m Game
 newGame = do
-  shuffled <- getDeck >>= shuffleIO
+  shuffled <- getDeck >>= shuffle
   pileCounts <- view config_piles
   let
     piles = fst $ foldl'
@@ -172,18 +172,6 @@ newGame = do
 
 gameIsWon :: Game -> Bool
 gameIsWon game = game ^. layout . to totalCards . to (== 0)
-
-separateErrors
-  :: Functor m
-  => ExceptT GameEnd m a
-  -> ExceptT GameQuit m (Either GameConclusion a)
-separateErrors ex = ExceptT $ splitGameEnd <$> runExceptT ex
-  where
-    splitGameEnd :: Either GameEnd a -> Either GameQuit (Either GameConclusion a)
-    splitGameEnd = \case
-      Left (GameConclusion conclusion) -> Right . Left $ conclusion
-      Left (GameQuit quit) -> Left quit
-      Right y -> Right . Right $ y
 
 -- utils
 singleton :: a -> [a]
