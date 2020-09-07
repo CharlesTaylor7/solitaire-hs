@@ -260,3 +260,33 @@ spec = do
           let expected = Left $ SourceIsTarget 1
           let result = moveReducer move game
           result `shouldBe` expected
+      it "can move stack which splits a stack" $ do
+          let move = moveStack 1 2
+          let game = Game
+                { _layout = Layout
+                  [ (1, Pile
+                      { _faceUp = [Four, Five]
+                      , _faceDown = []
+                      })
+                  , (2, Pile
+                      { _faceUp = [Five]
+                      , _faceDown = [Two, One]
+                      })
+                    ]
+                , _foundation = Foundation { _numSets = 0 }
+                }
+          let expected = Right $  Game
+                { _layout = Layout
+                  [ (0, Pile
+                      { _faceUp = [Five]
+                      , _faceDown = []
+                      })
+                  , (1, Pile
+                      { _faceUp = [Four, Five]
+                      , _faceDown = [Two, One]
+                      })
+                  ]
+                , _foundation = Foundation { _numSets = 0 }
+                }
+          let result = moveReducer move game
+          result `shouldBe` expected

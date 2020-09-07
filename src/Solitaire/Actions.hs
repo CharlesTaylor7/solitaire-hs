@@ -1,16 +1,17 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
+{-# options_ghc -Wwarn #-}
 module Solitaire.Actions where
 
 import Solitaire.Imports
 import Solitaire.Utils
+import Solitaire.PrettyPrinter
 
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
 import qualified Data.HashSet as Set
 
 import Data.List.NonEmpty ((<|))
+
+import Debug.Trace
 
 moves :: (MonadReader Config m) => m [Move]
 moves = do
@@ -112,8 +113,8 @@ moveReducer move =
             layout ^?! ix i . faceUp . to splitAtStack
           target = layout ^?! ix j
 
-          source' = ix i . faceUp .~ rest
-          target' = ix j . faceUp %~ (stack <>)
+--          source' = ix i . faceUp .~ rest
+--          target' = ix j . faceUp %~ (stack <>)
 
         when (i == j) $
           throwError $ SourceIsTarget i
@@ -127,14 +128,17 @@ moveReducer move =
           ) $
           throwError $ EmptyStackTarget j
 
-        let t = layout ^? ix j . faceUp . _head
-        let s = stack ^?! _last
-        let mismatchError = maybe False (not . flip isSuccessorOf s) t
+        let targetCard = layout ^?! ix j . faceUp . _head
+        let stackBottomCard = stack ^?! _last
+        let stackSize = length stack
+        let diff = fromEnum targetCard - fromEnum stackBottomCard
+        let splitStackAt = length stack + fromEnum targetCard - fromEnum stackBottomCard
 
-        when mismatchError $
-          throwError $ MismatchingStacks i j
 
-        pure $ layout & source' . target'
+--        when mismatchError $
+ --         throwError $ MismatchingStacks i j
+        pure layout & traceShow (stackSize, diff)
+        --pure $ layout & source' . target'
 
 isSuccessorOf :: Card -> Card -> Bool
 a `isSuccessorOf` b =
