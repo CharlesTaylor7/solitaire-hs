@@ -7,9 +7,10 @@ import Solitaire.PrettyPrinter
 import Solitaire.Utils
 import Solitaire.Actions
 
+type PriorityQueuePayload = ([Move], Game)
 -- types
 newtype App a = App
-  { unApp :: ExceptT GameQuit (PQueueT MoveCount Game (HistoryT Game (ReaderT Config IO))) a
+  { unApp :: ExceptT GameQuit (PQueueT MoveCount PriorityQueuePayload (HistoryT Game (ReaderT Config IO))) a
   }
   deriving
     ( Functor
@@ -17,7 +18,7 @@ newtype App a = App
     , Monad
     , MonadIO
     , MonadHistory Game
-    , MonadPQueue MoveCount Game
+    , MonadPQueue MoveCount PriorityQueuePayload
     , MonadReader Config
     , MonadError GameQuit
     , MonadRandom
@@ -28,7 +29,7 @@ data UserInput = Quit | Dump
 
 data GameEnd = GameConclusion GameConclusion | GameQuit GameQuit
   deriving Show
-data GameConclusion = GameWon | GameLost
+data GameConclusion = GameWon [Move] | GameLost
   deriving (Eq, Show)
 data GameQuit = UserQuit
   deriving Show
@@ -37,15 +38,17 @@ newtype MoveCount = MoveCount Int
   deriving (Eq, Ord, Num)
 
 -- convenience constructors
-gameWon, gameLost, gameQuit :: GameEnd
-gameWon = GameConclusion GameWon
+gameWon :: [Move] -> GameEnd
+gameWon = GameConclusion . GameWon
+
+gameLost, gameQuit :: GameEnd
 gameLost = GameConclusion GameLost
 gameQuit = GameQuit UserQuit
 
 runGameLoop :: App GameConclusion
 runGameLoop = do
   game <- newGame
-  queueInsert 0 game
+  queueInsert 0 ([], game)
   loopM (\_ -> App . separateErrors $ step) ()
 
 runGame :: Config -> IO ()
@@ -66,30 +69,42 @@ step
   , MonadReader Config m
   , MonadError GameEnd m
   , MonadHistory Game m
-  , MonadPQueue MoveCount Game m
+  , MonadPQueue MoveCount PriorityQueuePayload m
   )
   => m ()
 step = do
+  -- retrieve the best priority game state
   maybeMin <- queuePopMin
   case maybeMin of
+    -- out of game states to try, we lost
     Nothing ->
       throwError gameLost
 
-    Just (priority, game) -> do
-      prettyPrint game
+    -- we have game states to play from
+    Just (priority, (previousMoves, game)) -> do
+      -- game states can be reached multiple times via different paths
+      -- verify we haven't visted this state before
+      visited <- historyHas game
+      when (not visited) $ do
 
-      when (gameIsWon game) $
-        throwError gameWon
+        -- check to see if we won
+        when (gameIsWon game) $
+          throwError $ gameWon previousMoves
 
---      runUserInput game
-      saveToHistory game
+        -- record we visited this game state
+        saveToHistory game
 
-      steps <- nextSteps game
+        steps <- nextSteps game
 
-      for_ steps $ \step -> do
-        visited <- historyHas $ step ^. step_game
-        when (not visited) $
-          queueInsert (priority + 1) (step ^. step_game)
+        -- insert new game states reachable from this one
+        for_ steps $ \step -> do
+          -- checking the history hash set is much cheaper than spurious extra inserts to the priority queue
+          -- so we check the visited set both at insert time & queue pop time
+          visited <- historyHas $ step ^. step_game
+          when (not visited) $
+            queueInsert
+              (priority + 1)
+              (step ^. step_move : previousMoves, (step ^. step_game))
 
 --  printS $ "Chose move: " ++ pretty move
 --  printS "Valid moves:"
