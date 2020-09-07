@@ -24,12 +24,13 @@ moves = do
 
 type MonadStack = ReaderT Config (Either InvalidMove)
 
-nextSteps ::
-          ( MonadReader Config m
-          , MonadHistory Game m
-          )
-          => Game
-          -> m [Step]
+nextSteps
+  ::
+  ( MonadReader Config m
+  , MonadHistory Game m
+  )
+  => Game
+  -> m [Step]
 nextSteps game = do
   config <- ask
   history <- getHistory
@@ -39,7 +40,6 @@ nextSteps game = do
     unvisited = not . flip Set.member history . view step_game
     steps = runReader moves config
       ^.. folded . to paired . distributed . _Right . to step . filtered unvisited
-      & sortOn (Down . scoreStep)
   pure steps
 
 scoreStep :: Step -> (Score, Score)
