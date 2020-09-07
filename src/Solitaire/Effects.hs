@@ -65,13 +65,16 @@ runGame config = do
     Left quit ->
       print quit
 
-    Right (_, GameLost) ->
-      print GameLost
+    Right (game, GameLost) -> do
+      prettyPrint game
+
+      putStrLn "GameLost"
 
     Right (game, GameWon moves) -> do
       prettyPrint game
-
-      throwInIO $ void $ foldM observeGameStep game moves
+      liftIO $ putStrLn ""
+      throwInIO $ void $ foldM observeGameStep game (reverse moves)
+      putStrLn "GameWon"
 
 throwInIO :: (MonadIO m, Exception e) => ExceptT e m a -> m a
 throwInIO = join . fmap rightOrThrow . runExceptT
@@ -84,6 +87,7 @@ observeGameStep
 observeGameStep game move = do
   game <- moveReducer move game
   prettyPrint game
+  liftIO $ putStrLn ""
   pure game
 
 step
