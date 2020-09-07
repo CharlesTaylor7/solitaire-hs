@@ -3,6 +3,7 @@ module Solitaire.Utils where
 import Solitaire.Imports
 import qualified Data.Vector as V
 
+
 cards :: PileCards -> Vector Card
 cards pile = up <> down
   where

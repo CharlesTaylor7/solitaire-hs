@@ -1,11 +1,17 @@
 module ListT where
 
+import Prelude
+
+import Control.Monad.Trans (lift)
+
 import Data.Coerce
-import RIO hiding (over)
+import Data.Functor.Identity
+
 import Pipes (ListT(..))
 import qualified Pipes
 
 import Control.Lens (over, _Just, _2, preview, _Right)
+
 
 list :: Monad m => [a] -> ListT m a
 list = Select . Pipes.each

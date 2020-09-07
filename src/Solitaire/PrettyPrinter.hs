@@ -8,7 +8,8 @@ module Solitaire.PrettyPrinter
 import Solitaire.Imports hiding (Empty)
 import Solitaire.Invariants
 
-import qualified RIO.Text as T
+import Debug.Trace (trace)
+
 
 class Pretty a where
   pretty :: a -> String
@@ -116,4 +117,4 @@ prettyPrint :: (MonadIO m, Pretty a) => a -> m ()
 prettyPrint = liftIO . putStrLn . pretty
 
 tracePretty :: Pretty a => a -> b -> b
-tracePretty a = trace $ T.pack . pretty $ a
+tracePretty a = trace $ pretty $ a

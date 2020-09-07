@@ -4,7 +4,7 @@ import Solitaire
 
 main :: IO ()
 main = do
-  config <- fromEither $ mkConfig
+  config <- rightOrThrow $ mkConfig
     (NumSets 2)
     (Piles
       [ pileCounts 1 0

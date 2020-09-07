@@ -1,6 +1,7 @@
 {-# options_ghc -Wwarn #-}
 module Utils
-  ( enumerate
+  ( rightOrThrow
+  , enumerate
   , enumSize
   , maybeToError
   , distributed
@@ -13,13 +14,16 @@ module Utils
   , shuffleIO
   ) where
 
-import Prelude (putStrLn, getLine, reads)
+-- base
+import Prelude hiding (print)
 import qualified Prelude
-import Data.List (splitAt)
-import Control.Arrow
 
--- rio
-import RIO hiding (Lens, Lens', Getting, ASetter, ASetter', lens, (^.), to, view, over, set, sets)
+import Control.Arrow
+import Control.Exception
+
+import Data.Foldable
+
+import GHC.Exts (IsList(..))
 
 -- lens
 import Control.Lens
@@ -33,12 +37,17 @@ import Control.Monad.Random
 -- vector
 import Data.Vector.Mutable (IOVector)
 
-import Data.List ((!!))
-import GHC.Exts (IsList(..))
-
+-- containers
+import Data.IntMap (IntMap)
 import qualified Data.IntMap as M
+
+-- vector
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as MV
+
+
+rightOrThrow :: (MonadIO m, Exception e) => Either e a -> m a
+rightOrThrow = liftIO . throwIO ||| pure
 
 enumerate :: (Bounded a, Enum a, IsList l, Item l ~ a) => l
 enumerate = [minBound..maxBound]
@@ -61,9 +70,6 @@ print = liftIO . Prelude.print
 
 printS :: MonadIO m => String -> m ()
 printS = liftIO . putStrLn
-
-userConfirm :: MonadIO m => m ()
-userConfirm = liftIO getLine $> ()
 
 newtype Input = Input String
   deriving Eq

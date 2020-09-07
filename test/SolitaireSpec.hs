@@ -9,7 +9,7 @@ spec = do
   describe "Solitaire" $ do
     describe "deck" $ do
       it "should have the right number of cards" $ do
-        config <- fromEither $ configWith (NumSets 3) (NumPiles 3) (NumFaceDown 2)
+        config <- rightOrThrow $ configWith (NumSets 3) (NumPiles 3) (NumFaceDown 2)
 
         let
           runConfig = flip runReader config

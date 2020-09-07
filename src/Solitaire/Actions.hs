@@ -85,7 +85,7 @@ moveReducer move =
   case move of
     FlipCard (FC i) ->
       layout . _Layout . ix i $ \pile -> do
-        if isJust $ pile ^? faceUp . _Cons
+        if is _Just $ pile ^? faceUp . _Cons
         then throwError (CardFlipOnUnexposedPile i)
         else pure ()
 
