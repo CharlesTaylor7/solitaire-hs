@@ -1,7 +1,8 @@
 {-# OPTIONS_GHC -Wno-deprecations #-}
 module Solitaire.PrettyPrinter
-  ( prettyExprPrint
+  ( prettyPrint
   , tracePretty
+  , pretty
   , Pretty(..)
   ) where
 
@@ -20,17 +21,13 @@ pretty :: Pretty a => a -> String
 pretty = evalPrettyExpr . prettyExpr
 
 evalPrettyExpr :: PrettyExpr -> String
-evalPrettyExpr = snd . runWriter . runReaderT 2 . flip evalStateT 0 . toPrettyM
+evalPrettyExpr = snd . runWriter . flip runReaderT 2 . flip evalStateT 0 . toPrettyM
 
-type PrettyM m = (MonadState Int m, MonadState Int m, MonadWriter String m)
+type PrettyM m = (MonadReader Int m, MonadState Int m, MonadWriter String m)
 
 toPrettyM :: PrettyM m => PrettyExpr -> m ()
-toPrettyM PrettyNothing =
-  pure ()
-
-toPrettyM (PrettyLine line) = do
-  indentation <- flip replicate ' ' <$> get
-  tell $ indentation <> line <> "\n"
+toPrettyM (PrettyStr text) = do
+  tell text
 
 toPrettyM (PrettyIndent expr) = do
   indent <- ask
@@ -38,47 +35,61 @@ toPrettyM (PrettyIndent expr) = do
   toPrettyM expr
   modify (subtract indent)
 
-toPrettyM (PrettyTogether expr1 expr2) = do
-  toPrettyM expr1
-  toPrettyM expr2
+toPrettyM (PrettySoftWrap exprs) =
+  for_ exprs toPrettyM
+
+toPrettyM (PrettyHardWrap exprs) = do
+  indentation <- flip replicate ' ' <$> get
+  for_ exprs $ \expr -> do
+    tell indentation
+    toPrettyM expr
+    tell "\n"
 
 data PrettyExpr
-  = PrettyNothing
-  | PrettyLine String
+  = PrettyStr String
+  | PrettySoftWrap [PrettyExpr]
+  | PrettyHardWrap [PrettyExpr]
   | PrettyIndent PrettyExpr
-  | PrettyTogether PrettyExpr PrettyExpr
-
-instance Semigroup PrettyExpr where
-  (<>) = PrettyTogether
-
-instance Monoid PrettyExpr where
-  mempty = PrettyNothing
 
 instance IsString PrettyExpr where
-  fromString = PrettyLine
+  fromString = PrettyStr
 
 class Pretty a where
   prettyExpr :: a -> PrettyExpr
 
 instance Pretty Score where
-  prettyExpr = PrettyLine . show
+  prettyExpr = PrettyStr . show
 
 instance Pretty Text where
-  prettyExpr = PrettyLine . T.unpack
+  -- TODO: split on line breaks and use hardwrap
+  prettyExpr = PrettyStr . T.unpack
 
 instance Pretty a => Pretty [a] where
-  prettyExpr [] = PrettyLine "[]"
-  prettyExpr xs = "[" <> PrettyIndent (foldMap prettyExpr xs) <> "]"
+  prettyExpr [] = "[]"
+  prettyExpr xs =
+    PrettyHardWrap
+      [ "["
+      , PrettyIndent (PrettyHardWrap $ map prettyExpr xs)
+      , "]"
+      ]
 
 instance Pretty a => Pretty (Vector a) where
   prettyExpr = prettyExpr . toList
 
 instance (Pretty key, Pretty value) => Pretty (Map key value) where
-  prettyExpr xs = "{" <> join xs <> "}"
+  prettyExpr xs =
+    PrettyHardWrap
+      [ "{"
+      , PrettyIndent $ join xs
+      , "}"
+      ]
     where
-      format (key, value) = prettyExpr key <> ":" <> prettyExpr value
-      join = foldMap format . Map.toList
-
+      format (key, value) =
+        PrettyHardWrap
+          [ PrettySoftWrap [prettyExpr key, ":"]
+          , prettyExpr value
+          ]
+      join = PrettyHardWrap . map format . Map.toList
 
 instance Pretty Move where
   prettyExpr (MoveStack (MS i j)) = fromString $ "moveStack" ++ " " ++ show i ++ " " ++ show j
@@ -86,10 +97,10 @@ instance Pretty Move where
   prettyExpr (FlipCard (FC i)) = fromString $ "flipCard" ++ " " ++ show i
 
 instance Pretty InvalidMove where
-  prettyExpr = show
+  prettyExpr = PrettyStr . show
 
 instance Pretty Bool where
-  prettyExpr = show
+  prettyExpr = PrettyStr . show
 
 instance (Pretty a) => Pretty (Maybe a) where
   prettyExpr (Just x) = prettyExpr x
@@ -99,35 +110,32 @@ instance (Pretty a, Pretty b) => Pretty (Either a b) where
   prettyExpr (Left x) = prettyExpr x
   prettyExpr (Right x) = prettyExpr x
 
-instance (Pretty a, Pretty b) => Pretty (a, b) where
-  prettyExpr (a, b) = prettyExpr a ++ "\n" ++ prettyExpr b
-
-instance (Pretty a, Pretty b, Pretty c) => Pretty (a, b, c) where
-  prettyExpr (a, b, c) = prettyExpr a ++ "\n" ++ prettyExpr b ++ "\n" ++ prettyExpr c
-
 instance Pretty Char where
-  prettyExpr = pure
+  prettyExpr = PrettyStr . pure
 
 instance Pretty Card where
-  prettyExpr = show . (+ 1) . fromEnum
+  prettyExpr = PrettyStr . show
 
 instance Pretty CardView where
   prettyExpr Empty = " "
   prettyExpr FaceDown = "-"
-  prettyExpr (FaceUp card) = prettyExpr card
+  prettyExpr (FaceUp card) = PrettyStr . show . (+1) . fromEnum $ card
 
 instance Pretty Row where
-  prettyExpr = intercalate "|" . map prettyExpr . unRow
+  prettyExpr = PrettyStr . intercalate "|" . map pretty . unRow
 
 instance Pretty Layout where
-  prettyExpr = intercalate "\n" . map prettyExpr . toRows
+  prettyExpr = PrettyHardWrap . map prettyExpr . toRows
 
 instance Pretty Foundation where
-  prettyExpr (Foundation n) = "[" <> show n <> "]"
+  prettyExpr (Foundation n) = PrettyStr $ "[" <> show n <> "]"
 
 instance Pretty Game where
   prettyExpr (Game layout foundation) =
-    prettyExpr foundation <> "\n" <> prettyExpr layout
+    PrettyHardWrap
+      [ prettyExpr foundation
+      , prettyExpr layout
+      ]
 
 newtype Row = Row
   { unRow :: [CardView]
@@ -170,8 +178,8 @@ toRows (Layout layout) = do
 
   rows
 
-prettyExprPrint :: (MonadIO m, Pretty a) => a -> m ()
-prettyExprPrint = liftIO . putStrLn . prettyExpr
+prettyPrint :: (MonadIO m, Pretty a) => a -> m ()
+prettyPrint = liftIO . putStrLn . pretty
 
 tracePretty :: Pretty a => a -> b -> b
-tracePretty a = trace $ prettyExpr $ a
+tracePretty = trace . pretty
