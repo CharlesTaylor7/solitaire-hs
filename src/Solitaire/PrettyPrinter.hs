@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-deprecations #-}
 module Solitaire.PrettyPrinter
-  ( prettyPrint
+  ( prettyExprPrint
   , tracePretty
   , Pretty(..)
   ) where
@@ -10,68 +10,124 @@ import Solitaire.Invariants
 
 import Debug.Trace (trace)
 
+import Data.String (IsString(..))
+
+import qualified Data.Map as Map
+import qualified Data.Text as T
+
+
+pretty :: Pretty a => a -> String
+pretty = evalPrettyExpr . prettyExpr
+
+evalPrettyExpr :: PrettyExpr -> String
+evalPrettyExpr = snd . runWriter . runReaderT 2 . flip evalStateT 0 . toPrettyM
+
+type PrettyM m = (MonadState Int m, MonadState Int m, MonadWriter String m)
+
+toPrettyM :: PrettyM m => PrettyExpr -> m ()
+toPrettyM PrettyNothing =
+  pure ()
+
+toPrettyM (PrettyLine line) = do
+  indentation <- flip replicate ' ' <$> get
+  tell $ indentation <> line <> "\n"
+
+toPrettyM (PrettyIndent expr) = do
+  indent <- ask
+  modify (+ indent)
+  toPrettyM expr
+  modify (subtract indent)
+
+toPrettyM (PrettyTogether expr1 expr2) = do
+  toPrettyM expr1
+  toPrettyM expr2
+
+data PrettyExpr
+  = PrettyNothing
+  | PrettyLine String
+  | PrettyIndent PrettyExpr
+  | PrettyTogether PrettyExpr PrettyExpr
+
+instance Semigroup PrettyExpr where
+  (<>) = PrettyTogether
+
+instance Monoid PrettyExpr where
+  mempty = PrettyNothing
+
+instance IsString PrettyExpr where
+  fromString = PrettyLine
 
 class Pretty a where
-  pretty :: a -> String
+  prettyExpr :: a -> PrettyExpr
 
 instance Pretty Score where
-  pretty = show
+  prettyExpr = PrettyLine . show
+
+instance Pretty Text where
+  prettyExpr = PrettyLine . T.unpack
 
 instance Pretty a => Pretty [a] where
-  pretty [] = "[]"
-  pretty xs = "[" ++ space ++ join xs ++ "\n]"
+  prettyExpr [] = PrettyLine "[]"
+  prettyExpr xs = "[" <> PrettyIndent (foldMap prettyExpr xs) <> "]"
+
+instance Pretty a => Pretty (Vector a) where
+  prettyExpr = prettyExpr . toList
+
+instance (Pretty key, Pretty value) => Pretty (Map key value) where
+  prettyExpr xs = "{" <> join xs <> "}"
     where
-      space = '\n' : (replicate 2 ' ')
-      join = intercalate space . map pretty
+      format (key, value) = prettyExpr key <> ":" <> prettyExpr value
+      join = foldMap format . Map.toList
+
 
 instance Pretty Move where
-  pretty (MoveStack (MS i j)) = "moveStack" ++ " " ++ show i ++ " " ++ show j
-  pretty (MoveToFoundation (MTF i)) = "moveToFoundation" ++ " " ++ show i
-  pretty (FlipCard (FC i)) = "flipCard" ++ " " ++ show i
+  prettyExpr (MoveStack (MS i j)) = fromString $ "moveStack" ++ " " ++ show i ++ " " ++ show j
+  prettyExpr (MoveToFoundation (MTF i)) = fromString $ "moveToFoundation" ++ " " ++ show i
+  prettyExpr (FlipCard (FC i)) = fromString $ "flipCard" ++ " " ++ show i
 
 instance Pretty InvalidMove where
-  pretty = show
+  prettyExpr = show
 
 instance Pretty Bool where
-  pretty = show
+  prettyExpr = show
 
 instance (Pretty a) => Pretty (Maybe a) where
-  pretty (Just x) = pretty x
-  pretty Nothing = "Nothing"
+  prettyExpr (Just x) = prettyExpr x
+  prettyExpr Nothing = "Nothing"
 
 instance (Pretty a, Pretty b) => Pretty (Either a b) where
-  pretty (Left x) = pretty x
-  pretty (Right x) = pretty x
+  prettyExpr (Left x) = prettyExpr x
+  prettyExpr (Right x) = prettyExpr x
 
 instance (Pretty a, Pretty b) => Pretty (a, b) where
-  pretty (a, b) = pretty a ++ "\n" ++ pretty b
+  prettyExpr (a, b) = prettyExpr a ++ "\n" ++ prettyExpr b
 
 instance (Pretty a, Pretty b, Pretty c) => Pretty (a, b, c) where
-  pretty (a, b, c) = pretty a ++ "\n" ++ pretty b ++ "\n" ++ pretty c
+  prettyExpr (a, b, c) = prettyExpr a ++ "\n" ++ prettyExpr b ++ "\n" ++ prettyExpr c
 
 instance Pretty Char where
-  pretty = pure
+  prettyExpr = pure
 
 instance Pretty Card where
-  pretty = show . (+ 1) . fromEnum
+  prettyExpr = show . (+ 1) . fromEnum
 
 instance Pretty CardView where
-  pretty Empty = " "
-  pretty FaceDown = "-"
-  pretty (FaceUp card) = pretty card
+  prettyExpr Empty = " "
+  prettyExpr FaceDown = "-"
+  prettyExpr (FaceUp card) = prettyExpr card
 
 instance Pretty Row where
-  pretty = intercalate "|" . map pretty . unRow
+  prettyExpr = intercalate "|" . map prettyExpr . unRow
 
 instance Pretty Layout where
-  pretty = intercalate "\n" . map pretty . toRows
+  prettyExpr = intercalate "\n" . map prettyExpr . toRows
 
 instance Pretty Foundation where
-  pretty (Foundation n) = "[" <> show n <> "]"
+  prettyExpr (Foundation n) = "[" <> show n <> "]"
 
 instance Pretty Game where
-  pretty (Game layout foundation) =
-    pretty foundation <> "\n" <> pretty layout
+  prettyExpr (Game layout foundation) =
+    prettyExpr foundation <> "\n" <> prettyExpr layout
 
 newtype Row = Row
   { unRow :: [CardView]
@@ -102,7 +158,7 @@ toCardViews (RowCount n) =
     rightPad n Empty . (getFaceDowns <> getFaceUps)
 
 toRows :: Layout -> [Row]
-toRows (Layout layout) =
+toRows (Layout layout) = do
   let
     rowCount =
       layout
@@ -111,10 +167,11 @@ toRows (Layout layout) =
         & RowCount
     columns = toCardViews rowCount <$> toList layout
     rows = transpose columns & map Row
-  in rows
 
-prettyPrint :: (MonadIO m, Pretty a) => a -> m ()
-prettyPrint = liftIO . putStrLn . pretty
+  rows
+
+prettyExprPrint :: (MonadIO m, Pretty a) => a -> m ()
+prettyExprPrint = liftIO . putStrLn . prettyExpr
 
 tracePretty :: Pretty a => a -> b -> b
-tracePretty a = trace $ pretty $ a
+tracePretty a = trace $ prettyExpr $ a

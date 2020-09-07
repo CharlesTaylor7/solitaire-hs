@@ -51,3 +51,4 @@ import Data.Vector as X (Vector)
 
 -- containers
 import Data.Set as X (Set)
+import Data.Map as X (Map)

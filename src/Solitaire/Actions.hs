@@ -132,9 +132,11 @@ moveReducer move =
         let stackBottomCard = stack ^?! _last
         let stackSize = length stack
         let diff = fromEnum targetCard - fromEnum stackBottomCard
-        let splitStackAt = length stack + fromEnum targetCard - fromEnum stackBottomCard
+        let splitStackAt = length stack - diff - 1
+
         when (splitStackAt < 0 || splitStackAt >= stackSize) $
           throwError $ MismatchingStacks i j
+            & traceShow (splitStackAt, stack)
 
         let
           (stackPartToMove, stackPartToLeave) = V.splitAt splitStackAt stack
@@ -142,7 +144,13 @@ moveReducer move =
           sourceUpdate = ix i . faceUp .~ (stackPartToLeave <> sourcePileRest)
           targetUpdate = ix j . faceUp %~ (stackPartToMove <>)
 
-        pure $ layout & sourceUpdate . targetUpdate
+        (pure $ layout & sourceUpdate . targetUpdate)
+          & tracePretty
+              ( (mempty :: Map Text (Vector Card))
+                & at "partToLeave" ?~ stackPartToLeave
+                & at "partToMove" ?~ stackPartToMove
+                & at "sourcePileRest" ?~ sourcePileRest
+              )
 
 isSuccessorOf :: Card -> Card -> Bool
 a `isSuccessorOf` b =

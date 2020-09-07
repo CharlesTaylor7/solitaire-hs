@@ -146,7 +146,9 @@ spec = do
                    ]
                 , _foundation = Foundation { _numSets = 0 }
                 }
-          let expected = Right $ Game
+          let
+            expected :: Either InvalidMove Game
+            expected = Right $ Game
                 { _layout = Layout
                   [ (0, Pile
                       { _faceUp = [Five]
@@ -160,7 +162,9 @@ spec = do
                 , _foundation = Foundation { _numSets = 0 }
                 }
           let result = moveReducer move game
-          result `shouldBe` expected
+          (result `shouldBe` expected)
+            & tracePretty result
+            & tracePretty expected
         it "cannot move an empty stack" $ do
           let move = moveStack 0 2
           let game = Game
