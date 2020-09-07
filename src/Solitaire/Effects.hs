@@ -7,8 +7,9 @@ import Solitaire.PrettyPrinter
 import Solitaire.Utils
 import Solitaire.Actions
 
-type PriorityQueuePayload = ([Move], Game)
 -- types
+type PriorityQueuePayload = ([Move], Game)
+
 newtype App a = App
   { unApp :: ExceptT GameQuit (PQueueT MoveCount PriorityQueuePayload (HistoryT Game (ReaderT Config IO))) a
   }
@@ -45,11 +46,12 @@ gameLost, gameQuit :: GameEnd
 gameLost = GameConclusion GameLost
 gameQuit = GameQuit UserQuit
 
-runGameLoop :: App GameConclusion
+runGameLoop :: App (Game, GameConclusion)
 runGameLoop = do
   game <- newGame
   queueInsert 0 ([], game)
-  loopM (\_ -> App . separateErrors $ step) ()
+  conclusion <- loopM (\_ -> App . separateErrors $ step) ()
+  pure (game, conclusion)
 
 runGame :: Config -> IO ()
 runGame config = do
@@ -59,9 +61,30 @@ runGame config = do
     & runPQueueT
     & runHistoryT
     & flip runReaderT config
-  case result of
-    Left quit -> print quit
-    Right gameConclusion -> print gameConclusion
+  case result  of
+    Left quit ->
+      print quit
+
+    Right (_, GameLost) ->
+      print GameLost
+
+    Right (game, GameWon moves) -> do
+      prettyPrint game
+
+      throwInIO $ void $ foldM observeGameStep game moves
+
+throwInIO :: (MonadIO m, Exception e) => ExceptT e m a -> m a
+throwInIO = join . fmap rightOrThrow . runExceptT
+
+observeGameStep
+  :: (MonadError InvalidMove m, MonadIO m)
+  => Game
+  -> Move
+  -> m Game
+observeGameStep game move = do
+  game <- moveReducer move game
+  prettyPrint game
+  pure game
 
 step
   ::
@@ -93,15 +116,12 @@ step = do
 
         -- record we visited this game state
         saveToHistory game
-
+        -- checking the history hash set is much cheaper than spurious extra inserts to the priority queue
+        -- so we check the visited set both at insert time & queue pop time
         steps <- nextSteps game
 
         -- insert new game states reachable from this one
         for_ steps $ \step -> do
-          -- checking the history hash set is much cheaper than spurious extra inserts to the priority queue
-          -- so we check the visited set both at insert time & queue pop time
-          visited <- historyHas $ step ^. step_game
-          when (not visited) $
             queueInsert
               (priority + 1)
               (step ^. step_move : previousMoves, (step ^. step_game))
