@@ -14,15 +14,14 @@ import Data.PQueue.Prio.Min (MinPQueue)
 
 import Prelude hiding (splitAt)
 
-import Control.Applicative (pure)
 import Control.Monad.State.Strict
 import Control.Monad.Reader
 
 
 -- A state monad wrapped around a priority queue
 class (Ord k, Monad m) => MonadPQueue k v m | m -> k, m -> v where
-  deleteMin :: m (Maybe (k, v))
-  insert :: k -> v -> m ()
+  queuePopMin :: m (Maybe (k, v))
+  queueInsert :: k -> v -> m ()
 
 newtype PQueueT k v m a = PQueueT
   { toStateT :: StateT (MinPQueue k v) m a
@@ -40,7 +39,7 @@ runPQueueT :: (Ord k, Monad m) => PQueueT k v m a -> m a
 runPQueueT = flip evalStateT mempty . toStateT
 
 instance (Ord k, Monad m) => MonadPQueue k v (PQueueT k v m) where
-  deleteMin = PQueueT $ do
+  queuePopMin = PQueueT $ do
     queue <- get
     case Pri.minViewWithKey queue of
       Just ((k, v), queue) -> do
@@ -49,7 +48,7 @@ instance (Ord k, Monad m) => MonadPQueue k v (PQueueT k v m) where
       Nothing ->
         pure Nothing
 
-  insert key value = PQueueT . modify $ Pri.insert key value
+  queueInsert key value = PQueueT . modify $ Pri.insert key value
 
 instance MonadReader r m => MonadReader r (PQueueT k v m) where
   ask = lift ask
@@ -63,5 +62,5 @@ instance {-# OVERLAPPABLE #-}
   , MonadPQueue k v m
   )
   => MonadPQueue k v (t m) where
-  deleteMin = lift deleteMin
-  insert = (lift .) . insert
+  queuePopMin = lift queuePopMin
+  queueInsert = (lift .) . queueInsert

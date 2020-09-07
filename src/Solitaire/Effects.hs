@@ -3,9 +3,9 @@ module Solitaire.Effects where
 
 import Solitaire.Imports
 import Solitaire.Invariants
-import Solitaire.PrettyPrinter ()
+import Solitaire.PrettyPrinter
 import Solitaire.Utils
-import Solitaire.Actions ()
+import Solitaire.Actions
 
 -- types
 newtype App a = App
@@ -34,7 +34,7 @@ data GameQuit = UserQuit
   deriving Show
 
 newtype MoveCount = MoveCount Int
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Num)
 
 -- convenience constructors
 gameWon, gameLost, gameQuit :: GameEnd
@@ -45,6 +45,7 @@ gameQuit = GameQuit UserQuit
 runGameLoop :: App GameConclusion
 runGameLoop = do
   game <- newGame
+  queueInsert 0 game
   loopM (\_ -> App . separateErrors $ step) ()
 
 runGame :: Config -> IO ()
@@ -57,8 +58,7 @@ runGame config = do
     & flip runReaderT config
   case result of
     Left quit -> print quit
-    Right (gameConclusion) -> print gameWon
-    Right _ -> print gameLost
+    Right gameConclusion -> print gameConclusion
 
 step
   ::
@@ -69,16 +69,29 @@ step
   , MonadPQueue MoveCount Game m
   )
   => m ()
-step = pure ()
---  saveToHistory game
+step = do
+  maybeMin <- queuePopMin
+  case maybeMin of
+    Nothing ->
+      throwError gameLost
+
+    Just (priority, game) -> do
+      prettyPrint game
+
+      when (gameIsWon game) $
+        throwError gameWon
+
+--      runUserInput game
+      saveToHistory game
+
+      steps <- nextSteps game
+
+      for_ steps $ \step -> do
+        visited <- historyHas $ step ^. step_game
+        when (not visited) $
+          queueInsert (priority + 1) (step ^. step_game)
+
 --  printS $ "Chose move: " ++ pretty move
---  prettyPrint game
---  when (gameIsWon game) $
---    throwError gameWon
---  runUserInput game
---  steps <- nextSteps game
---  when (null steps) $
---    throwError gameLost
 --  printS "Valid moves:"
 --  prettyPrint $ map (view step_move &&& scoreByRuns . view step_game) steps
 --  pure steps

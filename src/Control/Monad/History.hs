@@ -5,6 +5,7 @@ module Control.Monad.History
   ( MonadHistory(..)
   , HistoryT
   , runHistoryT
+  , historyHas
   )
   where
 
@@ -14,7 +15,9 @@ import Control.Monad.State.Strict
 import Control.Monad.Reader
 
 import Data.HashSet
+import qualified Data.HashSet as Set
 import Data.Hashable
+
 
 type Set = HashSet
 type ItemConstraint s = (Hashable s, Eq s)
@@ -22,9 +25,12 @@ type ItemConstraint s = (Hashable s, Eq s)
 
 -- A monad with capabilities that are more permissive than Writer, but less capable than State.
 -- Allows viewing a set & appending items to it, but disallows deleting from it
-class Monad m => MonadHistory a m | m -> a where
+class (ItemConstraint a, Monad m) => MonadHistory a m | m -> a where
   getHistory :: m (Set a)
   saveToHistory :: a -> m ()
+
+historyHas :: (MonadHistory a m) => a -> m Bool
+historyHas val = Set.member val <$> getHistory
 
 newtype HistoryT s m a = HistoryT
   { toStateT :: StateT (Set s) m a }
