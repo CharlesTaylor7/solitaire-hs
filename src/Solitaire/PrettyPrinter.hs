@@ -39,8 +39,9 @@ toPrettyM (PrettySoftWrap exprs) =
 
 toPrettyM (PrettyHardWrap exprs) = do
   indentation <- flip T.replicate " " <$> get
-  for_ exprs $ \expr -> do
-    tell $ "\n" <> indentation
+  for_ (exprs `zip` [0 :: Int ..]) $ \(expr, i) -> do
+    when (i /= 0) $ tell "\n"
+    tell indentation
     toPrettyM expr
 
 data PrettyExpr
