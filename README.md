@@ -9,6 +9,6 @@ A vastly simplified Spider solitaire:
   - There is no leftover deck to deal from.
 
 # To Do
-- Implement Dijkstra's algorithm
 - Upgrade to A-star pathfinding
-- Make search deterministic
+- Compute stats on solitaire win rates
+- handle yukon solitaire as our first _real_ solitaire game
