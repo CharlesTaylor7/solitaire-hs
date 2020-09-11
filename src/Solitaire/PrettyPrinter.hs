@@ -16,14 +16,13 @@ import Data.String (IsString(..))
 import qualified Data.Map as Map
 import qualified Data.Text as T
 
-
-pretty :: Pretty a => a -> String
+pretty :: Pretty a => a -> Text
 pretty = evalPrettyExpr . prettyExpr
 
-evalPrettyExpr :: PrettyExpr -> String
+evalPrettyExpr :: PrettyExpr -> Text
 evalPrettyExpr = snd . runWriter . flip runReaderT 2 . flip evalStateT 0 . toPrettyM
 
-type PrettyM m = (MonadReader Int m, MonadState Int m, MonadWriter String m)
+type PrettyM m = (MonadReader Int m, MonadState Int m, MonadWriter Text m)
 
 toPrettyM :: PrettyM m => PrettyExpr -> m ()
 toPrettyM (PrettyStr text) = do
@@ -39,30 +38,38 @@ toPrettyM (PrettySoftWrap exprs) =
   for_ exprs toPrettyM
 
 toPrettyM (PrettyHardWrap exprs) = do
-  indentation <- flip replicate ' ' <$> get
+  indentation <- flip T.replicate " " <$> get
   for_ exprs $ \expr -> do
-    tell indentation
+    tell $ "\n" <> indentation
     toPrettyM expr
-    tell "\n"
 
 data PrettyExpr
-  = PrettyStr String
+  = PrettyStr Text
   | PrettySoftWrap [PrettyExpr]
   | PrettyHardWrap [PrettyExpr]
   | PrettyIndent PrettyExpr
 
 instance IsString PrettyExpr where
-  fromString = PrettyStr
+  fromString = PrettyStr . T.pack
 
 class Pretty a where
   prettyExpr :: a -> PrettyExpr
 
-instance Pretty Score where
-  prettyExpr = PrettyStr . show
+-- instances
+newtype WrappedShow a = WrappedShow a
+
+instance Show a => Pretty (WrappedShow a) where
+  prettyExpr (WrappedShow a) = PrettyStr . T.pack . show $ a
+
+deriving via WrappedShow Score instance Pretty Score
+deriving via WrappedShow InvalidMove instance Pretty InvalidMove
+deriving via WrappedShow Bool instance Pretty Bool
+deriving via WrappedShow Card instance Pretty Card
+
 
 instance Pretty Text where
   -- TODO: split on line breaks and use hardwrap
-  prettyExpr = PrettyStr . T.unpack
+  prettyExpr = PrettyStr
 
 instance Pretty a => Pretty [a] where
   prettyExpr [] = "[]"
@@ -96,12 +103,6 @@ instance Pretty Move where
   prettyExpr (MoveToFoundation (MTF i)) = fromString $ "moveToFoundation" ++ " " ++ show i
   prettyExpr (FlipCard (FC i)) = fromString $ "flipCard" ++ " " ++ show i
 
-instance Pretty InvalidMove where
-  prettyExpr = PrettyStr . show
-
-instance Pretty Bool where
-  prettyExpr = PrettyStr . show
-
 instance (Pretty a) => Pretty (Maybe a) where
   prettyExpr (Just x) = prettyExpr x
   prettyExpr Nothing = "Nothing"
@@ -111,24 +112,21 @@ instance (Pretty a, Pretty b) => Pretty (Either a b) where
   prettyExpr (Right x) = prettyExpr x
 
 instance Pretty Char where
-  prettyExpr = PrettyStr . pure
-
-instance Pretty Card where
-  prettyExpr = PrettyStr . show
+  prettyExpr = PrettyStr . T.singleton
 
 instance Pretty CardView where
   prettyExpr Empty = " "
   prettyExpr FaceDown = "-"
-  prettyExpr (FaceUp card) = PrettyStr . show . (+1) . fromEnum $ card
+  prettyExpr (FaceUp card) = PrettyStr . T.pack . show . (+1) . fromEnum $ card
 
 instance Pretty Row where
-  prettyExpr = PrettyStr . intercalate "|" . map pretty . unRow
+  prettyExpr = PrettyStr . T.intercalate "|" . map pretty . unRow
 
 instance Pretty Layout where
   prettyExpr = PrettyHardWrap . map prettyExpr . toRows
 
 instance Pretty Foundation where
-  prettyExpr (Foundation n) = PrettyStr $ "[" <> show n <> "]"
+  prettyExpr (Foundation n) = PrettyStr $ "[" <> T.pack (show n) <> "]"
 
 instance Pretty Game where
   prettyExpr (Game layout foundation) =
@@ -179,7 +177,7 @@ toRows (Layout layout) = do
   rows
 
 prettyPrint :: (MonadIO m, Pretty a) => a -> m ()
-prettyPrint = liftIO . putStrLn . pretty
+prettyPrint = liftIO . putStrLn . T.unpack . pretty
 
 tracePretty :: Pretty a => a -> b -> b
-tracePretty = trace . pretty
+tracePretty = trace . T.unpack . pretty
