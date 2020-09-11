@@ -16,7 +16,7 @@ spec = do
           numCards = enumSize @Card
           (deckSize, numCardCopies) = runConfig $ do
             d <- length <$> getDeck
-            c <- view config_numSets
+            c <- view #numSets
             pure (d, c)
           product = numCards * numCardCopies :: Int
         deckSize `shouldBe` product

@@ -120,7 +120,7 @@ step = do
         for_ steps $ \step -> do
             queueInsert
               (priority + 1)
-              (step ^. step_move : previousMoves, (step ^. step_game))
+              (step ^. #move : previousMoves, (step ^. #game))
 
 --  printS $ "Chose move: " ++ pretty move
 --  printS "Valid moves:"
@@ -148,7 +148,7 @@ runUserInput game =
 newGame :: (MonadIO m, MonadReader Config m) => m Game
 newGame = do
   shuffled <- getDeck >>= shuffle
-  pileCounts <- view config_piles
+  pileCounts <- view #piles
   let
     piles = fst $ foldl'
       (\(ps, cs) count ->
@@ -164,7 +164,7 @@ newGame = do
   pure $ Game layout foundation
 
 gameIsWon :: Game -> Bool
-gameIsWon game = game ^. layout . to totalCards . to (== 0)
+gameIsWon game = game ^. #layout . to totalCards . to (== 0)
 
 -- utils
 singleton :: a -> [a]

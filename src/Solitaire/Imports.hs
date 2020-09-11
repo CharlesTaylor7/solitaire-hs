@@ -33,6 +33,9 @@ import Pipes as X (ListT(Select), Producer, Pipe, yield, each, await, hoist)
 import Control.Lens as X hiding (each, (<|))
 import Control.Lens.Extras as X (is)
 
+-- generic-lens
+import Data.Generics.Labels ()
+
 -- mtl
 import Control.Monad.Except as X
 import Control.Monad.State.Strict as X

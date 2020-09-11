@@ -24,29 +24,29 @@ spec = do
         it "flips a card from face down to face up in a pile" $ do
           let move = flipCard 1
           let game = Game
-                { _layout = Layout
+                { layout = Layout
                   (M.empty & at 1 .~
                     (Just (Pile
-                      { _faceUp = []
-                      , _faceDown = [One]
+                      { faceUp = []
+                      , faceDown = [One]
                       })
                     )
                   )
-                , _foundation = Foundation { _numSets = 0 }
+                , foundation = Foundation { numSets = 0 }
                 }
-          let expected = Game {_layout = Layout {unLayout = [(1,Pile {_faceUp = [One], _faceDown = []})]}, _foundation = Foundation {_numSets = 0}}
+          let expected = Game {layout = Layout {unLayout = [(1,Pile {faceUp = [One], faceDown = []})]}, foundation = Foundation {numSets = 0}}
           let result = moveReducer move game
           result `shouldBe` Right expected
         it "marks flipping a face down card on an unexposed pile as invalid" $ do
           let move = flipCard 1
           let game = Game
-                { _layout = Layout
+                { layout = Layout
                   (M.empty & at 1 .~
                     (Just (Pile
-                      { _faceUp = [Two]
-                      , _faceDown = [One]
+                      { faceUp = [Two]
+                      , faceDown = [One]
                       })))
-                , _foundation = Foundation { _numSets = 0 }
+                , foundation = Foundation { numSets = 0 }
                 }
           let expected = Left (CardFlipOnUnexposedPile 1)
           let result = moveReducer move game
@@ -54,14 +54,14 @@ spec = do
         it "marks flipping a face down card on an empty pile as invalid" $ do
           let move = flipCard 1
           let game = Game
-                { _layout = Layout
+                { layout = Layout
                   (M.empty & at 1 .~ (Just
                     (Pile
-                      { _faceUp = []
-                      , _faceDown = []
+                      { faceUp = []
+                      , faceDown = []
                       })
                   ))
-                , _foundation = Foundation { _numSets = 0 }
+                , foundation = Foundation { numSets = 0 }
                 }
           let expected = Left (CardFlipOnEmptyPile 1)
           let result = moveReducer move game
@@ -70,62 +70,62 @@ spec = do
         it "moves a complete set from the layout to the foundation" $ do
           let move = moveToFoundation 2
           let game = Game
-                { _layout = Layout
+                { layout = Layout
                   (M.empty & at 2 .~ (Just
                     (Pile
-                      { _faceUp = enumerate @Card
-                      , _faceDown = []
+                      { faceUp = enumerate @Card
+                      , faceDown = []
                       })
                   ))
-                , _foundation = Foundation { _numSets = 0 }
+                , foundation = Foundation { numSets = 0 }
                 }
           let expected = Right $ Game
-                { _layout = Layout
+                { layout = Layout
                   (M.empty & at 2 .~ (Just
                     (Pile
-                      { _faceUp = []
-                      , _faceDown = []
+                      { faceUp = []
+                      , faceDown = []
                       })
                   ))
-                , _foundation = Foundation { _numSets = 1 }
+                , foundation = Foundation { numSets = 1 }
                 }
           let result = moveReducer move game
           result `shouldBe` expected
         it "moves a complete set from the layout to the foundation" $ do
           let move = moveToFoundation 2
           let game = Game
-                { _layout = Layout
+                { layout = Layout
                   (M.empty & at 2 .~ (Just
                     (Pile
-                      { _faceUp = enumerate @Card
-                      , _faceDown = []
+                      { faceUp = enumerate @Card
+                      , faceDown = []
                       })
                   ))
-                , _foundation = Foundation { _numSets = 0 }
+                , foundation = Foundation { numSets = 0 }
                 }
           let expected = Right $ Game
-                { _layout = Layout
+                { layout = Layout
                   (M.empty & at 2 .~ (Just
                     (Pile
-                      { _faceUp = []
-                      , _faceDown = []
+                      { faceUp = []
+                      , faceDown = []
                       })
                   ))
-                , _foundation = Foundation { _numSets = 1 }
+                , foundation = Foundation { numSets = 1 }
                 }
           let result = moveReducer move game
           result `shouldBe` expected
         it "cannot move an incomplete set to the foundation" $ do
           let move = moveToFoundation 2
           let game = Game
-                { _layout = Layout
+                { layout = Layout
                   (M.empty & at 2 .~ (Just
                     (Pile
-                      { _faceUp = []
-                      , _faceDown = [One]
+                      { faceUp = []
+                      , faceDown = [One]
                       })
                   ))
-                , _foundation = Foundation { _numSets = 0 }
+                , foundation = Foundation { numSets = 0 }
                 }
           let expected = Left $ IncompleteSet 2
           let result = moveReducer move game
@@ -134,32 +134,32 @@ spec = do
         it "moves stacks of cards" $ do
           let move = moveStack 0 2
           let game = Game
-                { _layout = Layout
+                { layout = Layout
                   [ (0, Pile
-                      { _faceUp = [One, Two, Five]
-                      , _faceDown = [Three]
+                      { faceUp = [One, Two, Five]
+                      , faceDown = [Three]
                       })
                   , (2, Pile
-                      { _faceUp = [Three, Two, Five]
-                      , _faceDown = [Two, One]
+                      { faceUp = [Three, Two, Five]
+                      , faceDown = [Two, One]
                       })
                    ]
-                , _foundation = Foundation { _numSets = 0 }
+                , foundation = Foundation { numSets = 0 }
                 }
           let
             expected :: Either InvalidMove Game
             expected = Right $ Game
-                { _layout = Layout
+                { layout = Layout
                   [ (0, Pile
-                      { _faceUp = [Five]
-                      , _faceDown = [Three]
+                      { faceUp = [Five]
+                      , faceDown = [Three]
                       })
                   , (2, Pile
-                      { _faceUp = [One, Two, Three, Two, Five]
-                      , _faceDown = [Two, One]
+                      { faceUp = [One, Two, Three, Two, Five]
+                      , faceDown = [Two, One]
                       })
                   ]
-                , _foundation = Foundation { _numSets = 0 }
+                , foundation = Foundation { numSets = 0 }
                 }
           let result = moveReducer move game
           (result `shouldBe` expected)
@@ -168,17 +168,17 @@ spec = do
         it "cannot move an empty stack" $ do
           let move = moveStack 0 2
           let game = Game
-                { _layout = Layout
+                { layout = Layout
                   [ (0, Pile
-                      { _faceUp = []
-                      , _faceDown = [Three]
+                      { faceUp = []
+                      , faceDown = [Three]
                       })
                   , (2, Pile
-                      { _faceUp = [Three, Two, Five]
-                      , _faceDown = [Two, One]
+                      { faceUp = [Three, Two, Five]
+                      , faceDown = [Two, One]
                       })
                     ]
-                , _foundation = Foundation { _numSets = 0 }
+                , foundation = Foundation { numSets = 0 }
                 }
           let expected = Left $ EmptyStackSource 0
           let result = moveReducer move game
@@ -186,47 +186,47 @@ spec = do
         it "can move onto an empty pile" $ do
           let move = moveStack 0 2
           let game = Game
-                { _layout = Layout
+                { layout = Layout
                   [ (0, Pile
-                      { _faceUp = [Five]
-                      , _faceDown = [Three]
+                      { faceUp = [Five]
+                      , faceDown = [Three]
                       })
                   , (2, Pile
-                      { _faceUp = []
-                      , _faceDown = []
+                      { faceUp = []
+                      , faceDown = []
                       })
                   ]
-                , _foundation = Foundation { _numSets = 0 }
+                , foundation = Foundation { numSets = 0 }
                 }
           let expected = Right $  Game
-                { _layout = Layout
+                { layout = Layout
                   [ (0, Pile
-                      { _faceUp = []
-                      , _faceDown = [Three]
+                      { faceUp = []
+                      , faceDown = [Three]
                       })
                   , (2, Pile
-                      { _faceUp = [Five]
-                      , _faceDown = []
+                      { faceUp = [Five]
+                      , faceDown = []
                       })
                   ]
-                , _foundation = Foundation { _numSets = 0 }
+                , foundation = Foundation { numSets = 0 }
                 }
           let result = moveReducer move game
           result `shouldBe` expected
         it "cannot move onto face down cards" $ do
           let move = moveStack 0 2
           let game = Game
-                { _layout = Layout
+                { layout = Layout
                   [ (0, Pile
-                      { _faceUp = [Five]
-                      , _faceDown = [Three]
+                      { faceUp = [Five]
+                      , faceDown = [Three]
                       })
                   , (2, Pile
-                      { _faceUp = []
-                      , _faceDown = [Two, One]
+                      { faceUp = []
+                      , faceDown = [Two, One]
                       })
                     ]
-                , _foundation = Foundation { _numSets = 0 }
+                , foundation = Foundation { numSets = 0 }
                 }
           let expected = Left $ MoveStackOntoFaceDownCards 2
           let result = moveReducer move game
@@ -235,17 +235,17 @@ spec = do
         it "cannot move stack onto a mismatching card" $ do
           let move = moveStack 0 2
           let game = Game
-                { _layout = Layout
+                { layout = Layout
                   [ (0, Pile
-                      { _faceUp = [Five]
-                      , _faceDown = [Three]
+                      { faceUp = [Five]
+                      , faceDown = [Three]
                       })
                   , (2, Pile
-                      { _faceUp = [One]
-                      , _faceDown = [Two, One]
+                      { faceUp = [One]
+                      , faceDown = [Two, One]
                       })
                     ]
-                , _foundation = Foundation { _numSets = 0 }
+                , foundation = Foundation { numSets = 0 }
                 }
           let expected = Left $ MismatchingStacks 0 2
           let result = moveReducer move game
@@ -253,13 +253,13 @@ spec = do
       it "cannot move stack onto itself" $ do
           let move = moveStack 1 1
           let game = Game
-                { _layout = Layout
+                { layout = Layout
                   [ (1, Pile
-                      { _faceUp = [Five]
-                      , _faceDown = [Three]
+                      { faceUp = [Five]
+                      , faceDown = [Three]
                       })
                   ]
-                , _foundation = Foundation { _numSets = 0 }
+                , foundation = Foundation { numSets = 0 }
                 }
           let expected = Left $ SourceIsTarget 1
           let result = moveReducer move game
@@ -267,30 +267,30 @@ spec = do
       it "can move stack which splits a stack" $ do
           let move = moveStack 1 2
           let game = Game
-                { _layout = Layout
+                { layout = Layout
                   [ (1, Pile
-                      { _faceUp = [Four, Five, One, Two]
-                      , _faceDown = []
+                      { faceUp = [Four, Five, One, Two]
+                      , faceDown = []
                       })
                   , (2, Pile
-                      { _faceUp = [Five]
-                      , _faceDown = [Two, One]
+                      { faceUp = [Five]
+                      , faceDown = [Two, One]
                       })
                     ]
-                , _foundation = Foundation { _numSets = 0 }
+                , foundation = Foundation { numSets = 0 }
                 }
           let expected = Right $  Game
-                { _layout = Layout
+                { layout = Layout
                   [ (0, Pile
-                      { _faceUp = [Five]
-                      , _faceDown = []
+                      { faceUp = [Five]
+                      , faceDown = []
                       })
                   , (1, Pile
-                      { _faceUp = [Four, Five, One, Two]
-                      , _faceDown = [Two, One]
+                      { faceUp = [Four, Five, One, Two]
+                      , faceDown = [Two, One]
                       })
                   ]
-                , _foundation = Foundation { _numSets = 0 }
+                , foundation = Foundation { numSets = 0 }
                 }
           let result = moveReducer move game
           result `shouldBe` expected

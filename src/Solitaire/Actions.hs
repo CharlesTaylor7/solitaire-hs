@@ -15,7 +15,7 @@ import Debug.Trace
 
 moves :: (MonadReader Config m) => m [Move]
 moves = do
-  numPiles <- M.size <$> view config_piles
+  numPiles <- M.size <$> view #piles
   let
     range = [0..numPiles-1]
     moves = moveStack <$> range <*> range
@@ -38,7 +38,7 @@ nextSteps game = do
   let
     paired = id &&& (\move -> runReaderT (moveReducer @MonadStack move game) config)
     step = Step ^. from curried
-    unvisited = not . flip Set.member history . view step_game
+    unvisited = not . flip Set.member history . view #game
     steps = runReader moves config
       ^.. folded . to paired . distributed . _Right . to step . filtered unvisited
   pure steps
@@ -69,12 +69,11 @@ scoreRun (Run cards) = Score $ length cards - 1
 
 scorePile :: PileCards -> Score
 scorePile pile =
-  pile ^.. faceUp . to toList . to splitIntoRuns . traverse . to scoreRun
-  & sumOf folded
+  pile & sumOf (#faceUp . to toList . to splitIntoRuns . traverse . to scoreRun)
 
 scoreByRuns :: Game -> Score
 scoreByRuns game =
-  game ^.. layout . _Layout . traverse . to scorePile
+  game ^.. #layout . #_Layout . traverse . to scorePile
   & sumOf folded
 
 moveReducer
@@ -85,32 +84,32 @@ moveReducer
 moveReducer move =
   case move of
     FlipCard (FC i) ->
-      layout . _Layout . ix i $ \pile -> do
-        if is _Just $ pile ^? faceUp . _Cons
+      #layout . #_Layout . ix i $ \pile -> do
+        if is _Just $ pile ^? #faceUp . _Cons
         then throwError (CardFlipOnUnexposedPile i)
         else pure ()
 
-        (head, rest) <- pile ^? faceDown . _Cons
+        (head, rest) <- pile ^? #faceDown . _Cons
           & (maybeToError $ CardFlipOnEmptyPile i)
 
-        let faceUp' = faceUp .~ [head]
-        let faceDown' = faceDown .~ rest
+        let faceUp' = #faceUp .~ [head]
+        let faceDown' = #faceDown .~ rest
         pure $ pile & faceUp' . faceDown'
     MoveToFoundation (MTF i) ->
-      foundation . numSets +~ 1 >>>
-      (layout . _Layout . ix i $ \pile ->
+      #foundation . #numSets +~ 1 >>>
+      (#layout . #_Layout . ix i $ \pile ->
         let
-          (set, leftover) = pile ^. faceUp . to splitAtStack
-          pile' = pile & faceUp .~ leftover
+          (set, leftover) = pile ^. #faceUp . to splitAtStack
+          pile' = pile & #faceUp .~ leftover
         in do
           when (length set /= enumSize @Card) $ throwError $ IncompleteSet i
           pure pile'
       )
     MoveStack (MS i j) ->
-      layout . _Layout $ \layout -> do
+      #layout . #_Layout $ \layout -> do
         let
           (stack, sourcePileRest) =
-            layout ^?! ix i . faceUp . to splitAtStack
+            layout ^?! ix i . #faceUp . to splitAtStack
           target = layout ^?! ix j
 
         -- sanity checking
@@ -125,10 +124,10 @@ moveReducer move =
         then error "todo"
         else do
           -- Can never move a stack onto facedown cards
-          when (is _Empty $ target ^. faceUp) $
+          when (is _Empty $ target ^. #faceUp) $
             throwError $ MoveStackOntoFaceDownCards  j
 
-        let targetCard = layout ^?! ix j . faceUp . _head
+        let targetCard = layout ^?! ix j . #faceUp . _head
         let stackBottomCard = stack ^?! _last
         let stackSize = length stack
         let diff = fromEnum targetCard - fromEnum stackBottomCard
@@ -141,8 +140,8 @@ moveReducer move =
         let
           (stackPartToMove, stackPartToLeave) = V.splitAt splitStackAt stack
 
-          sourceUpdate = ix i . faceUp .~ (stackPartToLeave <> sourcePileRest)
-          targetUpdate = ix j . faceUp %~ (stackPartToMove <>)
+          sourceUpdate = ix i . #faceUp .~ (stackPartToLeave <> sourcePileRest)
+          targetUpdate = ix j . #faceUp %~ (stackPartToMove <>)
 
         (pure $ layout & sourceUpdate . targetUpdate)
           & tracePretty

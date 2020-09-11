@@ -1,18 +1,17 @@
 module Solitaire.Invariants where
 
 import Solitaire.Imports
-import qualified Data.Set as Set
-import qualified Data.Vector as V
+
+import GHC.Exts (IsList(..))
+
 
 pileSize :: PileCards -> Int
-pileSize = (+) <$> V.length . view faceUp <*> V.length . view faceDown
+pileSize pile = (pile ^. #faceUp . to length) + (pile ^. #faceDown . to length)
 
 cardsInPile :: PileCards -> Set Card
-cardsInPile =
-  Set.fromList . (
-    (V.toList . view faceUp) <>
-    (V.toList . view faceDown)
-  )
+cardsInPile pile =
+  (pile ^.. #faceUp . folded & fromList) <>
+  (pile ^.. #faceDown . folded & fromList)
 
 totalCards :: Layout -> Int
 totalCards = alaf Sum foldMap pileSize . unLayout

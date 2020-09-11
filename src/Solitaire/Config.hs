@@ -33,10 +33,10 @@ configWith (NumSets s) (NumPiles p) (NumFaceDown f)
       deckSize = s * enumSize @Card
       (pileSize, rem) = deckSize `divMod` p
       faceUpCount i = pileSize - f + if i < rem then 1 else 0
-      pileCounts i = Pile { _faceUp = faceUpCount i, _faceDown = f }
+      pileCounts i = Pile { faceUp = faceUpCount i, faceDown = f }
     in pure Internal.Config
-      { _config_numSets = s
-      , _config_piles = M.fromAscList $
+      { numSets = s
+      , piles = M.fromAscList $
         map (id &&& pileCounts) [0..p-1]
       }
 
@@ -45,7 +45,7 @@ mkConfig (NumSets s) (Piles piles)
   | s < 0 = throwError $ InvalidConfig "Number of sets should be non negative."
   | s * enumSize @Card /= (sum . map pileCountsSize) piles = throwError $ InvalidConfig "Pile layout doesn't match deck size."
   | otherwise = pure Internal.Config
-    { _config_numSets = s
-    , _config_piles = M.fromAscList $ zip [0..p-1] piles
+    { numSets = s
+    , piles = M.fromAscList $ zip [0..p-1] piles
     }
     where p = length piles

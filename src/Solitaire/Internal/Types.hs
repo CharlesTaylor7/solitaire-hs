@@ -1,13 +1,9 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE DerivingVia #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 module Solitaire.Internal.Types where
 
 import Prelude
 
 import Control.Exception
-import Control.Lens
 
 import Data.Foldable
 import Data.Hashable
@@ -26,14 +22,14 @@ data Card
   deriving (Eq, Show, Read, Ord, Enum, Bounded, Generic)
 
 data Config = Config
-  { _config_numSets :: Int
-  , _config_piles :: IntMap PileCounts
+  { numSets :: Int
+  , piles :: IntMap PileCounts
   }
-  deriving (Eq, Show, Read)
+  deriving (Eq, Show, Read, Generic)
 
 data Pile a = Pile
-  { _faceUp :: a
-  , _faceDown :: a
+  { faceUp :: a
+  , faceDown :: a
   }
   deriving (Eq, Ord, Show, Read, Generic)
 
@@ -52,13 +48,13 @@ newtype Layout = Layout
   deriving (Eq, Ord, Show, Read, Generic)
 
 data Foundation = Foundation
-  { _numSets :: Int
+  { numSets :: Int
   }
   deriving (Eq, Ord, Show, Read, Generic)
 
 data Game = Game
-  { _layout :: Layout
-  , _foundation :: Foundation
+  { layout :: Layout
+  , foundation :: Foundation
   }
   deriving (Eq, Ord, Show, Read, Generic)
 
@@ -66,29 +62,29 @@ data Move
   = MoveStack MoveStack
   | FlipCard FlipCard
   | MoveToFoundation MoveToFoundation
-  deriving (Eq, Show, Read)
+  deriving (Eq, Show, Read, Generic)
 
 data Step = Step
-  { _step_move :: Move
-  , _step_game :: Game
+  { move :: Move
+  , game :: Game
   }
-  deriving (Eq, Read, Show)
+  deriving (Eq, Read, Show, Generic)
 
 data MoveStack = MS
-  { _ms_fromIndex :: Int
-  , _ms_toIndex :: Int
+  { fromIndex :: Int
+  , toIndex :: Int
   }
-  deriving (Eq, Show, Read)
+  deriving (Eq, Show, Read, Generic)
 
 newtype FlipCard = FC
-  { _fc_pileIndex :: Int
+  { pileIndex :: Int
   }
-  deriving (Eq, Show, Read)
+  deriving (Eq, Show, Read, Generic)
 
 newtype MoveToFoundation = MTF
-  { _mtf_pileIndex :: Int
+  { pileIndex :: Int
   }
-  deriving (Eq, Show, Read)
+  deriving (Eq, Show, Read, Generic)
 
 data InvalidMove
   = CardFlipOnUnexposedPile Int
@@ -98,12 +94,12 @@ data InvalidMove
   | EmptyStackSource Int
   | MoveStackOntoFaceDownCards Int
   | SourceIsTarget Int
-  deriving (Eq, Show, Read)
+  deriving (Eq, Show, Read, Generic)
 
 instance Exception InvalidMove
 
 newtype Score = Score Int
-  deriving (Eq, Ord, Show, Num)
+  deriving (Eq, Ord, Show, Num, Generic)
 
 -- hashable instances
 instance Hashable Game
@@ -128,15 +124,3 @@ moveToFoundation = MoveToFoundation . MTF
 
 moveStack :: Int -> Int -> Move
 moveStack = (MoveStack .) . MS
-
-makeLensesWith (lensRules & generateUpdateableOptics .~ False) ''Config
-makePrisms ''Card
-makePrisms ''Layout
-makeLenses ''Foundation
-makeLenses ''Game
-makeLenses ''Pile
-makePrisms ''Move
-makeLenses ''Step
-makeLenses ''MoveStack
-makeLenses ''FlipCard
-makeLenses ''MoveToFoundation
