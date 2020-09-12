@@ -1,17 +1,12 @@
 module Main where
 
-import Solitaire.Boring
+import Solitaire.Prelude
+
+import qualified Examples.Boring as Boring
+import qualified Examples.Yukon as Yukon
 
 
 main :: IO ()
 main = do
-  config <- rightOrThrow $ mkConfig
-    (NumSets 2)
-    (Piles
-      [ pileCounts 1 0
-      , pileCounts 1 1
-      , pileCounts 1 2
-      , pileCounts 1 3
-      ]
-    )
-  runGame @Boring config
+  Boring.main
+  Yukon.main
