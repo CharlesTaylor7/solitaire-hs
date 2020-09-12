@@ -4,7 +4,7 @@ import Solitaire.Prelude
 import Solitaire.PrettyPrinter
 import Solitaire.RuleSet
 
-import Solitaire.Boring.Types
+import Solitaire.Boring.Types hiding (Config, Game, Move, InvalidMove)
 import qualified Solitaire.Boring.Types as Boring
 import Solitaire.Boring.Utils
 
@@ -19,15 +19,21 @@ import Debug.Trace
 data Boring
 
 instance RuleSet Boring where
-  data Game Boring = Game
-  data Config Boring = Config
-  data Move Boring = Move
-  data InvalidMove Boring = InvalidMove
+  data Game Boring = Game { unwrap :: Boring.Game }
+    deriving Generic
+  data Config Boring = Config { unwrap :: Boring.Config }
+    deriving Generic
+  data Move Boring = Move { unwrap :: Boring.Move }
+    deriving Generic
+  data InvalidMove Boring = InvalidMove { unwrap :: Boring.InvalidMove }
+    deriving Generic
 
-  newGame :: (MonadIO m, MonadReader Boring.Config m) => m Boring.Game
+  newGame :: (MonadIO m, MonadReader (Config Boring) m) => m (Game Boring)
   newGame = do
-    shuffled <- getDeck >>= shuffle
-    pileCounts <- view #piles
+    Config config <- ask
+    let deck = getDeck config
+    shuffled <- shuffle deck
+    pileCounts <- view (#unwrap . #piles)
     let
       piles = fst $ foldl'
         (\(ps, cs) count ->
