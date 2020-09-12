@@ -19,10 +19,10 @@ import Debug.Trace
 data Boring
 
 instance RuleSet Boring where
-  type Game Boring = Boring.Game
-  type Config Boring = Boring.Config
-  type Move Boring = Boring.Move
-  type InvalidMove Boring = Boring.InvalidMove
+  data Game Boring = Game
+  data Config Boring = Config
+  data Move Boring = Move
+  data InvalidMove Boring = InvalidMove
 
   newGame :: (MonadIO m, MonadReader Boring.Config m) => m Boring.Game
   newGame = do
@@ -40,7 +40,7 @@ instance RuleSet Boring where
         pileCounts
       layout = Layout $ indexFrom 0 $ reverse piles
       foundation = Foundation 0
-    pure $ Game layout foundation
+    pure $ Boring.Game layout foundation
 
   gameIsWon :: Boring.Game -> Bool
   gameIsWon game = game ^. #layout . to totalCards . to (== 0)
@@ -157,8 +157,8 @@ splitAtStack cards =
 
 
   -- scoring game states, for A* path finding
-scoreStep :: Step -> (Score, Score)
-scoreStep (Step move game) = (scoreMove move,scoreByRuns game)
+scoreStep :: Step Boring -> (Score, Score)
+scoreStep (Step move game) = (scoreMove move, scoreByRuns game)
   where
     scoreMove :: Boring.Move -> Score
     scoreMove (MoveToFoundation _) = 2
