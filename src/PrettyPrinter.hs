@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wno-deprecations #-}
+{-# options_ghc -Wno-deprecations #-}
 module PrettyPrinter
   ( prettyPrint
   , tracePretty
@@ -16,11 +16,14 @@ import Control.Monad.Writer
 
 import Debug.Trace (trace)
 
-import Data.Foldable (for_)
+import Data.Foldable (for_, toList)
+import Data.Map (Map)
 import Data.String (IsString(..))
 import Data.Text (Text)
+import Data.Vector (Vector)
 
 import qualified Data.Text as T
+import qualified Data.Map as Map
 
 
 pretty :: Pretty a => a -> Text
@@ -63,15 +66,58 @@ instance IsString PrettyExpr where
 class Pretty a where
   prettyExpr :: a -> PrettyExpr
 
+prettyPrint :: (MonadIO m, Pretty a) => a -> m ()
+prettyPrint = liftIO . putStrLn . T.unpack . pretty
+
+tracePretty :: Pretty a => a -> b -> b
+tracePretty = trace . T.unpack . pretty
+
+
 -- instances
 newtype WrappedShow a = WrappedShow a
 
 instance Show a => Pretty (WrappedShow a) where
   prettyExpr (WrappedShow a) = PrettyStr . T.pack . show $ a
 
+deriving via WrappedShow Bool instance Pretty Bool
 
-prettyPrint :: (MonadIO m, Pretty a) => a -> m ()
-prettyPrint = liftIO . putStrLn . T.unpack . pretty
+instance Pretty Text where
+  prettyExpr = PrettyStr
 
-tracePretty :: Pretty a => a -> b -> b
-tracePretty = trace . T.unpack . pretty
+instance Pretty a => Pretty [a] where
+  prettyExpr [] = "[]"
+  prettyExpr xs =
+    PrettyHardWrap
+      [ "["
+      , PrettyIndent (PrettyHardWrap $ map prettyExpr xs)
+      , "]"
+      ]
+
+instance Pretty a => Pretty (Vector a) where
+  prettyExpr = prettyExpr . toList
+
+instance (Pretty key, Pretty value) => Pretty (Map key value) where
+  prettyExpr xs =
+    PrettyHardWrap
+      [ "{"
+      , PrettyIndent $ join xs
+      , "}"
+      ]
+    where
+      format (key, value) =
+        PrettyHardWrap
+          [ PrettySoftWrap [prettyExpr key, ":"]
+          , prettyExpr value
+          ]
+      join = PrettyHardWrap . map format . Map.toList
+
+instance (Pretty a) => Pretty (Maybe a) where
+  prettyExpr (Just x) = prettyExpr x
+  prettyExpr Nothing = "Nothing"
+
+instance (Pretty a, Pretty b) => Pretty (Either a b) where
+  prettyExpr (Left x) = prettyExpr x
+  prettyExpr (Right x) = prettyExpr x
+
+instance Pretty Char where
+  prettyExpr = PrettyStr . T.singleton

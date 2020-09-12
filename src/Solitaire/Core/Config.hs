@@ -26,12 +26,13 @@ mkConfig (NumSets s) (Piles piles)
         requestedCardCount = s * enumSize @Card
         totalPileAmount = piles
           & sumOf (folded . to pileCountsSize)
-          & traceShow (totalPileAmount, requestedCardCount)
 
         p = length piles
 
       when (requestedCardCount /= totalPileAmount) $
+
         throwError $ InvalidConfig "Pile layout doesn't match deck size."
+          & traceShow (totalPileAmount, requestedCardCount)
 
       pure Config
         { numSets = s

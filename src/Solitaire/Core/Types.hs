@@ -23,14 +23,15 @@ data Card = Card
 
 instance Enum Card where
   toEnum number =
-    let (rank, suit) = number `quotRem` enumSize @Rank
+    let (rank, suit) = number `quotRem` enumSize @Suit
     in Card (rank ^. enum) (suit ^. enum)
+
   fromEnum card =
     let
       rank = card ^. #rank . from enum
-      suit = card ^. #rank . from enum
+      suit = card ^. #suit . from enum
     in
-      rank * (enumSize @Rank) + suit
+      rank * (enumSize @Suit) + suit
 
 instance Bounded Card where
   minBound = Card minBound minBound

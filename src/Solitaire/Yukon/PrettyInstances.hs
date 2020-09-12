@@ -12,59 +12,36 @@ import qualified Data.Text as T
 
 
 deriving via WrappedShow InvalidMove instance Pretty InvalidMove
-deriving via WrappedShow Bool instance Pretty Bool
-deriving via WrappedShow Card instance Pretty Card
 
-instance Pretty Text where
-  prettyExpr = PrettyStr
+instance Pretty Card where
+  prettyExpr card =
+    PrettyStr $
+    T.pack $
+    card ^. #rank . to rankToChar : card ^. #suit . to suitToChar : []
 
-instance Pretty a => Pretty [a] where
-  prettyExpr [] = "[]"
-  prettyExpr xs =
-    PrettyHardWrap
-      [ "["
-      , PrettyIndent (PrettyHardWrap $ map prettyExpr xs)
-      , "]"
-      ]
+suitToChar :: Suit -> Char
+suitToChar Hearts = 'H'
+suitToChar Diamonds = 'D'
+suitToChar Spades = 'S'
+suitToChar Clubs = 'C'
 
-instance Pretty a => Pretty (Vector a) where
-  prettyExpr = prettyExpr . toList
-
-instance (Pretty key, Pretty value) => Pretty (Map key value) where
-  prettyExpr xs =
-    PrettyHardWrap
-      [ "{"
-      , PrettyIndent $ join xs
-      , "}"
-      ]
-    where
-      format (key, value) =
-        PrettyHardWrap
-          [ PrettySoftWrap [prettyExpr key, ":"]
-          , prettyExpr value
-          ]
-      join = PrettyHardWrap . map format . Map.toList
+rankToChar :: Rank -> Char
+rankToChar Ten = 'T'
+rankToChar Jack = 'J'
+rankToChar Queen = 'Q'
+rankToChar King = 'K'
+rankToChar Ace = 'A'
+rankToChar rank = rank & fromEnum & (+2) & intToDigit
 
 instance Pretty Move where
   prettyExpr (MoveStack (MS i j)) = fromString $ "moveStack" ++ " " ++ show i ++ " " ++ show j
   prettyExpr (MoveToFoundation (MTF i)) = fromString $ "moveToFoundation" ++ " " ++ show i
   prettyExpr (FlipCard (FC i)) = fromString $ "flipCard" ++ " " ++ show i
 
-instance (Pretty a) => Pretty (Maybe a) where
-  prettyExpr (Just x) = prettyExpr x
-  prettyExpr Nothing = "Nothing"
-
-instance (Pretty a, Pretty b) => Pretty (Either a b) where
-  prettyExpr (Left x) = prettyExpr x
-  prettyExpr (Right x) = prettyExpr x
-
-instance Pretty Char where
-  prettyExpr = PrettyStr . T.singleton
-
 instance Pretty CardView where
-  prettyExpr None = " "
-  prettyExpr FaceDown = "-"
-  prettyExpr (FaceUp card) = PrettyStr . T.pack . show . (+1) . fromEnum $ card
+  prettyExpr None = "  "
+  prettyExpr FaceDown = "--"
+  prettyExpr (FaceUp card) = prettyExpr card
 
 instance Pretty Row where
   prettyExpr = PrettyStr . T.intercalate "|" . map pretty . unRow
