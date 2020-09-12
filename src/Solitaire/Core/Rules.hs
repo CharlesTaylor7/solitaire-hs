@@ -51,11 +51,11 @@ data GameWithPlayback rs = GameWithPlayback
 
 
 class Rules rs where
-  type Config      rs = (config :: *)      | config -> rs
-  type Game        rs = (game :: *)        | game -> rs
-  type Move        rs = (move :: *)        | move -> rs
-  type InvalidMove rs = (invalidMove :: *) | invalidMove -> rs
-  type Card        rs = (card :: *)        | card -> rs
+  type Config rs :: *
+  type Game rs :: *
+  type Move rs :: *
+  type InvalidMove rs :: *
+  type Card rs :: *
 
   newGame :: (MonadIO m, MonadReader (Config rs) m) => m (Game rs)
 
@@ -73,7 +73,7 @@ class Rules rs where
 
 
 nextSteps
-  ::
+  :: forall rs m.
   ( Rules rs
   , MonadReader (Config rs) m
   , MonadHistory (Game rs) m
@@ -85,9 +85,9 @@ nextSteps game = do
   config <- ask
   history <- getHistory
   let
-    paired = id &&& (\move -> runReaderT (moveReducer move game) config)
+    paired = id &&& (\move -> runReaderT (moveReducer @rs move game) config)
     step = Step ^. from curried
     unvisited = not . flip Set.member history . view #game
-    steps = runReader moves config
+    steps = runReader (moves @rs) config
       ^.. folded . to paired . distributed . _Right . to step . filtered unvisited
   pure steps

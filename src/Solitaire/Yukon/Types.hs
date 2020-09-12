@@ -1,8 +1,6 @@
 {-# options_ghc -Wno-orphans #-}
 module Solitaire.Yukon.Types
   ( module CoreTypes
-  , Config(..)
-  , PileCounts
   , PileCards
   , Game(..)
   , Layout(..)
@@ -15,20 +13,18 @@ module Solitaire.Yukon.Types
   , moveStack
   , moveToFoundation
   , flipCard
-
   ) where
 
 import Solitaire.Prelude
 import Solitaire.Core.Types as CoreTypes
+  ( Pile(..)
+  , Card(..)
+  , Rank(..)
+  , Suit(..)
+  , Color(..)
+  , Config(..)
+  )
 
-
-data Config = Config
-  { numSets :: Int
-  , piles :: IntMap PileCounts
-  }
-  deriving (Eq, Show, Read, Generic)
-
-type PileCounts = Pile Int
 type PileCards = Pile (Vector Card)
 
 newtype Layout = Layout

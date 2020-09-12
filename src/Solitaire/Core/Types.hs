@@ -4,6 +4,13 @@ module Solitaire.Core.Types where
 import Solitaire.Prelude
 
 
+data Config = Config
+  { numSets :: Int
+  , piles :: IntMap (Pile Int)
+  }
+  deriving (Eq, Show, Generic)
+
+
 newtype Score = Score Int
   deriving stock (Eq, Ord, Show, Generic)
   deriving newtype (Num)

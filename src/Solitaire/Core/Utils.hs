@@ -16,4 +16,5 @@ a `isSuccessorOf` b =
   -- a is the opposite color of b
   a ^. #suit . to color /= b ^. #suit . to color
 
-
+pileCountsSize :: Pile Int -> Int
+pileCountsSize counts = counts ^. #faceUp + counts ^. #faceDown

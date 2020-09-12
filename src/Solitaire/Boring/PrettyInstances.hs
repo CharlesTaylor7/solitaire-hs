@@ -92,7 +92,7 @@ data CardView
   = None
   | FaceDown
   | FaceUp Card
-  deriving (Eq, Read, Show)
+  deriving (Eq, Show)
 
 newtype RowCount = RowCount Int
 

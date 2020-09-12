@@ -2,11 +2,11 @@
 {-# options_ghc -Wno-unused-top-binds #-}
 module Solitaire.Yukon.Rules
   ( Yukon
-  , scorePile
   ) where
 
 import Solitaire.Prelude
 import Solitaire.Core.Rules
+import Solitaire.Core.Utils (isSuccessorOf, pileCountsSize)
 
 import Solitaire.Yukon.Utils
 import Solitaire.Yukon.PrettyInstances ()
@@ -16,7 +16,6 @@ import qualified Solitaire.Yukon.Types as Yukon
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
 
-import Data.List.NonEmpty ((<|))
 
 import Debug.Trace
 
@@ -144,10 +143,6 @@ instance Rules Yukon where
                   & at "sourcePileRest" ?~ sourcePileRest
                 )
 
-isSuccessorOf :: Yukon.Card -> Yukon.Card -> Bool
-a `isSuccessorOf` b =
-  fromEnum a - fromEnum b == 1
-
 countWhile :: Foldable f => (a -> Bool) -> f a -> Int
 countWhile p =
   let
@@ -168,37 +163,3 @@ splitAtStack cards =
       in V.splitAt (n+1) cards
     )
     (uncons cards)
-
-
-  -- scoring game states, for A* path finding
-scoreStep :: Step Yukon -> (Score, Score)
-scoreStep (Step move game) = (scoreMove move, scoreByRuns game)
-  where
-    scoreMove :: Yukon.Move -> Score
-    scoreMove (MoveToFoundation _) = 2
-    scoreMove (FlipCard _) = 1
-    scoreMove (MoveStack _) = 0
-
-newtype Run = Run (NonEmpty Yukon.Card)
-
-splitIntoRuns :: [Yukon.Card] -> [Run]
-splitIntoRuns cards =
-  let
-    reducer :: [Run] -> Yukon.Card -> [Run]
-    reducer [] card = [Run $ card :| []]
-    reducer runs@(Run run@(c:|_) : rest) card
-      | card `isSuccessorOf` c = (Run $ card <| run) : rest
-      | otherwise = (Run $ card :| []) : runs
-  in
-    foldl' reducer [] cards
-
-scoreRun :: Run -> Score
-scoreRun (Run cards) = Score $ length cards - 1
-
-scorePile :: PileCards -> Score
-scorePile pile =
-  pile & sumOf (#faceUp . to toList . to splitIntoRuns . traverse . to scoreRun)
-
-scoreByRuns :: Yukon.Game -> Score
-scoreByRuns game =
-  game & sumOf (#layout . #_Layout . traverse . to scorePile)

@@ -16,10 +16,10 @@ getDeck = do
   numSets <- view #numSets
   pure $ enumerate >>= replicate numSets
 
-pileCountsSize :: PileCounts -> Int
+pileCountsSize :: Pile Int -> Int
 pileCountsSize counts = counts ^. #faceUp + counts ^. #faceDown
 
-toPile :: [Card] -> PileCounts -> PileCards
+toPile :: [Card] -> Pile Int -> PileCards
 toPile cards counts =
   let
     n = counts ^. #faceUp
