@@ -2,6 +2,7 @@
 module Solitaire.RuleSet where
 
 import Solitaire.Prelude
+import Solitaire.PrettyPrinter
 
 
 -- types
@@ -31,8 +32,8 @@ data Step rs = Step
   deriving (Generic)
 
 data GameWithPlayback rs = GameWithPlayback
-  { game :: Game rs
-  , moves :: [Move rs]
+  { moves :: [Move rs]
+  , game :: Game rs
   }
   deriving (Generic)
 
@@ -45,3 +46,19 @@ class RuleSet rs where
 
   newGame :: App rs (Game rs)
   gameIsWon :: Game rs -> Bool
+  moveReducer :: (MonadError (InvalidMove rs) m) => Move rs -> Game rs -> m (Game rs)
+  nextSteps
+    ::
+    ( MonadReader (Config rs) m
+    , MonadHistory (Game rs) m
+    )
+    => Game rs
+    -> m [Step rs]
+
+type Solitaire rs =
+  ( RuleSet rs
+  , Eq (Game rs)
+  , Hashable (Game rs)
+  , Pretty (Game rs)
+  , Exception (InvalidMove rs)
+  )

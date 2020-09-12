@@ -4,7 +4,7 @@ import Solitaire.Prelude
 import Solitaire.PrettyPrinter
 import Solitaire.RuleSet
 
-runGame :: RuleSet rs => Config rs -> IO ()
+runGame :: Solitaire rs => Config rs -> IO ()
 runGame config = do
   result <- runGameLoop
     & unApp
@@ -23,21 +23,8 @@ runGame config = do
       throwInIO $ void $ foldM observeGameStep game (reverse moves)
       putStrLn "GameWon"
 
-
-throwInIO :: (MonadIO m, Exception e) => ExceptT e m a -> m a
-throwInIO = join . fmap rightOrThrow . runExceptT
-
-
-runGameLoop :: RuleSet rs => App rs (Game rs, GameConclusion rs)
-runGameLoop = do
-  game <- newGame
-  queueInsert 0 ([], game)
-  conclusion <- App $ loopM (\_ -> step) ()
-  pure (game, conclusion)
-
-
 observeGameStep
-  :: (RuleSet rs, MonadError (InvalidMove rs) m, MonadIO m)
+  :: (Solitaire rs, MonadError (InvalidMove rs) m, MonadIO m)
   => Game rs
   -> Move rs
   -> m (Game rs)
@@ -48,17 +35,29 @@ observeGameStep game move = do
   pure game
 
 
-step :: RuleSet rs => ExceptT (InvalidMove rs) (App rs) ()
+throwInIO :: (MonadIO m, Exception e) => ExceptT e m a -> m a
+throwInIO = join . fmap rightOrThrow . runExceptT
+
+
+runGameLoop :: Solitaire rs => App rs (Game rs, GameConclusion rs)
+runGameLoop = do
+  game <- newGame
+  queueInsert 0 $ GameWithPlayback [] game
+  conclusion <- loopM (\_ -> step) ()
+  pure (game, conclusion)
+
+
+step :: Solitaire rs => ExceptT (GameConclusion rs) (App rs) ()
 step = do
   -- retrieve the best priority game state
   maybeMin <- queuePopMin
   case maybeMin of
     -- out of game states to try, we lost
     Nothing ->
-      throwError gameLost
+      throwError GameLost
 
     -- we have game states to play from
-    Just (priority, (previousMoves, game)) -> do
+    Just (priority, GameWithPlayback previousMoves game) -> do
       -- game states can be reached multiple times via different paths
       -- verify we haven't visted this state before
       visited <- historyHas game
@@ -66,7 +65,7 @@ step = do
 
         -- check to see if we won
         when (gameIsWon game) $
-          throwError $ gameWon previousMoves
+          throwError $ GameWon previousMoves
 
         -- record we visited this game state
         saveToHistory game
@@ -78,4 +77,4 @@ step = do
         for_ steps $ \step -> do
             queueInsert
               (priority + 1)
-              (step ^. #move : previousMoves, (step ^. #game))
+              (GameWithPlayback (step ^. #move : previousMoves) (step ^. #game))
