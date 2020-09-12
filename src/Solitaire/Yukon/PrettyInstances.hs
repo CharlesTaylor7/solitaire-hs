@@ -20,10 +20,10 @@ instance Pretty Card where
       suit = card ^. #suit . to suitToChar
 
 suitToChar :: Suit -> Char
-suitToChar Hearts = 'H'
-suitToChar Diamonds = 'D'
-suitToChar Spades = 'S'
-suitToChar Clubs = 'C'
+suitToChar Hearts = '\2661'
+suitToChar Diamonds = '\2662'
+suitToChar Spades = '\2660'
+suitToChar Clubs = '\2663'
 
 rankToChar :: Rank -> Char
 rankToChar Ten = 'T'
