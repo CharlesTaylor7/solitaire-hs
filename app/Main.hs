@@ -1,3 +1,4 @@
+{-# options_ghc -Wwarn #-}
 module Main where
 
 import Solitaire.Prelude
@@ -8,5 +9,5 @@ import qualified Examples.Yukon as Yukon
 
 main :: IO ()
 main = do
-  Boring.main
+--  Boring.main
   Yukon.main

@@ -34,7 +34,7 @@ historyHas val = Set.member val <$> getHistory
 
 newtype HistoryT s m a = HistoryT
   { toStateT :: StateT (Set s) m a }
-  deriving
+  deriving newtype
     ( Functor
     , Applicative
     , Monad

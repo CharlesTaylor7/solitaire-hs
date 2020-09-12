@@ -1,7 +1,7 @@
-module Solitaire.Boring.Utils where
+module Solitaire.Yukon.Utils where
 
 import Solitaire.Prelude
-import Solitaire.Boring.Types
+import Solitaire.Yukon.Types
 
 import qualified Data.Vector as V
 

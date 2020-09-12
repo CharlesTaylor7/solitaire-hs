@@ -1,17 +1,17 @@
 {-# language FlexibleInstances #-}
 {-# options_ghc -Wno-unused-top-binds #-}
-module Solitaire.Boring.Rules
-  ( Boring
+module Solitaire.Yukon.Rules
+  ( Yukon
   , scorePile
   ) where
 
 import Solitaire.Prelude
 import Solitaire.Core.Rules
 
-import Solitaire.Boring.Utils
-import Solitaire.Boring.PrettyInstances ()
-import Solitaire.Boring.Types
-import qualified Solitaire.Boring.Types as Boring
+import Solitaire.Yukon.Utils
+import Solitaire.Yukon.PrettyInstances ()
+import Solitaire.Yukon.Types
+import qualified Solitaire.Yukon.Types as Yukon
 
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
@@ -21,24 +21,24 @@ import Data.List.NonEmpty ((<|))
 import Debug.Trace
 
 
-data Boring
+data Yukon
 
 -- boilerplate instances
 -- these are required in each solitaire implementation
 -- because type applications are not allowed in the instances head
 -- otherwise I would just derive this once at App's declaration
-deriving newtype instance MonadReader Boring.Config (App Boring)
-deriving newtype instance MonadHistory Boring.Game (App Boring)
+deriving newtype instance MonadReader Yukon.Config (App Yukon)
+deriving newtype instance MonadHistory Yukon.Game (App Yukon)
 
 
-instance Rules Boring where
-  type Game Boring = Boring.Game
-  type Config Boring = Boring.Config
-  type Move Boring = Boring.Move
-  type InvalidMove Boring = Boring.InvalidMove
-  type Card Boring = Boring.Card
+instance Rules Yukon where
+  type Game Yukon = Yukon.Game
+  type Config Yukon = Yukon.Config
+  type Move Yukon = Yukon.Move
+  type InvalidMove Yukon = Yukon.InvalidMove
+  type Card Yukon = Yukon.Card
 
-  newGame :: (MonadIO m, MonadReader Boring.Config m) => m Boring.Game
+  newGame :: (MonadIO m, MonadReader Yukon.Config m) => m Yukon.Game
   newGame = do
     shuffled <- getDeck >>= shuffle
     pileCounts <- view #piles
@@ -54,12 +54,12 @@ instance Rules Boring where
         pileCounts
       layout = Layout $ indexFrom 0 $ reverse piles
       foundation = Foundation 0
-    pure $ Boring.Game layout foundation
+    pure $ Yukon.Game layout foundation
 
-  gameIsWon :: Boring.Game -> Bool
+  gameIsWon :: Yukon.Game -> Bool
   gameIsWon game = game ^. #layout . to totalCards . to (== 0)
 
-  moves :: (MonadReader Boring.Config m) => m [Boring.Move]
+  moves :: (MonadReader Yukon.Config m) => m [Yukon.Move]
   moves = do
     numPiles <- M.size <$> view #piles
     let
@@ -70,10 +70,10 @@ instance Rules Boring where
     pure $ sets ++ flips ++ moves
 
   moveReducer
-    :: (MonadError Boring.InvalidMove m)
-    => Boring.Move
-    -> Boring.Game
-    -> m Boring.Game
+    :: (MonadError Yukon.InvalidMove m)
+    => Yukon.Move
+    -> Yukon.Game
+    -> m Yukon.Game
   moveReducer move =
     case move of
       FlipCard (FC i) ->
@@ -95,7 +95,7 @@ instance Rules Boring where
             (set, leftover) = pile ^. #faceUp . to splitAtStack
             pile' = pile & #faceUp .~ leftover
           in do
-            when (length set /= enumSize @Boring.Card) $ throwError $ IncompleteSet i
+            when (length set /= enumSize @Yukon.Card) $ throwError $ IncompleteSet i
             pure pile'
         )
       MoveStack (MS i j) ->
@@ -138,13 +138,13 @@ instance Rules Boring where
 
           (pure $ layout & sourceUpdate . targetUpdate)
             & tracePretty
-                ( (mempty :: Map Text (Vector Boring.Card))
+                ( (mempty :: Map Text (Vector Yukon.Card))
                   & at "partToLeave" ?~ stackPartToLeave
                   & at "partToMove" ?~ stackPartToMove
                   & at "sourcePileRest" ?~ sourcePileRest
                 )
 
-isSuccessorOf :: Boring.Card -> Boring.Card -> Bool
+isSuccessorOf :: Yukon.Card -> Yukon.Card -> Bool
 a `isSuccessorOf` b =
   fromEnum a - fromEnum b == 1
 
@@ -156,7 +156,7 @@ countWhile p =
       | otherwise = acc
   in foldr reducer 0
 
-splitAtStack :: Vector Boring.Card -> (Vector Boring.Card, Vector Boring.Card)
+splitAtStack :: Vector Yukon.Card -> (Vector Yukon.Card, Vector Yukon.Card)
 splitAtStack cards =
   maybe
     (mempty, mempty)
@@ -171,20 +171,20 @@ splitAtStack cards =
 
 
   -- scoring game states, for A* path finding
-scoreStep :: Step Boring -> (Score, Score)
-scoreStep step = (step ^. #move . to scoreMove, step ^. #game . to scoreByRuns)
+scoreStep :: Step Yukon -> (Score, Score)
+scoreStep (Step move game) = (scoreMove move, scoreByRuns game)
   where
-    scoreMove :: Boring.Move -> Score
+    scoreMove :: Yukon.Move -> Score
     scoreMove (MoveToFoundation _) = 2
     scoreMove (FlipCard _) = 1
     scoreMove (MoveStack _) = 0
 
-newtype Run = Run (NonEmpty Boring.Card)
+newtype Run = Run (NonEmpty Yukon.Card)
 
-splitIntoRuns :: [Boring.Card] -> [Run]
+splitIntoRuns :: [Yukon.Card] -> [Run]
 splitIntoRuns cards =
   let
-    reducer :: [Run] -> Boring.Card -> [Run]
+    reducer :: [Run] -> Yukon.Card -> [Run]
     reducer [] card = [Run $ card :| []]
     reducer runs@(Run run@(c:|_) : rest) card
       | card `isSuccessorOf` c = (Run $ card <| run) : rest
@@ -199,6 +199,6 @@ scorePile :: PileCards -> Score
 scorePile pile =
   pile & sumOf (#faceUp . to toList . to splitIntoRuns . traverse . to scoreRun)
 
-scoreByRuns :: Boring.Game -> Score
+scoreByRuns :: Yukon.Game -> Score
 scoreByRuns game =
   game & sumOf (#layout . #_Layout . traverse . to scorePile)

@@ -1,9 +1,9 @@
 {-# options_ghc -Wno-orphans #-}
-module Solitaire.Boring.PrettyInstances () where
+module Solitaire.Yukon.PrettyInstances () where
 
 import Solitaire.Prelude
 
-import Solitaire.Boring.Types
+import Solitaire.Yukon.Types
 
 import Data.String (IsString(..))
 
@@ -92,7 +92,7 @@ data CardView
   = None
   | FaceDown
   | FaceUp Card
-  deriving (Eq, Read, Show)
+  deriving (Eq, Show)
 
 newtype RowCount = RowCount Int
 

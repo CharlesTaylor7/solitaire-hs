@@ -21,7 +21,7 @@ type Solitaire rs =
 newtype App rs a = App
   { unApp :: PQueueT MoveCount (GameWithPlayback rs) (HistoryT (Game rs) (ReaderT (Config rs) IO)) a
   }
-  deriving
+  deriving newtype
     ( Functor
     , Applicative
     , Monad
@@ -31,7 +31,8 @@ newtype App rs a = App
 
 
 newtype MoveCount = MoveCount Int
-  deriving (Eq, Ord, Num)
+  deriving stock (Eq, Ord)
+  deriving newtype (Num)
 
 data GameConclusion rs = GameWon [Move rs] | GameLost
 deriving instance Show (Move rs) => Show (GameConclusion rs)

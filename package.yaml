@@ -53,6 +53,7 @@ default-extensions:
   - DerivingStrategies
   - StandaloneDeriving
   - DerivingVia
+  - DeriveAnyClass
 
   # sugar
   - TupleSections

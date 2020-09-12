@@ -1,7 +1,6 @@
 {-# options_ghc -Wno-orphans #-}
-module Solitaire.Boring.Types
+module Solitaire.Yukon.Types
   ( module CoreTypes
-  , Card(..)
   , Config(..)
   , PileCounts
   , PileCards
@@ -20,16 +19,8 @@ module Solitaire.Boring.Types
   ) where
 
 import Solitaire.Prelude
-import Solitaire.Core.Types as CoreTypes (Pile(..), Score(..))
+import Solitaire.Core.Types as CoreTypes
 
-
-data Card
-  = One
-  | Two
-  | Three
-  | Four
-  | Five
-  deriving (Eq, Show, Read, Ord, Enum, Bounded, Generic)
 
 data Config = Config
   { numSets :: Int
@@ -43,19 +34,18 @@ type PileCards = Pile (Vector Card)
 newtype Layout = Layout
   { unLayout :: IntMap PileCards
   }
-  deriving (Eq, Ord, Show, Read, Generic)
-
+  deriving (Eq, Show, Generic)
 
 data Foundation = Foundation
   { numSets :: Int
   }
-  deriving (Eq, Ord, Show, Read, Generic)
+  deriving (Eq, Ord, Show, Generic)
 
 data Game = Game
   { layout :: Layout
   , foundation :: Foundation
   }
-  deriving (Eq, Ord, Show, Read, Generic)
+  deriving (Eq, Show, Generic)
 
 data Move
   = MoveStack MoveStack

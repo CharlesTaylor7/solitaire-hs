@@ -1,14 +1,66 @@
 {-# options_ghc -Wno-orphans #-}
-module Solitaire.Core.Types
-  ( Score(..)
-  , Pile(..)
-  ) where
+module Solitaire.Core.Types where
 
 import Solitaire.Prelude
 
 
 newtype Score = Score Int
-  deriving (Eq, Ord, Show, Num, Generic)
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving newtype (Num)
+
+data Card = Card
+  { rank :: Rank
+  , suit :: Suit
+  }
+  deriving (Eq, Show, Generic)
+
+instance Enum Card where
+  toEnum number =
+    let (rank, suit) = number `quotRem` enumSize @Rank
+    in Card (rank ^. enum) (suit ^. enum)
+  fromEnum card =
+    let
+      rank = card ^. #rank . from enum
+      suit = card ^. #rank . from enum
+    in
+      rank * (enumSize @Rank) + suit
+
+instance Bounded Card where
+  minBound = Card minBound minBound
+  maxBound = Card maxBound maxBound
+
+data Rank
+  = Ace
+  | Two
+  | Three
+  | Four
+  | Five
+  | Six
+  | Seven
+  | Eight
+  | Nine
+  | Ten
+  | Jack
+  | Queen
+  | King
+  deriving stock (Eq, Ord, Show, Enum, Bounded, Generic)
+  deriving anyclass (Hashable)
+
+
+data Suit
+ = Diamonds
+ | Clubs
+ | Hearts
+ | Spades
+  deriving stock (Eq, Show, Enum, Bounded, Generic)
+  deriving anyclass (Hashable)
+
+
+data Color
+ = Red
+ | Black
+  deriving stock (Eq, Show, Enum, Bounded, Generic)
+  deriving anyclass (Hashable)
 
 
 data Pile a = Pile
