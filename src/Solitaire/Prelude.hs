@@ -1,7 +1,6 @@
 {-# LANGUAGE PatternSynonyms #-}
-module Solitaire.Imports (module X) where
-
-import Solitaire.Types as X hiding (pattern Config)
+module Solitaire.Prelude (module X) where
+import GHC.Generics (Generic)
 
 -- custom
 import ListT as X
@@ -23,11 +22,22 @@ import Data.Foldable as X hiding (find)
 import Data.List as X (intercalate, transpose, sortOn)
 import Data.List.NonEmpty as X (NonEmpty(..), nonEmpty)
 
+import GHC.Exts as X (IsList(fromList))
+import GHC.Generics as X (Generic)
+
 -- text
 import Data.Text as X (Text)
+-- vector
+import Data.Vector.Mutable as X (IOVector)
+import Data.Vector as X (Vector)
 
--- pipes
-import Pipes as X (ListT(Select), Producer, Pipe, yield, each, await, hoist)
+-- containers
+import Data.IntMap as X (IntMap)
+import Data.Map as X (Map)
+import Data.Set as X (Set)
+
+-- hashable
+import Data.Hashable as X
 
 -- lens
 import Control.Lens as X hiding (each, (<|))
@@ -47,11 +57,3 @@ import Control.Monad.Trans.Maybe as X
 
 -- MonadRandom
 import Control.Monad.Random as X hiding (fromList, next)
-
--- vector
-import Data.Vector.Mutable as X (IOVector)
-import Data.Vector as X (Vector)
-
--- containers
-import Data.Set as X (Set)
-import Data.Map as X (Map)

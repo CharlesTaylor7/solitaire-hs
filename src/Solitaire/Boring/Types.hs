@@ -1,7 +1,8 @@
 {-# options_ghc -Wno-orphans #-}
-module Solitaire.Types where
+module Solitaire.Boring.Types where
 
 import Solitaire.Prelude
+
 
 data Card
   = One

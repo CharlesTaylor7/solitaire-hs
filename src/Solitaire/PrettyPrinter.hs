@@ -6,8 +6,9 @@ module Solitaire.PrettyPrinter
   , Pretty(..)
   ) where
 
-import Solitaire.Imports hiding (Empty)
-import Solitaire.Invariants
+import Solitaire.Prelude hiding (Empty)
+import Solitaire.Utils
+import Solitaire.Types
 
 import Debug.Trace (trace)
 

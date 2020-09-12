@@ -1,7 +1,6 @@
-{-# options_ghc -Wwarn #-}
-module Solitaire.Actions where
+module Solitaire.Boring.RuleSet where
 
-import Solitaire.Imports
+import Solitaire.Prelude
 import Solitaire.Utils
 import Solitaire.PrettyPrinter
 

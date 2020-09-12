@@ -1,11 +1,10 @@
-{-# options_ghc -Wwarn #-}
-module Solitaire.Effects where
+module Solitaire.Engine where
 
-import Solitaire.Imports
-import Solitaire.Invariants
+import Solitaire.Prelude
+import Solitaire.Types
 import Solitaire.PrettyPrinter
 import Solitaire.Utils
-import Solitaire.Actions
+import Solitaire.RuleSet
 
 -- types
 type PriorityQueuePayload = ([Move], Game)
@@ -122,29 +121,6 @@ step = do
               (priority + 1)
               (step ^. #move : previousMoves, (step ^. #game))
 
---  printS $ "Chose move: " ++ pretty move
---  printS "Valid moves:"
---  prettyPrint $ map (view step_move &&& scoreByRuns . view step_game) steps
---  pure steps
-
-{--
-runUserInput ::
-             ( MonadIO m
-             , MonadError GameEnd m
-             )
-             => Game
-             -> m ()
-runUserInput game =
-  userInput >>= \case
-    Left (Input "") -> pure ()
-    Right Quit -> throwError gameQuit
-    Right Dump -> do
-      print game
-      runUserInput game
-    Left (Input input) -> do
-      print $ "Invalid command of: " <> input
-      runUserInput game
---}
 newGame :: (MonadIO m, MonadReader Config m) => m Game
 newGame = do
   shuffled <- getDeck >>= shuffle
@@ -165,19 +141,3 @@ newGame = do
 
 gameIsWon :: Game -> Bool
 gameIsWon game = game ^. #layout . to totalCards . to (== 0)
-
--- utils
-singleton :: a -> [a]
-singleton = pure @[]
-
-cozip :: Functor f => Either (f a) (f b) -> f (Either a b)
-cozip = fmap Left ||| fmap Right
-
-find :: Monad m => (a -> Bool) -> ListT m a -> MaybeT m a
-find predicate producer = do
-  (x, prod) <- MaybeT $ next producer
-  if predicate x
-  then pure x
-  else find predicate prod
-
-

@@ -2,8 +2,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Solitaire.Config where
 
-import Solitaire.Imports
+import Solitaire.Prelude
 import Solitaire.Utils
+import Solitaire.Types
+
 import qualified Solitaire.Types as Internal (pattern Config)
 import qualified Data.IntMap as M
 

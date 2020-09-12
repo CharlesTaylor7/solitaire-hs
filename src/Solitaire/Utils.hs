@@ -1,6 +1,8 @@
 module Solitaire.Utils where
 
-import Solitaire.Imports
+import Solitaire.Prelude
+import Solitaire.Types
+
 import qualified Data.Vector as V
 
 cards :: PileCards -> Vector Card
@@ -24,3 +26,17 @@ toPile cards counts =
     (up, down) = splitAt n cards
   in
     Pile (V.fromList up) (V.fromList down)
+
+pileSize :: PileCards -> Int
+pileSize pile = (pile ^. #faceUp . to length) + (pile ^. #faceDown . to length)
+
+cardsInPile :: PileCards -> Set Card
+cardsInPile pile =
+  (pile ^.. #faceUp . folded & fromList) <>
+  (pile ^.. #faceDown . folded & fromList)
+
+totalCards :: Layout -> Int
+totalCards = alaf Sum foldMap pileSize . unLayout
+
+cardsInLayout :: Layout -> Set Card
+cardsInLayout = foldMap cardsInPile . unLayout
