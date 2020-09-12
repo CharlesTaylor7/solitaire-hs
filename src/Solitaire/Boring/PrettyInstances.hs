@@ -11,7 +11,6 @@ import qualified Data.Map as Map
 import qualified Data.Text as T
 
 
-deriving via WrappedShow Score instance Pretty Score
 deriving via WrappedShow InvalidMove instance Pretty InvalidMove
 deriving via WrappedShow Bool instance Pretty Bool
 deriving via WrappedShow Card instance Pretty Card

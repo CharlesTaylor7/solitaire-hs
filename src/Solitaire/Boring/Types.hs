@@ -1,7 +1,26 @@
 {-# options_ghc -Wno-orphans #-}
-module Solitaire.Boring.Types where
+module Solitaire.Boring.Types
+  ( module CoreTypes
+  , Card(..)
+  , Config(..)
+  , PileCounts
+  , PileCards
+  , Game(..)
+  , Layout(..)
+  , Foundation(..)
+  , Move(..)
+  , InvalidMove(..)
+  , MoveStack(..)
+  , MoveToFoundation(..)
+  , FlipCard(..)
+  , moveStack
+  , moveToFoundation
+  , flipCard
+
+  ) where
 
 import Solitaire.Prelude
+import Solitaire.Core.Types as CoreTypes
 
 
 data Card
@@ -18,20 +37,8 @@ data Config = Config
   }
   deriving (Eq, Show, Read, Generic)
 
-data Pile a = Pile
-  { faceUp :: a
-  , faceDown :: a
-  }
-  deriving (Eq, Ord, Show, Read, Generic)
-
 type PileCounts = Pile Int
 type PileCards = Pile (Vector Card)
-
-pileCounts :: Int -> Int -> PileCounts
-pileCounts = Pile
-
-pileCards :: Vector Card -> Vector Card -> PileCards
-pileCards = Pile
 
 newtype Layout = Layout
   { unLayout :: IntMap PileCards
@@ -84,25 +91,12 @@ data InvalidMove
 
 instance Exception InvalidMove
 
-newtype Score = Score Int
-  deriving (Eq, Ord, Show, Num, Generic)
-
 -- hashable instances
 instance Hashable Game
 instance Hashable Layout
 instance Hashable Foundation
 instance Hashable Card
 instance Hashable a => Hashable (Pile a)
-
-newtype SomeFoldable f a i = SomeFoldable { getFoldable :: f a }
-
-instance (FoldableWithIndex i f, Hashable a) => Hashable (SomeFoldable f a i) where
-  hashWithSalt salt = hashWithSalt salt . toList . getFoldable
-
--- orphan instance for Hashable Intmap & Hashable Vector
--- TODO: Use newtype wrappers?
-deriving via (SomeFoldable IntMap a Int) instance Hashable a => Hashable (IntMap a)
-deriving via (SomeFoldable Vector a Int) instance Hashable a => Hashable (Vector a)
 
 
 flipCard :: Int -> Move

@@ -54,7 +54,7 @@ class Rules rs where
   type Game        rs = (game :: *)        | game -> rs
   type Move        rs = (move :: *)        | move -> rs
   type InvalidMove rs = (invalidMove :: *) | invalidMove -> rs
-
+  type Card        rs = (card :: *)        | card -> rs
 
   newGame :: (MonadIO m, MonadReader (Config rs) m) => m (Game rs)
 

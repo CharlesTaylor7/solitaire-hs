@@ -35,6 +35,7 @@ instance Rules Boring where
   type Config Boring = Boring.Config
   type Move Boring = Boring.Move
   type InvalidMove Boring = Boring.InvalidMove
+  type Card Boring = Boring.Card
 
   newGame :: (MonadIO m, MonadReader Boring.Config m) => m Boring.Game
   newGame = do
@@ -93,7 +94,7 @@ instance Rules Boring where
             (set, leftover) = pile ^. #faceUp . to splitAtStack
             pile' = pile & #faceUp .~ leftover
           in do
-            when (length set /= enumSize @Card) $ throwError $ IncompleteSet i
+            when (length set /= enumSize @Boring.Card) $ throwError $ IncompleteSet i
             pure pile'
         )
       MoveStack (MS i j) ->
@@ -142,7 +143,7 @@ instance Rules Boring where
                   & at "sourcePileRest" ?~ sourcePileRest
                 )
 
-isSuccessorOf :: Card -> Card -> Bool
+isSuccessorOf :: Boring.Card -> Boring.Card -> Bool
 a `isSuccessorOf` b =
   fromEnum a - fromEnum b == 1
 
@@ -154,7 +155,7 @@ countWhile p =
       | otherwise = acc
   in foldr reducer 0
 
-splitAtStack :: Vector Card -> (Vector Card, Vector Card)
+splitAtStack :: Vector Boring.Card -> (Vector Boring.Card, Vector Boring.Card)
 splitAtStack cards =
   maybe
     (mempty, mempty)
@@ -177,12 +178,12 @@ scoreStep (Step move game) = (scoreMove move, scoreByRuns game)
     scoreMove (FlipCard _) = 1
     scoreMove (MoveStack _) = 0
 
-newtype Run = Run (NonEmpty Card)
+newtype Run = Run (NonEmpty Boring.Card)
 
-splitIntoRuns :: [Card] -> [Run]
+splitIntoRuns :: [Boring.Card] -> [Run]
 splitIntoRuns cards =
   let
-    reducer :: [Run] -> Card -> [Run]
+    reducer :: [Run] -> Boring.Card -> [Run]
     reducer [] card = [Run $ card :| []]
     reducer runs@(Run run@(c:|_) : rest) card
       | card `isSuccessorOf` c = (Run $ card <| run) : rest
