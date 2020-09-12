@@ -229,5 +229,8 @@ toRows (Layout layout) = do
     columns = toCardViews rowCount <$> toList layout
     rows = transpose columns & map Row
 
+    pileSize :: PileCards -> Int
+    pileSize pile = (pile ^. #faceUp . to length) + (pile ^. #faceDown . to length)
+
   rows
 

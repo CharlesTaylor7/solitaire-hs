@@ -4,6 +4,17 @@ module Solitaire.RuleSet where
 import Solitaire.Prelude
 import Solitaire.PrettyPrinter
 
+import qualified Data.HashSet as Set
+
+
+-- catch all constraint
+type Solitaire rs =
+  ( RuleSet rs
+  , Eq (Game rs)
+  , Hashable (Game rs)
+  , Pretty (Game rs)
+  , Exception (InvalidMove rs)
+  )
 
 -- types
 newtype App rs a = App
@@ -17,7 +28,7 @@ newtype App rs a = App
     , MonadPQueue MoveCount (GameWithPlayback rs)
     , MonadReader (Config rs)
     )
-deriving instance (Eq (Game rs), Hashable (Game rs)) => MonadHistory (Game rs) (App rs)
+deriving instance (Solitaire rs) => MonadHistory (Game rs) (App rs)
 
 newtype MoveCount = MoveCount Int
   deriving (Eq, Ord, Num)
@@ -44,21 +55,38 @@ class RuleSet rs where
   data Move rs :: *
   data InvalidMove rs :: *
 
-  newGame :: App rs (Game rs)
-  gameIsWon :: Game rs -> Bool
-  moveReducer :: (MonadError (InvalidMove rs) m) => Move rs -> Game rs -> m (Game rs)
-  nextSteps
-    ::
-    ( MonadReader (Config rs) m
-    , MonadHistory (Game rs) m
-    )
-    => Game rs
-    -> m [Step rs]
 
-type Solitaire rs =
+  newGame :: (MonadIO m, MonadReader (Config rs) m) => m (Game rs)
+
+  gameIsWon :: Game rs -> Bool
+
+  moves :: (MonadReader (Config rs) m) => m [Move rs]
+
+  moveReducer
+    :: forall m.
+    ( MonadError (InvalidMove rs) m
+    )
+    => Move rs
+    -> Game rs
+    -> m (Game rs)
+
+
+nextSteps
+  ::
   ( RuleSet rs
-  , Eq (Game rs)
-  , Hashable (Game rs)
-  , Pretty (Game rs)
-  , Exception (InvalidMove rs)
+  , MonadReader (Config rs) m
+  , MonadHistory (Game rs) m
   )
+  => Game rs
+  -> m [Step rs]
+
+nextSteps game = do
+  config <- ask
+  history <- getHistory
+  let
+    paired = id &&& (\move -> runReaderT (moveReducer move game) config)
+    step = Step ^. from curried
+    unvisited = not . flip Set.member history . view #game
+    steps = runReader moves config
+      ^.. folded . to paired . distributed . _Right . to step . filtered unvisited
+  pure steps
