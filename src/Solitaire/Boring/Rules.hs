@@ -36,7 +36,6 @@ instance Rules Boring where
   type Config Boring = Boring.Config
   type Move Boring = Boring.Move
   type InvalidMove Boring = Boring.InvalidMove
-  type Card Boring = Boring.Card
 
   newGame :: (MonadIO m, MonadReader Boring.Config m) => m Boring.Game
   newGame = do

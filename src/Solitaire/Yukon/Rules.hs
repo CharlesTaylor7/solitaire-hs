@@ -35,7 +35,6 @@ instance Rules Yukon where
   type Config Yukon = Yukon.Config
   type Move Yukon = Yukon.Move
   type InvalidMove Yukon = Yukon.InvalidMove
-  type Card Yukon = Yukon.Card
 
   newGame :: (MonadIO m, MonadReader Yukon.Config m) => m Yukon.Game
   newGame = do

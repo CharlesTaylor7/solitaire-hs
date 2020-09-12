@@ -6,6 +6,8 @@ import Solitaire.Core.Utils (pileCountsSize)
 
 import qualified Data.IntMap as M
 
+import Debug.Trace
+
 newtype NumPiles = NumPiles Int
 newtype NumFaceDown = NumFaceDown Int
 newtype NumSets = NumSets Int
@@ -19,12 +21,22 @@ instance Exception InvalidConfig
 mkConfig :: (MonadError InvalidConfig m) => NumSets -> Piles -> m Config
 mkConfig (NumSets s) (Piles piles)
   | s < 0 = throwError $ InvalidConfig "Number of sets should be non negative."
-  | s * enumSize @Card /= (sum . map pileCountsSize) piles = throwError $ InvalidConfig "Pile layout doesn't match deck size."
-  | otherwise = pure Config
-    { numSets = s
-    , piles = M.fromAscList $ zip [0..p-1] piles
-    }
-    where p = length piles
+  | otherwise = do
+      let
+        requestedCardCount = s * enumSize @Card
+        totalPileAmount = piles
+          & sumOf (folded . to pileCountsSize)
+          & traceShow (totalPileAmount, requestedCardCount)
+
+        p = length piles
+
+      when (requestedCardCount /= totalPileAmount) $
+        throwError $ InvalidConfig "Pile layout doesn't match deck size."
+
+      pure Config
+        { numSets = s
+        , piles = M.fromAscList $ zip [0..p-1] piles
+        }
 
 
 configWith :: (MonadError InvalidConfig m) => NumSets -> NumPiles -> NumFaceDown -> m Config
