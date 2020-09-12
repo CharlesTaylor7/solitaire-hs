@@ -14,6 +14,8 @@ type Solitaire rs =
   , Hashable (Game rs)
   , Pretty (Game rs)
   , Exception (InvalidMove rs)
+  , MonadReader (Config rs) (App rs)
+  , MonadHistory (Game rs) (App rs)
   )
 
 -- types
@@ -26,9 +28,8 @@ newtype App rs a = App
     , Monad
     , MonadIO
     , MonadPQueue MoveCount (GameWithPlayback rs)
-    , MonadReader (Config rs)
     )
-deriving instance (Solitaire rs) => MonadHistory (Game rs) (App rs)
+
 
 newtype MoveCount = MoveCount Int
   deriving (Eq, Ord, Num)
@@ -50,10 +51,10 @@ data GameWithPlayback rs = GameWithPlayback
 
 
 class RuleSet rs where
-  data Config rs :: *
-  data Game rs :: *
-  data Move rs :: *
-  data InvalidMove rs :: *
+  type Config      rs = (config :: *)      | config -> rs
+  type Game        rs = (game :: *)        | game -> rs
+  type Move        rs = (move :: *)        | move -> rs
+  type InvalidMove rs = (invalidMove :: *) | invalidMove -> rs
 
 
   newGame :: (MonadIO m, MonadReader (Config rs) m) => m (Game rs)

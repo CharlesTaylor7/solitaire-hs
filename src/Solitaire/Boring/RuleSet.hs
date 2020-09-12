@@ -1,3 +1,4 @@
+{-# language FlexibleInstances #-}
 module Solitaire.Boring.RuleSet where
 
 import Solitaire.Prelude
@@ -10,19 +11,26 @@ import Solitaire.Boring.Utils
 
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
-import qualified Data.HashSet as Set
 
 import Data.List.NonEmpty ((<|))
 
 import Debug.Trace
 
+-- boilerplate instances
+-- these are required in each solitaire implementation
+-- because type applications are not allowed in the instances head
+-- otherwise I would just derive this once at App's declaration
+deriving instance MonadReader Boring.Config (App Boring)
+deriving instance MonadHistory Boring.Game (App Boring)
+
+
 data Boring
 
 instance RuleSet Boring where
-  data Game Boring = Game
-  data Config Boring = Config
-  data Move Boring = Move
-  data InvalidMove Boring = InvalidMove
+  type Game Boring = Boring.Game
+  type Config Boring = Boring.Config
+  type Move Boring = Boring.Move
+  type InvalidMove Boring = Boring.InvalidMove
 
   newGame :: (MonadIO m, MonadReader Boring.Config m) => m Boring.Game
   newGame = do
@@ -187,4 +195,4 @@ scorePile pile =
 
 scoreByRuns :: Boring.Game -> Score
 scoreByRuns game =
-  pile & sumOf (#layout . #_Layout . traverse . to scorePile)
+  game & sumOf (#layout . #_Layout . traverse . to scorePile)
