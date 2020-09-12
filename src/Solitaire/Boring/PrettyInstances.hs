@@ -2,7 +2,6 @@
 module Solitaire.Boring.PrettyInstances () where
 
 import Solitaire.Prelude
-import Solitaire.PrettyPrinter
 
 import Solitaire.Boring.Types
 

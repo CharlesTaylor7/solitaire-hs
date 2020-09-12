@@ -4,6 +4,7 @@ import GHC.Generics (Generic)
 
 -- custom
 import Utils as X
+import PrettyPrinter as X
 
 import Control.Monad.History as X
 import Control.Monad.PQueue as X

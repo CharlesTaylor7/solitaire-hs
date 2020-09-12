@@ -6,7 +6,6 @@ module Solitaire.Boring.Rules
   ) where
 
 import Solitaire.Prelude
-import Solitaire.PrettyPrinter
 import Solitaire.Rules
 
 import Solitaire.Boring.Utils

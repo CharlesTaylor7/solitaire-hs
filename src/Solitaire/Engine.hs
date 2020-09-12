@@ -1,7 +1,6 @@
 module Solitaire.Engine where
 
 import Solitaire.Prelude
-import Solitaire.PrettyPrinter
 import Solitaire.Rules
 
 runGame :: Solitaire rs => Config rs -> IO ()

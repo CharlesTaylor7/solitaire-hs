@@ -2,7 +2,6 @@
 module Solitaire.Rules where
 
 import Solitaire.Prelude
-import Solitaire.PrettyPrinter
 
 import qualified Data.HashSet as Set
 

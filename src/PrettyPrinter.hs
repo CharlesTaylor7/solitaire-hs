@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wno-deprecations #-}
-module Solitaire.PrettyPrinter
+module PrettyPrinter
   ( prettyPrint
   , tracePretty
   , pretty
@@ -8,13 +8,20 @@ module Solitaire.PrettyPrinter
   , WrappedShow(..)
   ) where
 
-import Solitaire.Prelude hiding (Empty)
+import Prelude
+
+import Control.Monad.Reader
+import Control.Monad.State
+import Control.Monad.Writer
 
 import Debug.Trace (trace)
 
+import Data.Foldable (for_)
 import Data.String (IsString(..))
+import Data.Text (Text)
 
 import qualified Data.Text as T
+
 
 pretty :: Pretty a => a -> Text
 pretty = evalPrettyExpr . prettyExpr
