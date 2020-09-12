@@ -7,16 +7,8 @@ import Solitaire.PrettyPrinter
 import qualified Data.HashSet as Set
 
 
--- catch all constraint
-type Solitaire rs =
-  ( RuleSet rs
-  , Eq (Game rs)
-  , Hashable (Game rs)
-  , Pretty (Game rs)
-  , Exception (InvalidMove rs)
-  )
-
 -- types
+{--
 newtype App rs a = App
   { unApp :: PQueueT MoveCount (GameWithPlayback rs) (HistoryT (Game rs) (ReaderT (Config rs) IO)) a
   }
@@ -29,6 +21,7 @@ newtype App rs a = App
     , MonadReader (Config rs)
     )
 deriving instance (Solitaire rs) => MonadHistory (Game rs) (App rs)
+--}
 
 newtype MoveCount = MoveCount Int
   deriving (Eq, Ord, Num)
@@ -48,12 +41,19 @@ data GameWithPlayback rs = GameWithPlayback
   }
   deriving (Generic)
 
+-- catch all constraint
+type Solitaire rs =
+  forall config game move invalidMove.
+  ( RuleSet rs config game move invalidMove
+  , Eq game
+  , Hashable game
+  , Pretty game
+  , Exception invalidMove
+  )
 
-class RuleSet rs where
-  data Config rs :: *
-  data Game rs :: *
-  data Move rs :: *
-  data InvalidMove rs :: *
+class RuleSet rs config game move invalidMove
+  | rs -> config, rs -> game, rs -> move, rs -> invalidMove
+  where
 
 
   newGame :: (MonadIO m, MonadReader (Config rs) m) => m (Game rs)
