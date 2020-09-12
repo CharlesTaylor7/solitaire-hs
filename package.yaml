@@ -23,25 +23,40 @@ dependencies:
 - base >= 4.7 && < 5
  # data types
 - text
+- bytestring
 - containers
 - unordered-containers
 - hashable >= 1.3
 - vector
+# priority queues
 - pqueue
+# difference lists
+- dlist >= 1.0
 # control flow
 - lens
+- profunctors
 - generic-lens
 - mtl
 - transformers
 - MonadRandom
+# color terminal output
+- rainbow
+- time
+- directory
+- uuid
+
 
 default-extensions:
   # always
   - NoImplicitPrelude
+  - NoStarIsType
   - ScopedTypeVariables
   - PartialTypeSignatures
   - MonoLocalBinds
   - InstanceSigs
+  - PatternSynonyms
+  - TypeSynonymInstances
+  - DefaultSignatures
 
   # type applications
   - AllowAmbiguousTypes
@@ -50,9 +65,11 @@ default-extensions:
   # deriving extensions
   - GeneralizedNewtypeDeriving
   - DeriveGeneric
+  - DeriveTraversable
   - DerivingStrategies
   - StandaloneDeriving
   - DerivingVia
+  - DeriveAnyClass
 
   # sugar
   - TupleSections
@@ -62,6 +79,7 @@ default-extensions:
   - RankNTypes
   - FlexibleContexts
   - ConstraintKinds
+  - DataKinds
 
   # overloaded
   - OverloadedLists
@@ -71,9 +89,10 @@ default-extensions:
   # generic lens
   - DuplicateRecordFields
 
-  # to use type equality
+  # because what could go wrong
   - TypeFamilies
   - TypeFamilyDependencies
+  - GADTs
 
   # mtl style typeclasses
   - FunctionalDependencies
@@ -83,21 +102,39 @@ ghc-options:
   - -Wall
   - -Werror
   - -Wno-name-shadowing
+  - -Wno-unused-imports
+  - -Wno-unused-local-binds
+  - -Wno-unused-top-binds
+  - -Wno-unused-matches
+  - -Wno-type-defaults
+  - -Wno-partial-type-signatures
   - -freverse-errors
+  - -O2
 
 library:
   source-dirs: src
 
 executables:
-  solitaire-exe:
+  solve-games:
     main:                Main.hs
-    source-dirs:         app
+    source-dirs:         apps/solve-games
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
     - solitaire
+
+  optimize:
+    main:                Main.hs
+    source-dirs:         apps/optimize
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - solitaire
+
 
 tests:
   solitaire-test:

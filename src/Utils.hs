@@ -4,7 +4,6 @@ module Utils
   , enumerate
   , enumSize
   , maybeToError
-  , distributed
   , Input(..)
   , userInput
   , print
@@ -49,7 +48,7 @@ import qualified Data.Vector.Mutable as MV
 rightOrThrow :: (MonadIO m, Exception e) => Either e a -> m a
 rightOrThrow = liftIO . throwIO ||| pure
 
-enumerate :: (Bounded a, Enum a, IsList l, Item l ~ a) => l
+enumerate :: forall l a. (Bounded a, Enum a, IsList l, Item l ~ a) => l
 enumerate = [minBound..maxBound]
 
 enumSize :: forall a. (Bounded a, Enum a) => Int
@@ -103,11 +102,3 @@ shuffleIOVector vector =
     for_ indices $ \i ->
       getRandomR (0, i) >>=
       liftIO . MV.swap vector i
-
-distributed :: Iso' (a, Either b c) (Either (a, b) (a, c))
-distributed = iso to from
-  where
-    to (a, Left b) = Left (a, b)
-    to (a, Right c) = Right (a, c)
-    from (Left (a, b)) = (a, Left b)
-    from (Right (a, c)) = (a, Right c)

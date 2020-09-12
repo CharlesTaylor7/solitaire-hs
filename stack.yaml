@@ -3,6 +3,11 @@ resolver: lts-16.12
 packages:
   - .
 
+extra-deps:
+  - dlist-1.0@sha256:124cb3aa1decebd5171b46601b1f74cca6cfae12d266ace3799b86dd05ef7cb4,3560
+  - fastsum-0.1.1.1@sha256:984ce99c8c153f31bffe03af6cc0599818878d62e9dae6ecb26b6623c92d6cec,2325
+
+
 nix:
   enable: true
   add-gc-roots: true

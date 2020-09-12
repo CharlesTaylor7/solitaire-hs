@@ -16,17 +16,29 @@ import Control.Arrow as X ((&&&), (|||), (>>>))
 import Control.Exception as X
 import Control.Monad.Zip as X (mzip)
 
-import Data.Ord as X
+import Data.Char as X (intToDigit)
+import Data.Coerce as X (coerce)
 import Data.Bifunctor as X
-import Data.Foldable as X hiding (find)
+import Data.Foldable as X
+import Data.Traversable as X
+import Data.Function as X (on)
 import Data.List as X (intercalate, transpose, sortOn)
-import Data.List.NonEmpty as X (NonEmpty(..), nonEmpty)
+import Data.List.NonEmpty as X (NonEmpty(..), (<|), nonEmpty)
+import Data.Ord as X
+import Data.Proxy as X (Proxy(..))
+import Data.Void as X
+import Data.String as X (IsString(..))
+import Data.Kind as X (Type)
 
-import GHC.Exts as X (IsList(fromList))
+import GHC.Exts as X (IsList(fromList, Item))
 import GHC.Generics as X (Generic)
 
 -- text
 import Data.Text as X (Text)
+
+-- bytestring
+import Data.ByteString as X (ByteString)
+
 -- vector
 import Data.Vector.Mutable as X (IOVector)
 import Data.Vector as X (Vector)
@@ -42,9 +54,11 @@ import Data.Hashable as X
 -- lens
 import Control.Lens as X hiding (each, (<|))
 import Control.Lens.Extras as X (is)
+import Data.Profunctor.Unsafe as X ((.#))
 
 -- generic-lens
 import Data.Generics.Labels ()
+import Data.Generics.Product.Fields as X (HasField'(..))
 
 -- mtl
 import Control.Monad.Except as X

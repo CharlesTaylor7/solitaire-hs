@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# options_ghc -Wwarn #-}
 module Control.Monad.PQueue
   ( MonadPQueue(..)
   , PQueueT
@@ -26,7 +25,7 @@ class (Ord k, Monad m) => MonadPQueue k v m | m -> k, m -> v where
 newtype PQueueT k v m a = PQueueT
   { toStateT :: StateT (MinPQueue k v) m a
   }
-  deriving
+  deriving newtype
     ( Functor
     , Applicative
     , Monad

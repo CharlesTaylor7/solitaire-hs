@@ -11,13 +11,13 @@ spec = do
   describe "Actions" $ do
     describe "scorePile" $ do
       it "treats single card as a run of score 0" $
-        let pile = pileCards [Four] []
+        let pile = Pile [Four] []
         in scorePile pile `shouldBe` 0
       it "handles multiple runs" $
-        let pile = pileCards [One, Two, Four, Five, Three ] []
+        let pile = Pile [One, Two, Four, Five, Three] []
         in scorePile pile `shouldBe` 2
       it "ignores face down cards" $
-        let pile = pileCards [] [One, Two, Three, Two]
+        let pile = Pile [] [One, Two, Three, Two]
         in scorePile pile `shouldBe` 0
 
     describe "getDeck" $ do
