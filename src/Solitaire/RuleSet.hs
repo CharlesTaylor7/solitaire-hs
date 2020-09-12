@@ -1,44 +1,47 @@
+{-# language UndecidableInstances #-}
 module Solitaire.RuleSet where
 
 import Solitaire.Prelude
 
 
 -- types
-data Step move game = Step
-  { move :: move
-  , game :: game
-  }
-  deriving (Eq, Read, Show, Generic)
-
-data GameWithPlayback game move = GameWithPlayback
-  { game :: game
-  , moves :: [move]
-  }
-  deriving (Generic)
-
-newtype App game move config a = App
-  { unApp :: PQueueT MoveCount (GameWithPlayback game move) (HistoryT game (ReaderT config IO)) a
+newtype App rs a = App
+  { unApp :: PQueueT MoveCount (GameWithPlayback rs) (HistoryT (Game rs) (ReaderT (Config rs) IO)) a
   }
   deriving
     ( Functor
     , Applicative
     , Monad
     , MonadIO
-    , MonadHistory game
-    , MonadPQueue MoveCount (GameWithPlayback game move)
-    , MonadReader config
+    , MonadPQueue MoveCount (GameWithPlayback rs)
+    , MonadReader (Config rs)
     )
-
-data GameConclusion move = GameWon [move] | GameLost
-  deriving (Eq, Show)
+deriving instance (Eq (Game rs), Hashable (Game rs)) => MonadHistory (Game rs) (App rs)
 
 newtype MoveCount = MoveCount Int
   deriving (Eq, Ord, Num)
 
+data GameConclusion rs = GameWon [Move rs] | GameLost
+deriving instance Show (Move rs) => Show (GameConclusion rs)
 
-class RuleSet ruleset monad where
-  data Game ruleset :: *
-  data Move ruleset :: *
+data Step rs = Step
+  { move :: Move rs
+  , game :: Game rs
+  }
+  deriving (Generic)
 
-  newGame :: monad (Game ruleset)
-  gameIsWon :: Game ruleset -> Bool
+data GameWithPlayback rs = GameWithPlayback
+  { game :: Game rs
+  , moves :: [Move rs]
+  }
+  deriving (Generic)
+
+
+class RuleSet rs where
+  data Config rs :: *
+  data Game rs :: *
+  data Move rs :: *
+  data InvalidMove rs :: *
+
+  newGame :: App rs (Game rs)
+  gameIsWon :: Game rs -> Bool

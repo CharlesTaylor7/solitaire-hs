@@ -72,7 +72,8 @@ default-extensions:
   # to use type equality
   - TypeFamilies
 
-  # define mtl style classes
+  # mtl style typeclasses
+  - FunctionalDependencies
   - MultiParamTypeClasses
 
 ghc-options:

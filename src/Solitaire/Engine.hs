@@ -4,15 +4,7 @@ import Solitaire.Prelude
 import Solitaire.PrettyPrinter
 import Solitaire.RuleSet
 
-
-runGameLoop :: App (Game, GameConclusion)
-runGameLoop = do
-  game <- newGame
-  queueInsert 0 ([], game)
-  conclusion <- App $ loopM (\_ -> step) ()
-  pure (game, conclusion)
-
-runGame :: Config -> IO ()
+runGame :: RuleSet rs => Config rs -> IO ()
 runGame config = do
   result <- runGameLoop
     & unApp
@@ -31,29 +23,32 @@ runGame config = do
       throwInIO $ void $ foldM observeGameStep game (reverse moves)
       putStrLn "GameWon"
 
+
 throwInIO :: (MonadIO m, Exception e) => ExceptT e m a -> m a
 throwInIO = join . fmap rightOrThrow . runExceptT
 
+
+runGameLoop :: RuleSet rs => App rs (Game rs, GameConclusion rs)
+runGameLoop = do
+  game <- newGame
+  queueInsert 0 ([], game)
+  conclusion <- App $ loopM (\_ -> step) ()
+  pure (game, conclusion)
+
+
 observeGameStep
-  :: (MonadError InvalidMove m, MonadIO m)
-  => Game
-  -> Move
-  -> m Game
+  :: (RuleSet rs, MonadError (InvalidMove rs) m, MonadIO m)
+  => Game rs
+  -> Move rs
+  -> m (Game rs)
 observeGameStep game move = do
   game <- moveReducer move game
   prettyPrint game
   liftIO $ putStrLn ""
   pure game
 
-step
-  ::
-  ( MonadIO m
-  , MonadReader Config m
-  , MonadError GameConclusion m
-  , MonadHistory Game m
-  , MonadPQueue MoveCount PriorityQueuePayload m
-  )
-  => m ()
+
+step :: RuleSet rs => ExceptT (InvalidMove rs) (App rs) ()
 step = do
   -- retrieve the best priority game state
   maybeMin <- queuePopMin
@@ -84,4 +79,3 @@ step = do
             queueInsert
               (priority + 1)
               (step ^. #move : previousMoves, (step ^. #game))
-
