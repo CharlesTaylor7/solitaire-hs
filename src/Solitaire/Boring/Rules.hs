@@ -137,7 +137,7 @@ instance Rules Boring where
 
           (pure $ layout & sourceUpdate . targetUpdate)
             & tracePretty
-                ( (mempty :: Map Text (Vector Card))
+                ( (mempty :: Map Text (Vector Boring.Card))
                   & at "partToLeave" ?~ stackPartToLeave
                   & at "partToMove" ?~ stackPartToMove
                   & at "sourcePileRest" ?~ sourcePileRest
