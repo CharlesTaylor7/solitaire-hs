@@ -1,7 +1,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 module Solitaire.Imports (module X) where
 
-import Solitaire.Internal.Types as X hiding (pattern Config)
+import Solitaire.Types as X hiding (pattern Config)
 
 -- custom
 import ListT as X

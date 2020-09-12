@@ -4,7 +4,7 @@ module Solitaire.Config where
 
 import Solitaire.Imports
 import Solitaire.Utils
-import qualified Solitaire.Internal.Types as Internal (pattern Config)
+import qualified Solitaire.Types as Internal (pattern Config)
 import qualified Data.IntMap as M
 
 newtype NumPiles = NumPiles Int

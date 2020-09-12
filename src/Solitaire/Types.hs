@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
-module Solitaire.Internal.Types where
+module Solitaire.Types where
 
 import Prelude
 
