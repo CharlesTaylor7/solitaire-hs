@@ -4,6 +4,8 @@ module Solitaire.PrettyPrinter
   , tracePretty
   , pretty
   , Pretty(..)
+  , PrettyExpr(..)
+  , WrappedShow(..)
   ) where
 
 import Solitaire.Prelude hiding (Empty)

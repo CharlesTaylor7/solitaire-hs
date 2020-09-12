@@ -1,7 +1,7 @@
 module Solitaire.Boring.Utils where
 
 import Solitaire.Prelude
-import Solitaire.Types
+import Solitaire.Boring.Types
 
 import qualified Data.Vector as V
 

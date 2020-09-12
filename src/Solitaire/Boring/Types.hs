@@ -4,7 +4,10 @@ module Solitaire.Boring.Types where
 import Solitaire.Prelude
 import Solitaire.PrettyPrinter
 
+import Data.String (IsString(..))
+
 import qualified Data.Map as Map
+import qualified Data.Text as T
 
 
 data Card
@@ -167,7 +170,7 @@ instance Pretty Char where
   prettyExpr = PrettyStr . T.singleton
 
 instance Pretty CardView where
-  prettyExpr Empty = " "
+  prettyExpr None = " "
   prettyExpr FaceDown = "-"
   prettyExpr (FaceUp card) = PrettyStr . T.pack . show . (+1) . fromEnum $ card
 
@@ -193,7 +196,7 @@ newtype Row = Row
   deriving (Eq, Show, Read, Semigroup, Monoid)
 
 data CardView
-  = Empty
+  = None
   | FaceDown
   | FaceUp Card
   deriving (Eq, Read, Show)
@@ -213,7 +216,7 @@ toCardViews (RowCount n) =
     getFaceUps = reverse . toList . fmap FaceUp . view #faceUp
     getFaceDowns = toList . fmap (const FaceDown) . view #faceDown
   in
-    rightPad n Empty . (getFaceDowns <> getFaceUps)
+    rightPad n None . (getFaceDowns <> getFaceUps)
 
 toRows :: Layout -> [Row]
 toRows (Layout layout) = do
