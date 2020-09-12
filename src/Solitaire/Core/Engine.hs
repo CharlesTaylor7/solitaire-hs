@@ -1,7 +1,8 @@
-module Solitaire.Engine where
+module Solitaire.Core.Engine where
 
 import Solitaire.Prelude
-import Solitaire.Rules
+
+import Solitaire.Core.Rules
 
 runGame :: Solitaire rs => Config rs -> IO ()
 runGame config = do

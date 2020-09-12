@@ -6,7 +6,7 @@ module Solitaire.Boring.Rules
   ) where
 
 import Solitaire.Prelude
-import Solitaire.Rules
+import Solitaire.Core.Rules
 
 import Solitaire.Boring.Utils
 import Solitaire.Boring.PrettyInstances ()

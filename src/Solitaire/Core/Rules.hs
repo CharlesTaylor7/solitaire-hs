@@ -1,5 +1,5 @@
 {-# language UndecidableInstances #-}
-module Solitaire.Rules where
+module Solitaire.Core.Rules where
 
 import Solitaire.Prelude
 
