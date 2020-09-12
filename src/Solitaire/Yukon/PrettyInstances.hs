@@ -7,7 +7,6 @@ import Solitaire.Yukon.Types
 
 import Data.String (IsString(..))
 
-import qualified Data.Map as Map
 import qualified Data.Text as T
 
 
@@ -15,9 +14,10 @@ deriving via WrappedShow InvalidMove instance Pretty InvalidMove
 
 instance Pretty Card where
   prettyExpr card =
-    PrettyStr $
-    T.pack $
-    card ^. #rank . to rankToChar : card ^. #suit . to suitToChar : []
+    PrettyStr $ T.pack $ rank : suit : []
+    where
+      rank = card ^. #rank . to rankToChar
+      suit = card ^. #suit . to suitToChar
 
 suitToChar :: Suit -> Char
 suitToChar Hearts = 'H'

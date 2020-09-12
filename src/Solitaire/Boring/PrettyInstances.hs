@@ -7,7 +7,6 @@ import Solitaire.Boring.Types
 
 import Data.String (IsString(..))
 
-import qualified Data.Map as Map
 import qualified Data.Text as T
 
 
