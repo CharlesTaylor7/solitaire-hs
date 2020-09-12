@@ -1,4 +1,4 @@
-module Solitaire.Utils where
+module Solitaire.Boring.Utils where
 
 import Solitaire.Prelude
 import Solitaire.Types

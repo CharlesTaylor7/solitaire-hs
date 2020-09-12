@@ -12,6 +12,27 @@ import Data.List.NonEmpty ((<|))
 
 import Debug.Trace
 
+newGame :: (MonadIO m, MonadReader Config m) => m Game
+newGame = do
+  shuffled <- getDeck >>= shuffle
+  pileCounts <- view #piles
+  let
+    piles = fst $ foldl'
+      (\(ps, cs) count ->
+        let
+          size = pileCountsSize count
+          (p, cs') = splitAt size cs
+        in
+          (toPile p count : ps, cs'))
+      ([], shuffled)
+      pileCounts
+    layout = Layout $ indexFrom 0 $ reverse piles
+    foundation = Foundation 0
+  pure $ Game layout foundation
+
+gameIsWon :: Game -> Bool
+gameIsWon game = game ^. #layout . to totalCards . to (== 0)
+
 moves :: (MonadReader Config m) => m [Move]
 moves = do
   numPiles <- M.size <$> view #piles
