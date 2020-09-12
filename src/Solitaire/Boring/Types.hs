@@ -1,16 +1,7 @@
-{-# OPTIONS_GHC -Wno-orphans #-}
-module Solitaire.Internal.Types where
+{-# options_ghc -Wno-orphans #-}
+module Solitaire.Boring.Types where
 
-import Prelude
-
-import Control.Exception
-
-import Data.Foldable
-import Data.Hashable
-import Data.Vector (Vector)
-import Data.IntMap (IntMap)
-
-import GHC.Generics (Generic)
+import Solitaire.Prelude
 
 
 data Card
@@ -47,6 +38,7 @@ newtype Layout = Layout
   }
   deriving (Eq, Ord, Show, Read, Generic)
 
+
 data Foundation = Foundation
   { numSets :: Int
   }
@@ -63,12 +55,6 @@ data Move
   | FlipCard FlipCard
   | MoveToFoundation MoveToFoundation
   deriving (Eq, Show, Read, Generic)
-
-data Step = Step
-  { move :: Move
-  , game :: Game
-  }
-  deriving (Eq, Read, Show, Generic)
 
 data MoveStack = MS
   { fromIndex :: Int
@@ -108,13 +94,16 @@ instance Hashable Foundation
 instance Hashable Card
 instance Hashable a => Hashable (Pile a)
 
-deriving via (SomeFoldable IntMap a) instance Hashable a => Hashable (IntMap a)
-deriving via (SomeFoldable Vector a) instance Hashable a => Hashable (Vector a)
+newtype SomeFoldable f a i = SomeFoldable { getFoldable :: f a }
 
-newtype SomeFoldable f a = SomeFoldable { getFoldable :: f a }
-
-instance (Foldable f, Hashable a) => Hashable (SomeFoldable f a) where
+instance (FoldableWithIndex i f, Hashable a) => Hashable (SomeFoldable f a i) where
   hashWithSalt salt = hashWithSalt salt . toList . getFoldable
+
+-- orphan instance for Hashable Intmap & Hashable Vector
+-- TODO: Use newtype wrappers?
+deriving via (SomeFoldable IntMap a Int) instance Hashable a => Hashable (IntMap a)
+deriving via (SomeFoldable Vector a Int) instance Hashable a => Hashable (Vector a)
+
 
 flipCard :: Int -> Move
 flipCard = FlipCard . FC

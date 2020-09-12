@@ -1,6 +1,7 @@
 module Main where
 
-import Solitaire
+import Solitaire.Boring
+
 
 main :: IO ()
 main = do
@@ -13,4 +14,4 @@ main = do
       , pileCounts 1 3
       ]
     )
-  runGame config
+  runGame @Boring config

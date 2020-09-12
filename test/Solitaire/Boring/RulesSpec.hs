@@ -1,8 +1,9 @@
-module Solitaire.ActionsSpec where
+module Solitaire.Boring.RulesSpec where
 
 import Test.Hspec
 
-import Solitaire
+import Solitaire.Boring
+
 import qualified Data.IntMap as M
 
 spec :: Spec
@@ -18,6 +19,20 @@ spec = do
       it "ignores face down cards" $
         let pile = pileCards [] [One, Two, Three, Two]
         in scorePile pile `shouldBe` 0
+
+    describe "getDeck" $ do
+      it "should have the right number of cards" $ do
+        config <- rightOrThrow $ configWith (NumSets 3) (NumPiles 3) (NumFaceDown 2)
+
+        let
+          runConfig = flip runReader config
+          numCards = enumSize @Card
+          (deckSize, numCardCopies) = runConfig $ do
+            d <- length <$> getDeck
+            c <- view #numSets
+            pure (d, c)
+          product = numCards * numCardCopies :: Int
+        deckSize `shouldBe` product
 
     describe "moveReducer" $ do
       describe "FlipCard" $ do

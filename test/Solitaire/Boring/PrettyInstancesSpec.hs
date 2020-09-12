@@ -1,8 +1,8 @@
-module Solitaire.PrettyPrinterSpec where
-
-import Solitaire
+module Solitaire.Boring.PrettyInstancesSpec where
 
 import Test.Hspec
+
+import Solitaire.Boring
 
 
 spec :: Spec

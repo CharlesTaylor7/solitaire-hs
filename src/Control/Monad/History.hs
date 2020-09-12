@@ -29,7 +29,7 @@ class (ItemConstraint a, Monad m) => MonadHistory a m | m -> a where
   getHistory :: m (Set a)
   saveToHistory :: a -> m ()
 
-historyHas :: (MonadHistory a m) => a -> m Bool
+historyHas :: MonadHistory a m => a -> m Bool
 historyHas val = Set.member val <$> getHistory
 
 newtype HistoryT s m a = HistoryT

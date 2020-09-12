@@ -1,10 +1,12 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Solitaire.Config where
+module Solitaire.Boring.Config where
 
-import Solitaire.Imports
-import Solitaire.Utils
-import qualified Solitaire.Internal.Types as Internal (pattern Config)
+import Solitaire.Prelude
+import Solitaire.Boring.Utils
+import Solitaire.Boring.Types
+
+import qualified Solitaire.Boring.Types as Internal (pattern Config)
 import qualified Data.IntMap as M
 
 newtype NumPiles = NumPiles Int

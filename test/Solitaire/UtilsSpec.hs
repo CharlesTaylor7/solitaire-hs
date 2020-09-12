@@ -2,11 +2,8 @@
 {-# OPTIONS_GHC -Wno-type-defaults #-}
 module Solitaire.UtilsSpec where
 
-import Data.Monoid
-import Data.List ((\\))
-
-import Control.Monad.Identity
 import Test.Hspec
+
 import Solitaire
 
 
@@ -48,23 +45,3 @@ spec = do
         let expected = [1, 0, 2, 1, 3, 1, 0, 2, 4] :: [Int]
         loopM act 3 `shouldBe` expected
 
-      it "performs a depth first search with a list monad transformer" $ do
-        let
-          act :: Monad m => [Token] -> ExceptT [Token] (ListT m) [Token]
-          act ts = ExceptT $
-            let
-              rest = enumerate @Token \\ ts
-            in
-              if null rest
-              then pure $ Left ts
-              else list . map (pure . (ts ++) . pure) $ rest
-
-          ts = runList 10 $ loopM act []
-        ts `shouldBe` [
-            [A, B, C],
-            [A, C, B],
-            [B, A, C],
-            [B, C, A],
-            [C, A, B],
-            [C, B, A]
-          ]
