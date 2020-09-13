@@ -1,8 +1,10 @@
 {-# options_ghc -Wno-deprecations #-}
+{-# options_ghc -Wno-unused-top-binds #-}
+{-# options_ghc -Wno-unused-imports #-}
 module PrettyPrinter
   ( prettyPrint
-  , tracePretty
-  , pretty
+  -- , tracePretty
+  , chunksToByteStrings
   , Pretty(..)
   , PrettyExpr(..)
   , WrappedShow(..)
@@ -16,23 +18,51 @@ import Control.Monad.Writer
 
 import Debug.Trace (trace)
 
-import Data.Foldable (for_, toList)
+import Data.Foldable (traverse_, for_, toList)
+import Data.Function ((&))
 import Data.Map (Map)
 import Data.String (IsString(..))
 import Data.Text (Text)
+import Data.ByteString (ByteString)
 import Data.Vector (Vector)
+import Data.DList (DList)
 
+import qualified Data.DList as DL
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
+import qualified Data.ByteString as BS
 import qualified Data.Map as Map
 
+import qualified Rainbow
 
-pretty :: Pretty a => a -> Text
+import System.IO.Unsafe (unsafePerformIO)
+
+
+-- tracePretty :: Pretty a => a -> b -> b
+-- tracePretty = trace . T.unpack . pretty
+
+prettyPrint :: (MonadIO m, Pretty a) => a -> m ()
+prettyPrint =
+  liftIO .
+  traverse_ BS.putStr .
+  pretty
+
+pretty :: Pretty a => a -> DList ByteString
 pretty = evalPrettyExpr . prettyExpr
 
-evalPrettyExpr :: PrettyExpr -> Text
+chunksToByteStrings :: [Rainbow.Chunk] -> [ByteString]
+chunksToByteStrings = Rainbow.chunksToByteStrings terminalPrinter
+
+-- byteStringMakerFromEnvironment :: IO (Chunk -> [ByteString] -> [ByteString])
+terminalPrinter :: Rainbow.Chunk -> [ByteString] -> [ByteString]
+terminalPrinter = unsafePerformIO Rainbow.byteStringMakerFromEnvironment
+{-# NOINLINE terminalPrinter #-}
+
+
+evalPrettyExpr :: PrettyExpr -> DList ByteString
 evalPrettyExpr = snd . runWriter . flip runReaderT 2 . flip evalStateT 0 . toPrettyM
 
-type PrettyM m = (MonadReader Int m, MonadState Int m, MonadWriter Text m)
+type PrettyM m = (MonadReader Int m, MonadState Int m, MonadWriter (DList ByteString) m)
 
 toPrettyM :: PrettyM m => PrettyExpr -> m ()
 toPrettyM (PrettyStr text) = do
@@ -48,41 +78,38 @@ toPrettyM (PrettySoftWrap exprs) =
   for_ exprs toPrettyM
 
 toPrettyM (PrettyHardWrap exprs) = do
-  indentation <- flip T.replicate " " <$> get
+  indentation <- T.encodeUtf8 . flip T.replicate " " <$> get
   for_ (exprs `zip` [0 :: Int ..]) $ \(expr, i) -> do
-    when (i /= 0) $ tell "\n"
-    tell indentation
+    -- print newlines for all but the first line
+    when (i /= 0) $ tell (DL.singleton "\n")
+    -- print the indentation
+    tell $ DL.singleton indentation
+    -- print the expression
     toPrettyM expr
 
 data PrettyExpr
-  = PrettyStr Text
+  = PrettyStr (DList ByteString)
   | PrettySoftWrap [PrettyExpr]
   | PrettyHardWrap [PrettyExpr]
   | PrettyIndent PrettyExpr
 
 instance IsString PrettyExpr where
-  fromString = PrettyStr . T.pack
+  fromString = PrettyStr . DL.singleton . fromString
 
 class Pretty a where
   prettyExpr :: a -> PrettyExpr
-
-prettyPrint :: (MonadIO m, Pretty a) => a -> m ()
-prettyPrint = liftIO . putStrLn . T.unpack . pretty
-
-tracePretty :: Pretty a => a -> b -> b
-tracePretty = trace . T.unpack . pretty
 
 
 -- instances
 newtype WrappedShow a = WrappedShow a
 
 instance Show a => Pretty (WrappedShow a) where
-  prettyExpr (WrappedShow a) = PrettyStr . T.pack . show $ a
+  prettyExpr (WrappedShow a) = fromString . show $ a
 
 deriving via WrappedShow Bool instance Pretty Bool
 
 instance Pretty Text where
-  prettyExpr = PrettyStr
+  prettyExpr = PrettyStr . DL.singleton . T.encodeUtf8
 
 instance Pretty a => Pretty [a] where
   prettyExpr [] = "[]"
@@ -120,4 +147,4 @@ instance (Pretty a, Pretty b) => Pretty (Either a b) where
   prettyExpr (Right x) = prettyExpr x
 
 instance Pretty Char where
-  prettyExpr = PrettyStr . T.singleton
+  prettyExpr = prettyExpr . T.singleton
