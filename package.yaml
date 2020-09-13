@@ -34,6 +34,8 @@ dependencies:
 - mtl
 - transformers
 - MonadRandom
+  # color terminal output 
+- rainbow
 
 default-extensions:
   # always
