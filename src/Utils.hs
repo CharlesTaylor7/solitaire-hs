@@ -49,7 +49,7 @@ import qualified Data.Vector.Mutable as MV
 rightOrThrow :: (MonadIO m, Exception e) => Either e a -> m a
 rightOrThrow = liftIO . throwIO ||| pure
 
-enumerate :: (Bounded a, Enum a, IsList l, Item l ~ a) => l
+enumerate :: forall l a. (Bounded a, Enum a, IsList l, Item l ~ a) => l
 enumerate = [minBound..maxBound]
 
 enumSize :: forall a. (Bounded a, Enum a) => Int

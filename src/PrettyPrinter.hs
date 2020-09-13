@@ -10,6 +10,8 @@ module PrettyPrinter
   , PrettyExpr(..)
   , WrappedShow(..)
   , KeyValuePairs(..)
+  -- re export
+  , DList
   ) where
 
 import Prelude
@@ -44,10 +46,9 @@ import System.IO.Unsafe (unsafePerformIO)
 -- tracePretty = trace . T.unpack . pretty
 
 prettyPrint :: (MonadIO m, Pretty a) => a -> m ()
-prettyPrint =
-  liftIO .
-  traverse_ BS.putStr .
-  pretty
+prettyPrint a = liftIO $ do
+  traverse_ BS.putStr $ pretty a
+  putStrLn ""
 
 pretty :: Pretty a => a -> DList ByteString
 pretty = evalPrettyExpr . prettyExpr

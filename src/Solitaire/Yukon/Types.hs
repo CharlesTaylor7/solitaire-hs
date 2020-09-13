@@ -13,6 +13,7 @@ module Solitaire.Yukon.Types
   ) where
 
 import Solitaire.Prelude
+import Solitaire.Core.Types (rankToChar, suitToChar, suitColor)
 import Solitaire.Core.Types as CoreTypes
   ( Pile(..)
   , Card(..)
@@ -23,22 +24,40 @@ import Solitaire.Core.Types as CoreTypes
   , Tableau(..)
   )
 
+import qualified Data.DList as DL
+
+import qualified Rainbow
+
 
 newtype Foundation = Foundation (Map Suit Rank)
   deriving stock (Eq, Show, Generic)
   deriving anyclass (Hashable)
 
 instance Pretty Foundation where
-  prettyExpr =
-    prettyExpr .
-    KeyValuePairs .
-    toListOf
-      ( #_Foundation
-      . ifolded
-      . withIndex
-      . to (_1 %~ WrappedShow)
-      . to (_2 %~ WrappedShow)
-      )
+  prettyExpr (Foundation foundation) =
+    enumerate @[Suit]
+      & fmap (chunkToByteStrings . formatFoundationPile)
+      & DL.intercalate ["|"]
+      & PrettyStr
+    where
+      formatFoundationPile :: Suit -> Rainbow.Chunk
+      formatFoundationPile suit =
+        let
+          suitChar = suitToChar suit
+          rankChar = foundation ^. at suit . to (fmap rankToChar) . non '_'
+
+          textColor :: Rainbow.Radiant
+          textColor =
+            case suitColor suit of
+              Red -> Rainbow.red
+              Black -> Rainbow.black
+        in
+          (rankChar : suitChar : [])
+          & fromString
+          & Rainbow.fore textColor
+
+chunkToByteStrings :: Rainbow.Chunk -> DList ByteString
+chunkToByteStrings = fromList . chunksToByteStrings . pure
 
 data Game = Game
   { tableau :: Tableau Card
@@ -67,7 +86,7 @@ data InvalidMove
   deriving anyclass (Exception)
 
 
--- TODO: Move class
+-- TODO: Move typeclass
 data Move
   = MoveStack MoveStack
   | FlipCard FlipCard

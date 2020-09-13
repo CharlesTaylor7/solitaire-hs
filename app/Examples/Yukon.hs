@@ -5,5 +5,10 @@ import Solitaire.Yukon
 
 main :: IO ()
 main = do
-  config <- rightOrThrow $ defaultConfig
-  runGame @Yukon config
+  for_ (enumerate @[Card]) $ \card -> do
+    prettyPrint card
+    print card
+
+  -- config <- rightOrThrow $ defaultConfig
+
+  -- runGame @Yukon config

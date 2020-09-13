@@ -54,20 +54,28 @@ instance Bounded Card where
 
 instance Pretty Card where
   prettyExpr card =
-    PrettyStr $ fromList $ chunksToByteStrings $
-      [ (rank : suit : [])
-        & fromString
-        & Rainbow.fore textColor
-      ]
+    card
+    & cardToChunk
+    & pure
+    & chunksToByteStrings
+    & fromList
+    & PrettyStr
     where
-      rank = card ^. #rank . to rankToChar
-      suit = card ^. #suit . to suitToChar
+      cardToChunk :: Card -> Rainbow.Chunk
+      cardToChunk card =
+        (rank : suit : [])
+          & fromString
+          & Rainbow.fore textColor
 
-      textColor :: Rainbow.Radiant
-      textColor =
-        case card ^. #suit . to color of
-          Red -> Rainbow.red
-          Black -> Rainbow.black
+        where
+          rank = card ^. #rank . to rankToChar
+          suit = card ^. #suit . to suitToChar
+
+          textColor :: Rainbow.Radiant
+          textColor =
+            case card ^. #suit . to suitColor of
+              Red -> Rainbow.red
+              Black -> Rainbow.black
 
 
 instance IsCard Card where
@@ -76,12 +84,12 @@ instance IsCard Card where
     -- a has a rank 1 higher than b
     a ^. #rank . from enum - b ^. #rank . from enum == 1 &&
     -- a is the opposite color of b
-    a ^. #suit . to color /= b ^. #suit . to color
+    a ^. #suit . to suitColor /= b ^. #suit . to suitColor
 
-color :: Suit -> Color
-color Hearts = Red
-color Diamonds = Red
-color _ = Black
+suitColor :: Suit -> Color
+suitColor Hearts = Red
+suitColor Diamonds = Red
+suitColor _ = Black
 
 
 data Rank
@@ -107,7 +115,7 @@ rankToChar Jack = 'J'
 rankToChar Queen = 'Q'
 rankToChar King = 'K'
 rankToChar Ace = 'A'
-rankToChar rank = rank & fromEnum & (+2) & intToDigit
+rankToChar rank = rank & fromEnum & (+1) & intToDigit
 
 
 data Suit
