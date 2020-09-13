@@ -18,13 +18,3 @@ instance Pretty Move where
   prettyExpr (MoveToFoundation (MTF i)) = fromString $ "moveToFoundation" ++ " " ++ show i
   prettyExpr (FlipCard (FC i)) = fromString $ "flipCard" ++ " " ++ show i
 
-instance Pretty Foundation where
-  prettyExpr (Foundation n) = undefined
-
-instance Pretty Game where
-  prettyExpr (Game tableau foundation) =
-    PrettyHardWrap
-      [ prettyExpr foundation
-      , prettyExpr tableau
-      ]
-

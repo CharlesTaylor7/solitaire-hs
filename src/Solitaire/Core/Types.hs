@@ -54,24 +54,20 @@ instance Bounded Card where
 
 instance Pretty Card where
   prettyExpr card =
-    PrettyStr $ fromList $ chunksToByteStrings [rank, suit]
+    PrettyStr $ fromList $ chunksToByteStrings $
+      [ (rank : suit : [])
+        & fromString
+        & Rainbow.fore textColor
+      ]
     where
-      rank = card ^. #rank . to rankToChunk
-      suit = card ^. #suit . to suitToChunk
+      rank = card ^. #rank . to rankToChar
+      suit = card ^. #suit . to suitToChar
 
-      suitToChunk :: Suit -> Rainbow.Chunk
-      suitToChunk Hearts = "H"
-      suitToChunk Diamonds = "D"
-      suitToChunk Spades = "S"
-      suitToChunk Clubs = "C"
-
-      rankToChunk :: Rank -> Rainbow.Chunk
-      rankToChunk Ten = "T"
-      rankToChunk Jack = "J"
-      rankToChunk Queen = "Q"
-      rankToChunk King = "K"
-      rankToChunk Ace = "A"
-      rankToChunk rank = rank & fromEnum & (+2) & intToDigit & pure & fromString
+      textColor :: Rainbow.Radiant
+      textColor =
+        case card ^. #suit . to color of
+          Red -> Rainbow.red
+          Black -> Rainbow.black
 
 
 instance IsCard Card where
@@ -81,11 +77,11 @@ instance IsCard Card where
     a ^. #rank . from enum - b ^. #rank . from enum == 1 &&
     -- a is the opposite color of b
     a ^. #suit . to color /= b ^. #suit . to color
-    where
-      color :: Suit -> Color
-      color Hearts = Red
-      color Diamonds = Red
-      color _ = Black
+
+color :: Suit -> Color
+color Hearts = Red
+color Diamonds = Red
+color _ = Black
 
 
 data Rank
@@ -105,6 +101,14 @@ data Rank
   deriving stock (Eq, Ord, Show, Enum, Bounded, Generic)
   deriving anyclass (Hashable)
 
+rankToChar :: Rank -> Char
+rankToChar Ten = 'T'
+rankToChar Jack = 'J'
+rankToChar Queen = 'Q'
+rankToChar King = 'K'
+rankToChar Ace = 'A'
+rankToChar rank = rank & fromEnum & (+2) & intToDigit
+
 
 data Suit
  = Diamonds
@@ -113,6 +117,12 @@ data Suit
  | Spades
   deriving stock (Eq, Ord, Show, Enum, Bounded, Generic)
   deriving anyclass (Hashable)
+
+suitToChar :: Suit -> Char
+suitToChar Hearts = 'H'
+suitToChar Diamonds = 'D'
+suitToChar Spades = 'S'
+suitToChar Clubs = 'C'
 
 
 data Color

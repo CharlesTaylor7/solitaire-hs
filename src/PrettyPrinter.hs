@@ -9,6 +9,7 @@ module PrettyPrinter
   , Pretty(..)
   , PrettyExpr(..)
   , WrappedShow(..)
+  , KeyValuePairs(..)
   ) where
 
 import Prelude
@@ -124,11 +125,15 @@ instance Pretty a => Pretty [a] where
 instance Pretty a => Pretty (Vector a) where
   prettyExpr = prettyExpr . toList
 
-instance (Pretty key, Pretty value) => Pretty (Map key value) where
-  prettyExpr xs =
+
+-- | A wrapper type for map like objects to be pretty printed
+newtype KeyValuePairs key value = KeyValuePairs [(key, value)]
+
+instance (Pretty key, Pretty value) => Pretty (KeyValuePairs key value) where
+  prettyExpr (KeyValuePairs pairs) =
     PrettyHardWrap
       [ "{"
-      , PrettyIndent $ join xs
+      , PrettyIndent $ join pairs
       , "}"
       ]
     where
@@ -137,7 +142,10 @@ instance (Pretty key, Pretty value) => Pretty (Map key value) where
           [ PrettySoftWrap [prettyExpr key, ":"]
           , prettyExpr value
           ]
-      join = PrettyHardWrap . map format . Map.toList
+      join = PrettyHardWrap . map format
+
+instance (Pretty key, Pretty value) => Pretty (Map key value) where
+  prettyExpr = prettyExpr . KeyValuePairs . Map.toList
 
 instance (Pretty a) => Pretty (Maybe a) where
   prettyExpr (Just x) = prettyExpr x

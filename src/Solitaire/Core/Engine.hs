@@ -13,13 +13,10 @@ runGame config = do
     & runHistoryT
     & flip runReaderT config
   case result of
-    (game, GameLost) -> do
-      prettyPrint game
-
+    (_, GameLost) -> do
       putStrLn "GameLost"
 
     (game, GameWon moves) -> do
-      prettyPrint game
       liftIO $ putStrLn ""
       throwInIO $ void $ foldM (observeGameStep @rs) game (reverse moves)
       putStrLn "GameWon"
@@ -45,10 +42,12 @@ throwInIO = join . fmap rightOrThrow . runExceptT
 
 
 runGameLoop
-  :: forall rs.Solitaire rs
+  :: forall rs. Solitaire rs
   => App rs (Game rs, GameConclusion rs)
 runGameLoop = do
   game <- newGame @rs
+  prettyPrint game
+
   queueInsert 0 $ GameWithPlayback [] game
   conclusion <- loopM (\_ -> step) ()
   pure (game, conclusion)

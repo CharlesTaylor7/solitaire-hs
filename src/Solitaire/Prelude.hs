@@ -17,6 +17,7 @@ import Control.Exception as X
 import Control.Monad.Zip as X (mzip)
 
 import Data.Char as X (intToDigit)
+import Data.Coerce as X (coerce)
 import Data.Bifunctor as X
 import Data.Foldable as X
 import Data.Function as X (on)

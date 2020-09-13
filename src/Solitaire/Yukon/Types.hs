@@ -28,6 +28,17 @@ newtype Foundation = Foundation (Map Suit Rank)
   deriving stock (Eq, Show, Generic)
   deriving anyclass (Hashable)
 
+instance Pretty Foundation where
+  prettyExpr =
+    prettyExpr .
+    KeyValuePairs .
+    toListOf
+      ( #_Foundation
+      . ifolded
+      . withIndex
+      . to (_1 %~ WrappedShow)
+      . to (_2 %~ WrappedShow)
+      )
 
 data Game = Game
   { tableau :: Tableau Card
@@ -35,6 +46,26 @@ data Game = Game
   }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (Hashable)
+
+instance Pretty Game where
+  prettyExpr (Game tableau foundation) =
+    PrettyHardWrap
+      [ prettyExpr foundation
+      , prettyExpr tableau
+      ]
+
+
+data InvalidMove
+  = CardFlipOnUnexposedPile Int
+  | CardFlipOnEmptyPile Int
+  | IncompleteSet Int
+  | MismatchingStacks Int Int
+  | EmptyStackSource Int
+  | MoveStackOntoFaceDownCards Int
+  | SourceIsTarget Int
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (Exception)
+
 
 -- TODO: Move class
 data Move
@@ -58,18 +89,6 @@ newtype MoveToFoundation = MTF
   { pileIndex :: Int
   }
   deriving (Eq, Show, Read, Generic)
-
-data InvalidMove
-  = CardFlipOnUnexposedPile Int
-  | CardFlipOnEmptyPile Int
-  | IncompleteSet Int
-  | MismatchingStacks Int Int
-  | EmptyStackSource Int
-  | MoveStackOntoFaceDownCards Int
-  | SourceIsTarget Int
-  deriving stock (Eq, Show, Read, Generic)
-  deriving anyclass (Exception)
-
 
 flipCard :: Int -> Move
 flipCard = FlipCard . FC
