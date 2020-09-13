@@ -3,6 +3,7 @@
 {-# options_ghc -Wno-unused-imports #-}
 module PrettyPrinter
   ( prettyPrint
+  , pretty
   -- , tracePretty
   , chunksToByteStrings
   , Pretty(..)

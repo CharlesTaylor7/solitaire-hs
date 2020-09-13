@@ -33,22 +33,13 @@ data Card
   | Five
   deriving (Eq, Show, Ord, Enum, Bounded, Generic)
 
-
-type PileCards = Pile (Vector Card)
-
-newtype Layout = Layout
-  { unLayout :: IntMap PileCards
-  }
-  deriving (Eq, Ord, Show, Generic)
-
-
 data Foundation = Foundation
   { numSets :: Int
   }
   deriving (Eq, Ord, Show, Generic)
 
 data Game = Game
-  { layout :: Layout
+  { tableau :: Tableau Card
   , foundation :: Foundation
   }
   deriving (Eq, Ord, Show, Generic)
@@ -89,7 +80,6 @@ instance Exception InvalidMove
 
 -- hashable instances
 instance Hashable Game
-instance Hashable Layout
 instance Hashable Foundation
 instance Hashable Card
 instance Hashable a => Hashable (Pile a)

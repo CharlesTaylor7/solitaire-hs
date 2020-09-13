@@ -1,9 +1,6 @@
-{-# options_ghc -Wno-orphans #-}
 module Solitaire.Yukon.Types
   ( module CoreTypes
-  , PileCards
-  , Game(..)
-  , Layout(..)
+  , Game
   , Foundation(..)
   , Move(..)
   , InvalidMove(..)
@@ -23,22 +20,15 @@ import Solitaire.Core.Types as CoreTypes
   , Suit(..)
   , Color(..)
   , Config(..)
+  , Tableau(..)
   )
 
-type PileCards = Pile (Vector Card)
-
-newtype Layout = Layout
-  { unLayout :: IntMap PileCards
-  }
-  deriving (Eq, Show, Generic)
-
-data Foundation = Foundation
-  { numSets :: Int
-  }
-  deriving (Eq, Ord, Show, Generic)
+newtype Foundation = Foundation (Map Suit Rank)
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (Hashable)
 
 data Game = Game
-  { layout :: Layout
+  { tableau :: Tableau Card
   , foundation :: Foundation
   }
   deriving (Eq, Show, Generic)
@@ -73,16 +63,8 @@ data InvalidMove
   | EmptyStackSource Int
   | MoveStackOntoFaceDownCards Int
   | SourceIsTarget Int
-  deriving (Eq, Show, Read, Generic)
-
-instance Exception InvalidMove
-
--- hashable instances
-instance Hashable Game
-instance Hashable Layout
-instance Hashable Foundation
-instance Hashable Card
-instance Hashable a => Hashable (Pile a)
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (Exception)
 
 
 flipCard :: Int -> Move

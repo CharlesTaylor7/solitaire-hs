@@ -24,11 +24,16 @@ import Data.List as X (intercalate, transpose, sortOn)
 import Data.List.NonEmpty as X (NonEmpty(..), nonEmpty)
 import Data.Ord as X
 
-import GHC.Exts as X (IsList(fromList))
+import Data.String as X (IsString(..))
+import GHC.Exts as X (IsList(fromList, Item))
 import GHC.Generics as X (Generic)
 
 -- text
 import Data.Text as X (Text)
+
+-- bytestring
+import Data.ByteString as X (ByteString)
+
 -- vector
 import Data.Vector.Mutable as X (IOVector)
 import Data.Vector as X (Vector)

@@ -29,7 +29,7 @@ dependencies:
 - hashable >= 1.3
 - vector
 - pqueue
-- dlist
+- dlist >= 1.0
 # control flow
 - lens
 - generic-lens
