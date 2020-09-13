@@ -1,4 +1,4 @@
-{-# options_ghc -Wno-orphans #-}
+{-# options_ghc -Wwarn #-}
 module Solitaire.Yukon.PrettyInstances () where
 
 import Solitaire.Prelude

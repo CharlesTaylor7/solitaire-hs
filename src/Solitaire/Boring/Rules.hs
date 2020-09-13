@@ -7,16 +7,15 @@ module Solitaire.Boring.Rules
 
 import Solitaire.Prelude
 import Solitaire.Core.Rules
+import Solitaire.Core.Utils (cards, toPile, totalCards, pileCountsSize, getDeck)
+import Solitaire.Core.Card (IsCard(..), Run(..), splitIntoRuns, splitAtFirstRun)
 
-import Solitaire.Boring.Utils
 import Solitaire.Boring.PrettyInstances ()
 import Solitaire.Boring.Types
 import qualified Solitaire.Boring.Types as Boring
 
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
-
-import Data.List.NonEmpty ((<|))
 
 import Debug.Trace
 
@@ -51,12 +50,12 @@ instance Rules Boring where
             (toPile p count : ps, cs'))
         ([], shuffled)
         pileCounts
-      layout = Layout $ indexFrom 0 $ reverse piles
+      tableau = Tableau $ indexFrom 0 $ reverse piles
       foundation = Foundation 0
-    pure $ Boring.Game layout foundation
+    pure $ Boring.Game tableau foundation
 
   gameIsWon :: Boring.Game -> Bool
-  gameIsWon game = game ^. #layout . to totalCards . to (== 0)
+  gameIsWon game = game ^. #tableau . to totalCards . to (== 0)
 
   moves :: (MonadReader Boring.Config m) => m [Boring.Move]
   moves = do
@@ -76,7 +75,7 @@ instance Rules Boring where
   moveReducer move =
     case move of
       FlipCard (FC i) ->
-        #layout . #_Layout . ix i $ \pile -> do
+        #tableau . #_Tableau . ix i $ \pile -> do
           if is _Just $ pile ^? #faceUp . _Cons
           then throwError (CardFlipOnUnexposedPile i)
           else pure ()
@@ -89,20 +88,20 @@ instance Rules Boring where
           pure $ pile & faceUp' . faceDown'
       MoveToFoundation (MTF i) ->
         #foundation . #numSets +~ 1 >>>
-        (#layout . #_Layout . ix i $ \pile ->
+        (#tableau . #_Tableau . ix i $ \pile ->
           let
-            (set, leftover) = pile ^. #faceUp . to splitAtStack
+            (set, leftover) = pile ^. #faceUp . to splitAtFirstRun
             pile' = pile & #faceUp .~ leftover
           in do
             when (length set /= enumSize @Boring.Card) $ throwError $ IncompleteSet i
             pure pile'
         )
       MoveStack (MS i j) ->
-        #layout . #_Layout $ \layout -> do
+        #tableau . #_Tableau $ \tableau -> do
           let
             (stack, sourcePileRest) =
-              layout ^?! ix i . #faceUp . to splitAtStack
-            target = layout ^?! ix j
+              tableau ^?! ix i . #faceUp . to splitAtFirstRun
+            target = tableau ^?! ix j
 
           -- sanity checking
           when (i == j) $
@@ -119,7 +118,7 @@ instance Rules Boring where
             when (is _Empty $ target ^. #faceUp) $
               throwError $ MoveStackOntoFaceDownCards  j
 
-          let targetCard = layout ^?! ix j . #faceUp . _head
+          let targetCard = tableau ^?! ix j . #faceUp . _head
           let stackBottomCard = stack ^?! _last
           let stackSize = length stack
           let diff = fromEnum targetCard - fromEnum stackBottomCard
@@ -135,39 +134,7 @@ instance Rules Boring where
             sourceUpdate = ix i . #faceUp .~ (stackPartToLeave <> sourcePileRest)
             targetUpdate = ix j . #faceUp %~ (stackPartToMove <>)
 
-          (pure $ layout & sourceUpdate . targetUpdate)
-            & tracePretty
-                ( (mempty :: Map Text (Vector Boring.Card))
-                  & at "partToLeave" ?~ stackPartToLeave
-                  & at "partToMove" ?~ stackPartToMove
-                  & at "sourcePileRest" ?~ sourcePileRest
-                )
-
-isSuccessorOf :: Boring.Card -> Boring.Card -> Bool
-a `isSuccessorOf` b =
-  fromEnum a - fromEnum b == 1
-
-countWhile :: Foldable f => (a -> Bool) -> f a -> Int
-countWhile p =
-  let
-    reducer x acc
-      | p x = 1 + acc
-      | otherwise = acc
-  in foldr reducer 0
-
-splitAtStack :: Vector Boring.Card -> (Vector Boring.Card, Vector Boring.Card)
-splitAtStack cards =
-  maybe
-    (mempty, mempty)
-    (\(_, rest) ->
-      let
-        n =
-          mzip rest cards
-            & countWhile (uncurry isSuccessorOf)
-      in V.splitAt (n+1) cards
-    )
-    (uncons cards)
-
+          pure $ tableau & sourceUpdate . targetUpdate
 
   -- scoring game states, for A* path finding
 scoreStep :: Step Boring -> (Score, Score)
@@ -178,26 +145,13 @@ scoreStep step = (step ^. #move . to scoreMove, step ^. #game . to scoreByRuns)
     scoreMove (FlipCard _) = 1
     scoreMove (MoveStack _) = 0
 
-newtype Run = Run (NonEmpty Boring.Card)
-
-splitIntoRuns :: [Boring.Card] -> [Run]
-splitIntoRuns cards =
-  let
-    reducer :: [Run] -> Boring.Card -> [Run]
-    reducer [] card = [Run $ card :| []]
-    reducer runs@(Run run@(c:|_) : rest) card
-      | card `isSuccessorOf` c = (Run $ card <| run) : rest
-      | otherwise = (Run $ card :| []) : runs
-  in
-    foldl' reducer [] cards
-
-scoreRun :: Run -> Score
+scoreRun :: Run card -> Score
 scoreRun (Run cards) = Score $ length cards - 1
 
-scorePile :: PileCards -> Score
+scorePile :: (IsCard card, Foldable f) => Pile (f card) -> Score
 scorePile pile =
   pile & sumOf (#faceUp . to toList . to splitIntoRuns . traverse . to scoreRun)
 
 scoreByRuns :: Boring.Game -> Score
 scoreByRuns game =
-  game & sumOf (#layout . #_Layout . traverse . to scorePile)
+  game & sumOf (#tableau . #_Tableau . traverse . to scorePile)

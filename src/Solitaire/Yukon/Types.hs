@@ -1,6 +1,6 @@
 module Solitaire.Yukon.Types
   ( module CoreTypes
-  , Game
+  , Game(..)
   , Foundation(..)
   , Move(..)
   , InvalidMove(..)
@@ -23,16 +23,20 @@ import Solitaire.Core.Types as CoreTypes
   , Tableau(..)
   )
 
+
 newtype Foundation = Foundation (Map Suit Rank)
   deriving stock (Eq, Show, Generic)
   deriving anyclass (Hashable)
+
 
 data Game = Game
   { tableau :: Tableau Card
   , foundation :: Foundation
   }
-  deriving (Eq, Show, Generic)
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (Hashable)
 
+-- TODO: Move class
 data Move
   = MoveStack MoveStack
   | FlipCard FlipCard

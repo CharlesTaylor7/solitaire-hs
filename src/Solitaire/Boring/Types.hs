@@ -3,9 +3,7 @@ module Solitaire.Boring.Types
   ( module CoreTypes
   , Card(..)
   , Config(..)
-  , PileCards
   , Game(..)
-  , Layout(..)
   , Foundation(..)
   , Move(..)
   , InvalidMove(..)
@@ -22,7 +20,10 @@ import Solitaire.Core.Types as CoreTypes
   ( Pile(..)
   , Score(..)
   , Config(..)
+  , Tableau(..)
   )
+
+import Solitaire.Core.Card (IsCard(..))
 
 
 data Card
@@ -31,19 +32,30 @@ data Card
   | Three
   | Four
   | Five
-  deriving (Eq, Show, Ord, Enum, Bounded, Generic)
+  deriving stock (Eq, Show, Ord, Enum, Bounded, Generic)
+  deriving anyclass (Hashable)
+
+instance IsCard Card where
+  a `isSuccessorOf` b =
+    fromEnum a - fromEnum b == 1
+
 
 data Foundation = Foundation
   { numSets :: Int
   }
-  deriving (Eq, Ord, Show, Generic)
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving anyclass (Hashable)
+
 
 data Game = Game
   { tableau :: Tableau Card
   , foundation :: Foundation
   }
-  deriving (Eq, Ord, Show, Generic)
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (Hashable)
 
+
+-- TODO: use open sum type?
 data Move
   = MoveStack MoveStack
   | FlipCard FlipCard
@@ -66,6 +78,7 @@ newtype MoveToFoundation = MTF
   }
   deriving (Eq, Show, Generic)
 
+
 data InvalidMove
   = CardFlipOnUnexposedPile Int
   | CardFlipOnEmptyPile Int
@@ -74,22 +87,17 @@ data InvalidMove
   | EmptyStackSource Int
   | MoveStackOntoFaceDownCards Int
   | SourceIsTarget Int
-  deriving (Eq, Show, Generic)
-
-instance Exception InvalidMove
-
--- hashable instances
-instance Hashable Game
-instance Hashable Foundation
-instance Hashable Card
-instance Hashable a => Hashable (Pile a)
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (Exception)
 
 
 flipCard :: Int -> Move
 flipCard = FlipCard . FC
 
+
 moveToFoundation :: Int -> Move
 moveToFoundation = MoveToFoundation . MTF
+
 
 moveStack :: Int -> Int -> Move
 moveStack = (MoveStack .) . MS

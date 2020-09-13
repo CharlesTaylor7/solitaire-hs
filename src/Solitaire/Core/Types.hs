@@ -4,6 +4,8 @@ module Solitaire.Core.Types where
 
 import Solitaire.Prelude
 
+import Solitaire.Core.Card (IsCard(..))
+
 import qualified Data.ByteString as BS
 import qualified Data.DList as DL
 
@@ -72,6 +74,19 @@ instance Pretty Card where
       rankToChunk rank = rank & fromEnum & (+2) & intToDigit & pure & fromString
 
 
+instance IsCard Card where
+  isSuccessorOf :: Card -> Card -> Bool
+  a `isSuccessorOf` b =
+    -- a has a rank 1 higher than b
+    a ^. #rank . from enum - b ^. #rank . from enum == 1 &&
+    -- a is the opposite color of b
+    a ^. #suit . to color /= b ^. #suit . to color
+    where
+      color :: Suit -> Color
+      color Hearts = Red
+      color Diamonds = Red
+      color _ = Black
+
 
 data Rank
   = Ace
@@ -96,7 +111,7 @@ data Suit
  | Clubs
  | Hearts
  | Spades
-  deriving stock (Eq, Show, Enum, Bounded, Generic)
+  deriving stock (Eq, Ord, Show, Enum, Bounded, Generic)
   deriving anyclass (Hashable)
 
 

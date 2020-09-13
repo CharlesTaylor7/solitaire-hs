@@ -6,9 +6,16 @@ module Solitaire.Yukon.Rules
 
 import Solitaire.Prelude
 import Solitaire.Core.Rules
-import Solitaire.Core.Utils (isSuccessorOf, pileCountsSize)
+import Solitaire.Core.Utils
+  ( pileCountsSize
+  , getDeck
+  , totalCards
+  , cards
+  )
 
-import Solitaire.Yukon.Utils
+import Solitaire.Core.Card (splitAtFirstRun)
+import Solitaire.Core.Utils (toPile)
+
 import Solitaire.Yukon.PrettyInstances ()
 import Solitaire.Yukon.Types
 import qualified Solitaire.Yukon.Types as Yukon
@@ -50,12 +57,12 @@ instance Rules Yukon where
             (toPile p count : ps, cs'))
         ([], shuffled)
         pileCounts
-      layout = Layout $ indexFrom 0 $ reverse piles
-      foundation = Foundation 0
-    pure $ Yukon.Game layout foundation
+      tableau = Tableau $ indexFrom 0 $ reverse piles
+      foundation = Foundation mempty
+    pure $ Yukon.Game tableau foundation
 
   gameIsWon :: Yukon.Game -> Bool
-  gameIsWon game = game ^. #layout . to totalCards . to (== 0)
+  gameIsWon game = game ^. #tableau . to totalCards . to (== 0)
 
   moves :: (MonadReader Yukon.Config m) => m [Yukon.Move]
   moves = do
@@ -75,7 +82,7 @@ instance Rules Yukon where
   moveReducer move =
     case move of
       FlipCard (FC i) ->
-        #layout . #_Layout . ix i $ \pile -> do
+        #tableau . #_Tableau . ix i $ \pile -> do
           if is _Just $ pile ^? #faceUp . _Cons
           then throwError (CardFlipOnUnexposedPile i)
           else pure ()
@@ -86,22 +93,23 @@ instance Rules Yukon where
           let faceUp' = #faceUp .~ [head]
           let faceDown' = #faceDown .~ rest
           pure $ pile & faceUp' . faceDown'
-      MoveToFoundation (MTF i) ->
-        #foundation . #numSets +~ 1 >>>
-        (#layout . #_Layout . ix i $ \pile ->
-          let
-            (set, leftover) = pile ^. #faceUp . to splitAtStack
-            pile' = pile & #faceUp .~ leftover
-          in do
-            when (length set /= enumSize @Yukon.Card) $ throwError $ IncompleteSet i
-            pure pile'
-        )
+      MoveToFoundation (MTF _) ->
+        error "not implemented"
+        -- #foundation . #numSets +~ 1 >>>
+        -- (#tableau . #_Tableau . ix i $ \pile ->
+        --   let
+        --     (set, leftover) = pile ^. #faceUp . to splitAtFirstRun
+        --     pile' = pile & #faceUp .~ leftover
+        --   in do
+        --     when (length set /= enumSize @Yukon.Card) $ throwError $ IncompleteSet i
+        --     pure pile'
+        -- )
       MoveStack (MS i j) ->
-        #layout . #_Layout $ \layout -> do
+        #tableau . #_Tableau $ \tableau -> do
           let
             (stack, sourcePileRest) =
-              layout ^?! ix i . #faceUp . to splitAtStack
-            target = layout ^?! ix j
+              tableau ^?! ix i . #faceUp . to splitAtFirstRun
+            target = tableau ^?! ix j
 
           -- sanity checking
           when (i == j) $
@@ -118,7 +126,7 @@ instance Rules Yukon where
             when (is _Empty $ target ^. #faceUp) $
               throwError $ MoveStackOntoFaceDownCards  j
 
-          let targetCard = layout ^?! ix j . #faceUp . _head
+          let targetCard = tableau ^?! ix j . #faceUp . _head
           let stackBottomCard = stack ^?! _last
           let stackSize = length stack
           let diff = fromEnum targetCard - fromEnum stackBottomCard
@@ -134,31 +142,5 @@ instance Rules Yukon where
             sourceUpdate = ix i . #faceUp .~ (stackPartToLeave <> sourcePileRest)
             targetUpdate = ix j . #faceUp %~ (stackPartToMove <>)
 
-          (pure $ layout & sourceUpdate . targetUpdate)
-            & tracePretty
-                ( (mempty :: Map Text (Vector Yukon.Card))
-                  & at "partToLeave" ?~ stackPartToLeave
-                  & at "partToMove" ?~ stackPartToMove
-                  & at "sourcePileRest" ?~ sourcePileRest
-                )
+          pure $ tableau & sourceUpdate . targetUpdate
 
-countWhile :: Foldable f => (a -> Bool) -> f a -> Int
-countWhile p =
-  let
-    reducer x acc
-      | p x = 1 + acc
-      | otherwise = acc
-  in foldr reducer 0
-
-splitAtStack :: Vector Yukon.Card -> (Vector Yukon.Card, Vector Yukon.Card)
-splitAtStack cards =
-  maybe
-    (mempty, mempty)
-    (\(_, rest) ->
-      let
-        n =
-          mzip rest cards
-            & countWhile (uncurry isSuccessorOf)
-      in V.splitAt (n+1) cards
-    )
-    (uncons cards)
