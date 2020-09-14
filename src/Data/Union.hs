@@ -1,8 +1,8 @@
 {-# LANGUAGE KindSignatures, DataKinds, TypeOperators, TypeFamilies, FlexibleContexts #-}
 module Data.Union
-  ( Union(..)
-  , inject
+  ( OpenSum
   , (:<)
+  , inject
   ) where
 
 import Prelude
@@ -12,17 +12,16 @@ import Data.Void
 import qualified Data.Sum as FastSum
 
 
-newtype Union variants = Union (FastSum.Sum (Record variants) Void)
+type OpenSum vs = FastSum.Sum (Mapped vs) Void
 
-type Record variants = Map Const variants
+type (:<) v vs = FastSum.Element (Const v) (Mapped vs)
 
-type (:<) v vs = Const v FastSum.:< Record vs
-
-
-inject :: v :< vs => v -> Union vs
-inject = Union . FastSum.inject . Const
+inject :: v :< vs => v -> OpenSum vs
+inject = FastSum.inject . Const
 
 
 type family Map (f :: * -> * -> *) (xs :: [*]) where
   Map f '[]       = '[]
   Map f (x ': xs) = f x ': Map f xs
+
+type Mapped variants = Map Const variants
