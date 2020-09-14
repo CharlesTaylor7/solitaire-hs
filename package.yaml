@@ -28,8 +28,12 @@ dependencies:
 - unordered-containers
 - hashable >= 1.3
 - vector
+# priority queues
 - pqueue
+# difference lists
 - dlist >= 1.0
+# higher order open sum types
+- fastsum
 # control flow
 - lens
 - generic-lens

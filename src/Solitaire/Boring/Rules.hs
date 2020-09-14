@@ -57,15 +57,16 @@ instance Rules Boring where
   gameIsWon :: Boring.Game -> Bool
   gameIsWon game = game ^. #tableau . to totalCards . to (== 0)
 
-  moves :: (MonadReader Boring.Config m) => m [Boring.Move]
-  moves = do
-    numPiles <- M.size <$> view #piles
+  moves :: NumPiles -> [Boring.Move]
+  moves (NumPiles numPiles) =
     let
       range = [0..numPiles-1]
       moves = moveStack <$> range <*> range
       flips = flipCard <$> range
       sets = moveToFoundation <$> range
-    pure $ sets ++ flips ++ moves
+    in
+      sets <> flips <> moves
+
 
   moveReducer
     :: (MonadError Boring.InvalidMove m)

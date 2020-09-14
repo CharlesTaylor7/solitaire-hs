@@ -2,6 +2,7 @@
 module Solitaire.Core.Rules where
 
 import Solitaire.Prelude
+import Solitaire.Core.Move
 
 import qualified Data.HashSet as Set
 
@@ -12,6 +13,7 @@ type Solitaire rs =
   , Eq (Game rs)
   , Hashable (Game rs)
   , Pretty (Game rs)
+  , IsMove (Move rs) (Game rs) (InvalidMove rs)
   , Exception (InvalidMove rs)
   , MonadReader (Config rs) (App rs)
   , MonadHistory (Game rs) (App rs)
@@ -61,14 +63,6 @@ class Rules rs where
   gameIsWon :: Game rs -> Bool
 
   moves :: (MonadReader (Config rs) m) => m [Move rs]
-
-  moveReducer
-    :: forall m.
-    ( MonadError (InvalidMove rs) m
-    )
-    => Move rs
-    -> Game rs
-    -> m (Game rs)
 
 
 nextSteps
