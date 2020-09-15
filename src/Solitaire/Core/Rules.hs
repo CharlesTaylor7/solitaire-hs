@@ -17,84 +17,10 @@ import Data.Proxy
 import GHC.OverloadedLabels (IsLabel(..))
 import GHC.Records (HasField(..))
 
-
-data SomeMoveType game =
-  forall move. IsMoveConstraints move game =>
-    SomeMoveType (Proxy move)
-
-data SomeMove game =
-  forall move. IsMoveConstraints move game =>
-    SomeMove move
-
-
-applySomeMove :: (MonadError SomeException m) => SomeMove game -> game -> m game
-applySomeMove (SomeMove move) =
-  liftEither .
-  over _Left SomeException .
-  Move.apply move
-
-
-allMoves
-  :: forall rs.
-  ( Solitaire rs
-  )
-  => Config rs
-  -> [SomeMove (Game rs)]
-allMoves config = do
-  let
-    pileCount :: NumPiles
-    pileCount = numPiles config
-
-  SomeMoveType (proxy :: Proxy move) <- moveTypes @rs
-
-  SomeMove <$> Move.moves @move @(Game rs) pileCount
-
--- catch all constraint
-type Solitaire rs =
-  ( Rules rs
-  , Eq (Game rs)
-  , Hashable (Game rs)
-  , Pretty (Game rs)
-  , IsConfig (Config rs)
-  , MonadReader (Config rs) (App rs)
-  , MonadHistory (Game rs) (App rs)
-  )
-
--- types
-newtype App rs a = App
-  { unApp :: PQueueT MoveCount (GameWithPlayback rs) (HistoryT (Game rs) (ReaderT (Config rs) IO)) a
-  }
-  deriving newtype
-    ( Functor
-    , Applicative
-    , Monad
-    , MonadIO
-    , MonadPQueue MoveCount (GameWithPlayback rs)
-    )
-
-
-newtype MoveCount = MoveCount Int
-  deriving stock (Eq, Ord)
-  deriving newtype (Num)
-
-data GameConclusion game = GameWon [SomeMove game] | GameLost
-
-data Step game = Step
-  { move :: SomeMove game
-  , game :: game
-  }
-  deriving (Generic)
-
-data GameWithPlayback game = GameWithPlayback
-  { moves :: [SomeMove game]
-  , game :: game
-  }
-  deriving (Generic)
-
-
 class Rules rs where
-  type Config rs :: *
-  type Game rs :: *
+  type Config (rs :: *) :: *
+  type Game (rs :: *) :: *
+
 
   moveTypes :: [SomeMoveType (Game rs)]
 
@@ -107,28 +33,52 @@ class Rules rs where
   gameIsWon :: Game rs -> Bool
 
 
-nextSteps
-  :: forall rs m.
-  ( Solitaire rs
-  , MonadReader (Config rs) m
-  , MonadHistory (Game rs) m
+-- catch all constraint
+type Solitaire rs =
+  ( Rules rs
+  , Eq (Game rs)
+  , Hashable (Game rs)
+  , Pretty (Game rs)
+  , IsConfig (Config rs)
   )
-  => Game rs
-  -> m [Step (Game rs)]
 
-nextSteps game = do
-  config <- ask
-  history <- getHistory
-  let
-    paired = id &&& (\move -> runReaderT (applySomeMove move game) config)
-    step = Step ^. from curried
-    unvisited = not . flip Set.member history . view #game
 
-    someMoves :: [SomeMove (Game rs)]
-    someMoves = allMoves @rs config
+-- existential types
+data SomeMoveType game =
+  forall move. IsMoveConstraints move game =>
+    SomeMoveType (Proxy move)
 
-    steps :: [Step (Game rs)]
-    steps = someMoves
-      ^.. folded . to paired . distributed . _Right . to step . filtered unvisited
 
-  pure steps
+data SomeMove game =
+  forall move. IsMoveConstraints move game =>
+    SomeMove move
+
+
+
+-- data types
+newtype App config game a = App
+  { unApp :: PQueueT MoveCount (GameWithPlayback game) (HistoryT game (ReaderT config IO)) a
+  }
+  deriving newtype
+    ( Functor
+    , Applicative
+    , Monad
+    , MonadIO
+    , MonadPQueue MoveCount (GameWithPlayback game)
+    , MonadReader config
+    , MonadHistory game
+    )
+
+
+newtype MoveCount = MoveCount Int
+  deriving stock (Eq, Ord)
+  deriving newtype (Num)
+
+
+data GameWithPlayback game = GameWithPlayback
+  { moves :: [SomeMove game]
+  , game :: game
+  }
+  deriving (Generic)
+
+
