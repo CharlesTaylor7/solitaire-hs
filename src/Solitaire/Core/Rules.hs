@@ -35,34 +35,19 @@ applySomeMove (SomeMove move) =
 
 
 allMoves
-  :: forall rs config game.
-  ( Rules rs
-  , IsConfig config
-  , Game rs ~ game
+  :: forall rs.
+  ( Solitaire rs
   )
-  => config
-  -> [SomeMove game]
-allMoves config =
+  => Config rs
+  -> [SomeMove (Game rs)]
+allMoves config = do
   let
     pileCount :: NumPiles
     pileCount = numPiles config
 
-  in
-    moveTypes @rs
-      >>= \(SomeMoveType (proxy :: Proxy move)) ->
-        let
-          oldMoves :: [ move]
-          oldMoves = Move.moves @move pileCount
+  SomeMoveType (proxy :: Proxy move) <- moveTypes @rs
 
-          moves :: [SomeMove game]
-          moves = SomeMove <$> oldMoves
-        in
-          moves
-
-
-
-
-
+  SomeMove <$> Move.moves @move @(Game rs) pileCount
 
 -- catch all constraint
 type Solitaire rs =
