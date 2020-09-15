@@ -7,15 +7,13 @@ module Solitaire.Core.Rules where
 import Solitaire.Prelude
 import Solitaire.Core.Config
 
-import Solitaire.Core.Move (IsMove, IsMoveConstraints, InvalidMove)
+import Solitaire.Core.Move
 import qualified Solitaire.Core.Move as Move
 
 import qualified Data.HashSet as Set
 
-import Control.Exception (SomeException(..))
-import Data.Proxy
-import GHC.OverloadedLabels (IsLabel(..))
 import GHC.Records (HasField(..))
+
 
 class Rules rs where
   type Config (rs :: *) :: *
@@ -43,16 +41,11 @@ type Solitaire rs =
   )
 
 
--- existential types
-data SomeMoveType game =
-  forall move. IsMoveConstraints move game =>
-    SomeMoveType (Proxy move)
-
-
-data SomeMove game =
-  forall move. IsMoveConstraints move game =>
-    SomeMove move
-
+data Step game = Step
+  { move :: SomeMove game
+  , game :: game
+  }
+  deriving (Generic)
 
 
 -- data types
@@ -80,5 +73,4 @@ data GameWithPlayback game = GameWithPlayback
   , game :: game
   }
   deriving (Generic)
-
 

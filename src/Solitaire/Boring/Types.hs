@@ -5,14 +5,6 @@ module Solitaire.Boring.Types
   , Config(..)
   , Game(..)
   , Foundation(..)
-  , Move(..)
-  , InvalidMove(..)
-  , MoveStack(..)
-  , MoveToFoundation(..)
-  , FlipCard(..)
-  , moveStack
-  , moveToFoundation
-  , flipCard
   ) where
 
 import Solitaire.Prelude
@@ -39,12 +31,21 @@ instance IsCard Card where
   a `isSuccessorOf` b =
     fromEnum a - fromEnum b == 1
 
+deriving via WrappedShow Card instance Pretty Card
+
 
 data Foundation = Foundation
   { numSets :: Int
   }
   deriving stock (Eq, Ord, Show, Generic)
   deriving anyclass (Hashable)
+
+instance Pretty Foundation where
+  prettyExpr (Foundation n) = PrettyStr
+    [ "["
+    , fromString (show n)
+    , "]"
+    ]
 
 
 data Game = Game
@@ -54,50 +55,11 @@ data Game = Game
   deriving stock (Eq, Show, Generic)
   deriving anyclass (Hashable)
 
-
--- TODO: use open sum type?
-data Move
-  = MoveStack MoveStack
-  | FlipCard FlipCard
-  | MoveToFoundation MoveToFoundation
-  deriving (Eq, Show, Generic)
-
-data MoveStack = MS
-  { fromIndex :: Int
-  , toIndex :: Int
-  }
-  deriving (Eq, Show, Generic)
-
-newtype FlipCard = FC
-  { pileIndex :: Int
-  }
-  deriving (Eq, Show, Generic)
-
-newtype MoveToFoundation = MTF
-  { pileIndex :: Int
-  }
-  deriving (Eq, Show, Generic)
+instance Pretty Game where
+  prettyExpr (Game layout foundation) =
+    PrettyHardWrap
+      [ prettyExpr foundation
+      , prettyExpr layout
+      ]
 
 
-data InvalidMove
-  = CardFlipOnUnexposedPile Int
-  | CardFlipOnEmptyPile Int
-  | IncompleteSet Int
-  | MismatchingStacks Int Int
-  | EmptyStackSource Int
-  | MoveStackOntoFaceDownCards Int
-  | SourceIsTarget Int
-  deriving stock (Eq, Show, Generic)
-  deriving anyclass (Exception)
-
-
-flipCard :: Int -> Move
-flipCard = FlipCard . FC
-
-
-moveToFoundation :: Int -> Move
-moveToFoundation = MoveToFoundation . MTF
-
-
-moveStack :: Int -> Int -> Move
-moveStack = (MoveStack .) . MS

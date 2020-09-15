@@ -5,6 +5,7 @@ import Solitaire.Prelude
 import Solitaire.Core.Rules
 import Solitaire.Core.Config
 
+import Solitaire.Core.Move
 import qualified Solitaire.Core.Move as Move
 
 import qualified Data.HashSet as Set
@@ -12,20 +13,6 @@ import qualified Data.HashSet as Set
 
 
 data GameConclusion game = GameWon [SomeMove game] | GameLost
-
-data Step game = Step
-  { move :: SomeMove game
-  , game :: game
-  }
-  deriving (Generic)
-
-
-
-applySomeMove :: (MonadError SomeException m) => SomeMove game -> game -> m game
-applySomeMove (SomeMove move) =
-  liftEither .
-  over _Left SomeException .
-  Move.apply move
 
 
 allMoves

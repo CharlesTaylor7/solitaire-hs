@@ -80,9 +80,10 @@ default-extensions:
   # generic lens
   - DuplicateRecordFields
 
-  # to use type equality
+  # because what could go wrong
   - TypeFamilies
   - TypeFamilyDependencies
+  - GADTs
 
   # mtl style typeclasses
   - FunctionalDependencies
