@@ -8,6 +8,13 @@ import qualified Data.IntMap as M
 
 import Debug.Trace
 
+
+class IsConfig config where
+  numPiles :: config -> NumPiles
+
+instance IsConfig Config where
+  numPiles = view $ #piles . to length . to NumPiles
+
 newtype NumPiles = NumPiles Int
 newtype NumFaceDown = NumFaceDown Int
 newtype NumSets = NumSets Int

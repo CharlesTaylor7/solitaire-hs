@@ -5,6 +5,16 @@ import Solitaire.Core.Config
 
 
 class IsMove move game where
-  type InvalidMove move :: *
-  apply :: MonadError (InvalidMove move) m => move -> game -> m game
+  apply :: move -> game -> Either (InvalidMove move) game
   moves :: NumPiles -> [move]
+
+
+type family InvalidMove (move :: *) = (invalid :: *) | invalid -> move
+
+
+type IsMoveConstraints move game =
+  ( IsMove move game
+  , Exception (InvalidMove move)
+  )
+
+
