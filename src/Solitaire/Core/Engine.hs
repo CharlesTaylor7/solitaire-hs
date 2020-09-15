@@ -11,7 +11,6 @@ import qualified Solitaire.Core.Move as Move
 import qualified Data.HashSet as Set
 
 
-
 data GameConclusion game = GameWon [SomeMove game] | GameLost
 
 
@@ -19,50 +18,43 @@ allMoves
   :: forall rs.
   ( Solitaire rs
   )
-  => Config rs
+  => Game rs
   -> [SomeMove (Game rs)]
-allMoves config = do
-  let
-    pileCount :: NumPiles
-    pileCount = numPiles config
-
+allMoves game = do
   SomeMoveType (_ :: Proxy move) <- moveTypes @rs
+  SomeMove <$> Move.moves @move game
 
-  SomeMove <$> Move.moves @move @(Game rs) pileCount
 
 nextSteps
   :: forall rs m.
   ( Solitaire rs
-  , MonadReader (Config rs) m
   , MonadHistory (Game rs) m
   )
   => Game rs
   -> m [Step (Game rs)]
 
 nextSteps game = do
-  config <- ask
   history <- getHistory
   let
-    paired = id &&& (\move -> runReaderT (applySomeMove move game) config)
+    paired = id &&& flip applySomeMove game
     step = Step ^. from curried
     unvisited = not . flip Set.member history . view #game
 
     someMoves :: [SomeMove (Game rs)]
-    someMoves = allMoves @rs config
+    someMoves = allMoves @rs game
+      allMoves
 
     steps :: [Step (Game rs)]
     steps = someMoves
-      ^.. folded . to paired . distributed . _Right . to step . filtered unvisited
+      ^.. folded . to paired . to step . filtered unvisited
 
   pure steps
 
 runGame
-  :: forall rs config game.
+  :: forall rs.
   ( Solitaire rs
-  , Config rs ~ config
-  , Game rs ~ game
   )
-  => config
+  => Config rs
   -> IO ()
 runGame config = do
   result <- runGameLoop @rs
@@ -80,16 +72,15 @@ runGame config = do
       putStrLn "GameWon"
 
 observeGameStep
-  :: forall rs m game.
+  :: forall rs m.
   ( Solitaire rs
   , MonadError SomeException m
   -- TODO: MonadLog
   , MonadIO m
-  , game ~ Game rs
   )
-  => game
-  -> SomeMove game
-  -> m (game)
+  => (Game rs)
+  -> SomeMove (Game rs)
+  -> m (Game rs)
 observeGameStep game move = do
   game <- applySomeMove move game
   prettyPrint game

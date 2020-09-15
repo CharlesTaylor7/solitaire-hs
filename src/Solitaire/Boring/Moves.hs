@@ -1,10 +1,13 @@
 {-# language FlexibleInstances #-}
-{-# options_ghc -Wwarn #-}
-module Solitaire.Boring.Moves where
+module Solitaire.Boring.Moves
+  ( MoveToFoundation
+  , FlipCard
+  , MoveStack
+  ) where
 
 import Solitaire.Prelude
--- import Solitaire.Core.Rules
 import Solitaire.Core.Utils (cards, toPile, totalCards, pileCountsSize, getDeck)
+import Solitaire.Core.Card (splitAtFirstRun)
 import Solitaire.Core.Move
 
 import Solitaire.Boring.Types
@@ -13,6 +16,17 @@ import qualified Data.Vector as V
 import qualified Data.IntMap as M
 
 
+newtype MoveToFoundation = MTF
+  { pileIndex :: Int
+  }
+  deriving (Eq, Show, Generic)
+
+
+instance IsMove MoveToFoundation Game where
+  moves :: Game -> [(Move, Game)]
+  moves game = game ^. #tableau . ifolded . withIndex . filtered
+
+-------------------------------------
 newtype FlipCard = FC
   { pileIndex :: Int
   }
@@ -22,8 +36,9 @@ instance IsMove FlipCard Game where
   data InvalidMove FlipCard
     = CardFlipOnUnexposedPile Int
     | CardFlipOnEmptyPile Int
-      deriving stock (Eq, Show, Generic)
-      deriving anyclass (Exception)
+
+    deriving stock (Eq, Show, Generic)
+    deriving anyclass (Exception)
 
 -------------------------------------
 data MoveStack = MS
@@ -38,21 +53,10 @@ instance IsMove MoveStack Game where
     | EmptyStackSource Int
     | MoveStackOntoFaceDownCards Int
     | SourceIsTarget Int
-      deriving stock (Eq, Show, Generic)
-      deriving anyclass (Exception)
 
-
--------------------------------------
-newtype MoveToFoundation = MTF
-  { pileIndex :: Int
-  }
-  deriving (Eq, Show, Generic)
-
-instance IsMove MoveToFoundation Game where
-
-  data InvalidMove MoveToFoundation = IncompleteSet Int
     deriving stock (Eq, Show, Generic)
     deriving anyclass (Exception)
+
 {--
   moves :: NumPiles -> [Boring.Move]
   moves (NumPiles numPiles) =
@@ -134,5 +138,3 @@ instance IsMove MoveToFoundation Game where
 
           pure $ tableau & sourceUpdate . targetUpdate
 --}
-
-

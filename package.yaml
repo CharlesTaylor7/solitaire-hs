@@ -93,6 +93,7 @@ ghc-options:
   - -Wall
   - -Werror
   - -Wno-name-shadowing
+  - -Wno-unused-imports
   - -freverse-errors
 
 library:
