@@ -15,9 +15,11 @@ import Solitaire.Boring.Types
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
 
+type PileOfCards = Pile (Vector Card)
+
 -- | convenience traversal
-indexedTableau :: IndexedTraversal' Int Game (Int, Pile (Vector Card))
-indexedTableau = #tableau . #_Tableau . itraversed . withIndex
+indexedTableau :: IndexedTraversal' Int Game (PileOfCards)
+indexedTableau = #tableau . #_Tableau . itraversed
 
 newtype MoveToFoundation = MoveToFoundation
   { pileIndex :: Int
@@ -29,8 +31,9 @@ instance IsMove MoveToFoundation Game where
   steps :: Game -> [(MoveToFoundation, Game)]
   steps game =
     game ^.. indexedTableau
-    . to (_2 %~ takeSet)
-    . aside _Just
+    . to takeSet
+    . _Just
+    . withIndex
     . to
       (   (MoveToFoundation . fst)
       &&& \(pileId, pile) ->
@@ -39,7 +42,7 @@ instance IsMove MoveToFoundation Game where
             & #foundation . #numSets +~ 1
       )
     where
-      takeSet :: Pile (Vector Card) -> Maybe (Pile (Vector Card))
+      takeSet :: PileOfCards -> Maybe (PileOfCards)
       takeSet pile =
         pile ^. #faceUp
         & splitAtFirstRun
@@ -59,14 +62,15 @@ instance IsMove FlipCard Game where
   steps :: Game -> [(FlipCard, Game)]
   steps game =
     game ^.. indexedTableau
-    . to (_2 %~ flipCard)
-    . aside _Just
+    . to flipCard
+    . _Just
+    . withIndex
     . to
       (   (FlipCard . fst)
       &&& \(pileId, pile) -> game & #tableau . #_Tableau . ix pileId .~ pile
       )
     where
-      flipCard :: Pile (Vector Card) -> Maybe (Pile (Vector Card))
+      flipCard :: PileOfCards -> Maybe (PileOfCards)
       flipCard pile
         -- face down pile is covered by face up cards
         | pile ^. #faceUp . to (not . V.null) = Nothing
@@ -87,7 +91,16 @@ data MoveStack = MS
   deriving (Eq, Show, Generic)
 
 instance IsMove MoveStack Game where
-
+  steps :: Game -> [(MoveStack, Game)]
+  steps game =
+    game ^.. indexedTableau
+    . to moveStack
+    . _Just
+    . withIndex
+    . to _updateGame
+    where
+      moveStack :: PileOfCards -> PileOfCards -> Maybe (PileOfCards, PileOfCards)
+      moveStack from onto = undefined
 {--
   moveReducer
     :: (MonadError Boring.InvalidMove m)
