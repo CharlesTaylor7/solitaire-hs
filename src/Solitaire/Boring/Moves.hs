@@ -15,6 +15,9 @@ import Solitaire.Boring.Types
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
 
+-- | convenience traversal
+indexedTableau :: IndexedTraversal' Int Game (Int, Pile (Vector Card))
+indexedTableau = #tableau . #_Tableau . itraversed . withIndex
 
 newtype MoveToFoundation = MoveToFoundation
   { pileIndex :: Int
@@ -25,11 +28,7 @@ newtype MoveToFoundation = MoveToFoundation
 instance IsMove MoveToFoundation Game where
   steps :: Game -> [(MoveToFoundation, Game)]
   steps game =
-    game
-    ^.. #tableau
-    . #_Tableau
-    . ifolded
-    . withIndex
+    game ^.. indexedTableau
     . to (_2 %~ takeSet)
     . aside _Just
     . to
@@ -59,11 +58,7 @@ newtype FlipCard = FlipCard
 instance IsMove FlipCard Game where
   steps :: Game -> [(FlipCard, Game)]
   steps game =
-    game
-    ^.. #tableau
-    . #_Tableau
-    . ifolded
-    . withIndex
+    game ^.. indexedTableau
     . to (_2 %~ flipCard)
     . aside _Just
     . to
@@ -83,8 +78,6 @@ instance IsMove FlipCard Game where
                   & #faceUp .~ V.singleton card
                   & #faceDown .~ rest
               )
-
-
 
 -------------------------------------
 data MoveStack = MS
