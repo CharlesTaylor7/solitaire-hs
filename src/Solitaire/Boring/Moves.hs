@@ -16,29 +16,75 @@ import qualified Data.Vector as V
 import qualified Data.IntMap as M
 
 
-newtype MoveToFoundation = MTF
+newtype MoveToFoundation = MoveToFoundation
   { pileIndex :: Int
   }
   deriving (Eq, Show, Generic)
 
 
 instance IsMove MoveToFoundation Game where
-  moves :: Game -> [(Move, Game)]
-  moves game = game ^. #tableau . ifolded . withIndex . filtered
+  steps :: Game -> [(MoveToFoundation, Game)]
+  steps game =
+    game
+    ^.. #tableau
+    . #_Tableau
+    . ifolded
+    . withIndex
+    . to (_2 %~ takeSet)
+    . aside _Just
+    . to
+      (   (MoveToFoundation . fst)
+      &&& \(pileId, pile) ->
+            game
+            & #tableau . #_Tableau . ix pileId .~ pile
+            & #foundation . #numSets +~ 1
+      )
+    where
+      takeSet :: Pile (Vector Card) -> Maybe (Pile (Vector Card))
+      takeSet pile =
+        pile ^. #faceUp
+        & splitAtFirstRun
+        & \(run, rest) ->
+          if length run == enumSize @Card
+          then Just $ pile & #faceUp .~ rest
+          else Nothing
+
 
 -------------------------------------
-newtype FlipCard = FC
+newtype FlipCard = FlipCard
   { pileIndex :: Int
   }
   deriving (Eq, Show, Generic)
 
 instance IsMove FlipCard Game where
-  data InvalidMove FlipCard
-    = CardFlipOnUnexposedPile Int
-    | CardFlipOnEmptyPile Int
+  steps :: Game -> [(FlipCard, Game)]
+  steps game =
+    game
+    ^.. #tableau
+    . #_Tableau
+    . ifolded
+    . withIndex
+    . to (_2 %~ flipCard)
+    . aside _Just
+    . to
+      (   (FlipCard . fst)
+      &&& \(pileId, pile) -> game & #tableau . #_Tableau . ix pileId .~ pile
+      )
+    where
+      flipCard :: Pile (Vector Card) -> Maybe (Pile (Vector Card))
+      flipCard pile
+        -- face down pile is covered by face up cards
+        | pile ^. #faceUp . to (not . V.null) = Nothing
+        | otherwise =
+          pile ^? #faceDown . _Cons .
+            to
+              (\(card, rest) ->
+                pile
+                  & #faceUp .~ V.singleton card
+                  & #faceDown .~ rest
+              )
 
-    deriving stock (Eq, Show, Generic)
-    deriving anyclass (Exception)
+
 
 -------------------------------------
 data MoveStack = MS
@@ -48,56 +94,14 @@ data MoveStack = MS
   deriving (Eq, Show, Generic)
 
 instance IsMove MoveStack Game where
-  data InvalidMove MoveStack
-    = MismatchingStacks Int Int
-    | EmptyStackSource Int
-    | MoveStackOntoFaceDownCards Int
-    | SourceIsTarget Int
-
-    deriving stock (Eq, Show, Generic)
-    deriving anyclass (Exception)
 
 {--
-  moves :: NumPiles -> [Boring.Move]
-  moves (NumPiles numPiles) =
-    let
-      range = [0..numPiles-1]
-      moves = moveStack <$> range <*> range
-      flips = flipCard <$> range
-      sets = moveToFoundation <$> range
-    in
-      sets <> flips <> moves
-
-
   moveReducer
     :: (MonadError Boring.InvalidMove m)
     => Boring.Move
     -> Boring.Game
     -> m Boring.Game
   moveReducer move =
-    case move of
-      FlipCard (FC i) ->
-        #tableau . #_Tableau . ix i $ \pile -> do
-          if is _Just $ pile ^? #faceUp . _Cons
-          then throwError (CardFlipOnUnexposedPile i)
-          else pure ()
-
-          (head, rest) <- pile ^? #faceDown . _Cons
-            & (maybeToError $ CardFlipOnEmptyPile i)
-
-          let faceUp' = #faceUp .~ [head]
-          let faceDown' = #faceDown .~ rest
-          pure $ pile & faceUp' . faceDown'
-      MoveToFoundation (MTF i) ->
-        #foundation . #numSets +~ 1 >>>
-        (#tableau . #_Tableau . ix i $ \pile ->
-          let
-            (set, leftover) = pile ^. #faceUp . to splitAtFirstRun
-            pile' = pile & #faceUp .~ leftover
-          in do
-            when (length set /= enumSize @Boring.Card) $ throwError $ IncompleteSet i
-            pure pile'
-        )
       MoveStack (MS i j) ->
         #tableau . #_Tableau $ \tableau -> do
           let

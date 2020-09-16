@@ -25,7 +25,7 @@ import Data.Bifunctor as X
 import Data.Foldable as X
 import Data.Function as X (on)
 import Data.List as X (intercalate, transpose, sortOn)
-import Data.List.NonEmpty as X (NonEmpty(..), nonEmpty)
+import Data.List.NonEmpty as X (NonEmpty(..), (<|), nonEmpty)
 import Data.Ord as X
 import Data.Proxy as X (Proxy(..))
 import Data.Void as X

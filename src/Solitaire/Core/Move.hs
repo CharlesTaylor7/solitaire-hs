@@ -5,8 +5,7 @@ import Solitaire.Core.Config
 
 
 class IsMove move game where
-  apply :: move -> game -> game
-  moves :: game -> [move]
+  steps :: game -> [(move, game)]
 
 
 data SomeMoveType game =
@@ -17,10 +16,6 @@ data SomeMoveType game =
 data SomeMove game =
   forall move. IsMove move game =>
     SomeMove move
-
-
-applySomeMove :: SomeMove game -> game -> game
-applySomeMove (SomeMove move) = apply move
 
 
 moveType :: forall move game. IsMove move game => SomeMoveType game

@@ -34,7 +34,7 @@ instance IsCard Card where
 deriving via WrappedShow Card instance Pretty Card
 
 
-data Foundation = Foundation
+newtype Foundation = Foundation
   { numSets :: Int
   }
   deriving stock (Eq, Ord, Show, Generic)

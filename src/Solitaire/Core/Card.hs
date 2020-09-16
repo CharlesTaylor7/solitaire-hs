@@ -7,8 +7,6 @@ module Solitaire.Core.Card
 
 import Solitaire.Prelude
 
-import Data.List.NonEmpty ((<|))
-
 import qualified Data.Vector as V
 
 class IsCard card where

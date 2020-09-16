@@ -50,14 +50,14 @@ data Step game = Step
 
 -- data types
 newtype App config game a = App
-  { unApp :: PQueueT MoveCount (GameWithPlayback game) (HistoryT game (ReaderT config IO)) a
+  { unApp :: PQueueT MoveCount (NonEmpty game) (HistoryT game (ReaderT config IO)) a
   }
   deriving newtype
     ( Functor
     , Applicative
     , Monad
     , MonadIO
-    , MonadPQueue MoveCount (GameWithPlayback game)
+    , MonadPQueue MoveCount (NonEmpty game)
     , MonadReader config
     , MonadHistory game
     )
@@ -66,11 +66,3 @@ newtype App config game a = App
 newtype MoveCount = MoveCount Int
   deriving stock (Eq, Ord)
   deriving newtype (Num)
-
-
-data GameWithPlayback game = GameWithPlayback
-  { moves :: [SomeMove game]
-  , game :: game
-  }
-  deriving (Generic)
-

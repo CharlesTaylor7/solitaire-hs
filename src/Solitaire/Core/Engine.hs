@@ -11,7 +11,7 @@ import qualified Solitaire.Core.Move as Move
 import qualified Data.HashSet as Set
 
 
-data GameConclusion game = GameWon [SomeMove game] | GameLost
+data GameConclusion game = GameWon [game] | GameLost
 
 
 allMoves
@@ -19,10 +19,10 @@ allMoves
   ( Solitaire rs
   )
   => Game rs
-  -> [SomeMove (Game rs)]
+  -> [Step (Game rs)]
 allMoves game = do
   SomeMoveType (_ :: Proxy move) <- moveTypes @rs
-  SomeMove <$> Move.moves @move game
+  (uncurry Step . (_1 %~ SomeMove)) <$> Move.steps @move game
 
 
 nextSteps
@@ -36,19 +36,11 @@ nextSteps
 nextSteps game = do
   history <- getHistory
   let
-    paired = id &&& flip applySomeMove game
-    step = Step ^. from curried
+    unvisited :: Step (Game rs) -> Bool
     unvisited = not . flip Set.member history . view #game
 
-    someMoves :: [SomeMove (Game rs)]
-    someMoves = allMoves @rs game
-      allMoves
+  pure $ allMoves @rs game & filter unvisited
 
-    steps :: [Step (Game rs)]
-    steps = someMoves
-      ^.. folded . to paired . to step . filtered unvisited
-
-  pure steps
 
 runGame
   :: forall rs.
@@ -63,45 +55,25 @@ runGame config = do
     & runHistoryT
     & flip runReaderT config
   case result of
-    (_, GameLost) -> do
+    GameLost -> do
       putStrLn "GameLost"
 
-    (game, GameWon moves) -> do
+    GameWon games -> do
       liftIO $ putStrLn ""
-      throwInIO $ void $ foldM (observeGameStep @rs) game (reverse moves)
+      for_ games prettyPrint
       putStrLn "GameWon"
-
-observeGameStep
-  :: forall rs m.
-  ( Solitaire rs
-  , MonadError SomeException m
-  -- TODO: MonadLog
-  , MonadIO m
-  )
-  => (Game rs)
-  -> SomeMove (Game rs)
-  -> m (Game rs)
-observeGameStep game move = do
-  game <- applySomeMove move game
-  prettyPrint game
-  liftIO $ putStrLn ""
-  pure game
-
-
-throwInIO :: (MonadIO m, Exception e) => ExceptT e m a -> m a
-throwInIO = join . fmap rightOrThrow . runExceptT
 
 
 runGameLoop
   :: forall rs. Solitaire rs
-  => App (Config rs) (Game rs) (Game rs, GameConclusion (Game rs))
+  => App (Config rs) (Game rs) (GameConclusion (Game rs))
 runGameLoop = do
   game <- newGame @rs
   prettyPrint game
 
-  queueInsert 0 $ GameWithPlayback [] game
+  queueInsert 0 $ [game]
   conclusion <- loopM (\_ -> step @rs) ()
-  pure (game, conclusion)
+  pure conclusion
 
 
 step
@@ -116,7 +88,7 @@ step = do
       throwError GameLost
 
     -- we have game states to play from
-    Just (priority, GameWithPlayback previousMoves game) -> do
+    Just (priority, gameHistory@(game :| _ )) -> do
       -- game states can be reached multiple times via different paths
       -- verify we haven't visted this state before
       visited <- historyHas game
@@ -124,7 +96,7 @@ step = do
 
         -- check to see if we won
         when (gameIsWon @rs game) $
-          throwError $ GameWon previousMoves
+          throwError $ GameWon (toList gameHistory)
 
         -- record we visited this game state
         saveToHistory game
@@ -136,4 +108,4 @@ step = do
         for_ steps $ \step -> do
             queueInsert
               (priority + 1)
-              (GameWithPlayback (step ^. #move : previousMoves) (step ^. #game))
+              (step ^. #game <| gameHistory)
