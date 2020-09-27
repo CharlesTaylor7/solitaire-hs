@@ -31,7 +31,8 @@ instance IsCard Card where
   a `isSuccessorOf` b =
     fromEnum a - fromEnum b == 1
 
-deriving via WrappedShow Card instance Pretty Card
+instance Pretty Card where
+  prettyExpr = fromString . show . (+1) . fromEnum
 
 
 newtype Foundation = Foundation
@@ -61,5 +62,3 @@ instance Pretty Game where
       [ prettyExpr foundation
       , prettyExpr layout
       ]
-
-
