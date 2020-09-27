@@ -97,26 +97,20 @@ instance IsMove MoveStack Game where
   steps :: Game -> [(MoveStack, Game)]
   steps game =
     let
-      sourceStacks :: IndexedFold Int Game (Vector Card, Card, Vector Card)
-      sourceStacks =
-        indexedTableau
-        <. #faceUp
-        . to splitAtFirstRun
-        . to
-          (\(stack, rest) ->
-            stack ^? _Snoc . to (\(run, card) -> (run, card, rest))
-          )
-        . _Just
+      sourceStacks :: IndexedFold Int Game (Vector Card, Vector Card)
+      sourceStacks = indexedTableau <. #faceUp . to splitAtFirstRun
 
       targets :: Card -> IndexedFold Int Game (Vector Card)
-      targets card = indexedTableau . #faceUp . to (isTarget card) . _Just
-
-      isTarget :: Card -> Vector Card -> Maybe (Vector Card)
-      isTarget card cards = cards ^? to (id &&& alongside id _head . filtered (card `isSuccessorOf`)
+      targets card = indexedTableau <. #faceUp . filtered isTarget
+        where
+          isTarget :: Vector Card -> Bool
+          isTarget cards = maybe False (isSuccessorOf card) (cards ^? _head)
 
     in do
       -- parse, don't validate
-      (source_i, (sourceStack, stackBottom, sourceRest)) <- game ^.. sourceStacks . withIndex
+      (source_i, (sourceStack, sourceRest)) <- game ^.. sourceStacks . withIndex
+
+      stackBottom <- sourceStack ^.. _last
 
       (target_i, targetFaceUp) <- game ^.. targets stackBottom . withIndex
 
