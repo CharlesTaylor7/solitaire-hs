@@ -94,6 +94,7 @@ ghc-options:
   - -Werror
   - -Wno-name-shadowing
   - -Wno-unused-imports
+  - -Wno-unused-local-binds
   - -freverse-errors
 
 library:

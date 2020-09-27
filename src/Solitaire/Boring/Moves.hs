@@ -7,7 +7,7 @@ module Solitaire.Boring.Moves
 
 import Solitaire.Prelude
 import Solitaire.Core.Utils (cards, toPile, totalCards, pileCountsSize, getDeck)
-import Solitaire.Core.Card (splitAtFirstRun)
+import Solitaire.Core.Card (splitAtFirstRun, isSuccessorOf)
 import Solitaire.Core.Move
 
 import Solitaire.Boring.Types
@@ -15,10 +15,12 @@ import Solitaire.Boring.Types
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
 
+
+
 type PileOfCards = Pile (Vector Card)
 
 -- | convenience traversal
-indexedTableau :: IndexedTraversal' Int Game (PileOfCards)
+indexedTableau :: IndexedTraversal' Int Game PileOfCards
 indexedTableau = #tableau . #_Tableau . itraversed
 
 newtype MoveToFoundation = MoveToFoundation
@@ -84,67 +86,45 @@ instance IsMove FlipCard Game where
               )
 
 -------------------------------------
-data MoveStack = MS
+data MoveStack = MoveStack
   { fromIndex :: Int
   , toIndex :: Int
+  , numMoved :: Int
   }
   deriving (Eq, Show, Generic)
 
 instance IsMove MoveStack Game where
   steps :: Game -> [(MoveStack, Game)]
   steps game =
-    game ^.. indexedTableau
-    . to moveStack
-    . _Just
-    . withIndex
-    . to _updateGame
-    where
-      moveStack :: PileOfCards -> PileOfCards -> Maybe (PileOfCards, PileOfCards)
-      moveStack from onto = undefined
-{--
-  moveReducer
-    :: (MonadError Boring.InvalidMove m)
-    => Boring.Move
-    -> Boring.Game
-    -> m Boring.Game
-  moveReducer move =
-      MoveStack (MS i j) ->
-        #tableau . #_Tableau $ \tableau -> do
-          let
-            (stack, sourcePileRest) =
-              tableau ^?! ix i . #faceUp . to splitAtFirstRun
-            target = tableau ^?! ix j
+    let
+      sourceStacks :: IndexedFold Int Game (Vector Card, Card, Vector Card)
+      sourceStacks =
+        indexedTableau
+        <. #faceUp
+        . to splitAtFirstRun
+        . to
+          (\(stack, rest) ->
+            stack ^? _Snoc . to (\(run, card) -> (run, card, rest))
+          )
+        . _Just
 
-          -- sanity checking
-          when (i == j) $
-            throwError $ SourceIsTarget i
+      targets :: Card -> IndexedFold Int Game (Vector Card)
+      targets card = indexedTableau . #faceUp . to (isTarget card) . _Just
 
-          when (null stack) $
-            throwError $ EmptyStackSource i
+      isTarget :: Card -> Vector Card -> Maybe (Vector Card)
+      isTarget card cards = cards ^? to (id &&& alongside id _head . filtered (card `isSuccessorOf`)
 
-          -- short circuit case where you move a stack onto an empty pile
-          if V.null . cards $ target
-          then error "todo"
-          else do
-            -- Can never move a stack onto facedown cards
-            when (is _Empty $ target ^. #faceUp) $
-              throwError $ MoveStackOntoFaceDownCards  j
+    in do
+      -- parse, don't validate
+      (source_i, (sourceStack, stackBottom, sourceRest)) <- game ^.. sourceStacks . withIndex
 
-          let targetCard = tableau ^?! ix j . #faceUp . _head
-          let stackBottomCard = stack ^?! _last
-          let stackSize = length stack
-          let diff = fromEnum targetCard - fromEnum stackBottomCard
-          let splitStackAt = length stack - diff - 1
+      (target_i, targetFaceUp) <- game ^.. targets stackBottom . withIndex
 
-          when (splitStackAt < 0 || splitStackAt >= stackSize) $
-            throwError $ MismatchingStacks i j
-              & traceShow (splitStackAt, stack)
+      let
+        numMoved = length sourceStack
+        updatedFaceUp = sourceStack <> cons stackBottom targetFaceUp
+        game' = game
+            & #tableau . #_Tableau . ix target_i . #faceUp .~ updatedFaceUp
+            & #tableau . #_Tableau . ix source_i . #faceUp .~ sourceRest
 
-          let
-            (stackPartToMove, stackPartToLeave) = V.splitAt splitStackAt stack
-
-            sourceUpdate = ix i . #faceUp .~ (stackPartToLeave <> sourcePileRest)
-            targetUpdate = ix j . #faceUp %~ (stackPartToMove <>)
-
-          pure $ tableau & sourceUpdate . targetUpdate
---}
+      pure $ (MoveStack source_i target_i numMoved, game')
