@@ -25,12 +25,13 @@ newtype InvalidConfig = InvalidConfig Text
 
 instance Exception InvalidConfig
 
-mkConfig :: (MonadError InvalidConfig m) => NumSets -> Piles -> m Config
+type BoundedEnum a = (Bounded a, Enum a)
+mkConfig :: forall card m. (MonadError InvalidConfig m, BoundedEnum card) => NumSets -> Piles -> m Config
 mkConfig (NumSets s) (Piles piles)
   | s < 0 = throwError $ InvalidConfig "Number of sets should be non negative."
   | otherwise = do
       let
-        requestedCardCount = s * enumSize @Card
+        requestedCardCount = s * enumSize @card
         totalPileAmount = piles
           & sumOf (folded . to pileCountsSize)
 

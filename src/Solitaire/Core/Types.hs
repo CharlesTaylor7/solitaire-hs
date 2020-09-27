@@ -52,6 +52,14 @@ instance Bounded Card where
   minBound = Card minBound minBound
   maxBound = Card maxBound maxBound
 
+instance IsCard Card where
+  isSuccessorOf :: Card -> Card -> Bool
+  a `isSuccessorOf` b =
+    -- a has a rank 1 higher than b
+    a ^. #rank . from enum - b ^. #rank . from enum == 1 &&
+    -- a is the opposite color of b
+    a ^. #suit . to suitColor /= b ^. #suit . to suitColor
+
 instance Pretty Card where
   prettyExpr card =
     card
@@ -77,14 +85,8 @@ instance Pretty Card where
               Red -> Rainbow.red
               Black -> Rainbow.black
 
-
-instance IsCard Card where
-  isSuccessorOf :: Card -> Card -> Bool
-  a `isSuccessorOf` b =
-    -- a has a rank 1 higher than b
-    a ^. #rank . from enum - b ^. #rank . from enum == 1 &&
-    -- a is the opposite color of b
-    a ^. #suit . to suitColor /= b ^. #suit . to suitColor
+instance PrettyCard Card where
+  prettyWidth = 2
 
 suitColor :: Suit -> Color
 suitColor Hearts = Red
@@ -154,7 +156,7 @@ newtype Tableau card = Tableau (IntMap (Pile (Vector card)))
   deriving stock (Eq, Show, Generic)
   deriving anyclass (Hashable)
 
-instance Pretty card => Pretty (Tableau card) where
+instance PrettyCard card => Pretty (Tableau card) where
   prettyExpr = PrettyHardWrap . map prettyExpr . toRows
 
 
@@ -163,7 +165,7 @@ newtype Row card = Row [CardView card]
   deriving stock (Eq, Show, Generic)
   deriving newtype (Semigroup, Monoid)
 
-instance Pretty card => Pretty (Row card) where
+instance PrettyCard card => Pretty (Row card) where
   prettyExpr = PrettyStr . DL.intercalate ["|"] . map pretty . view #_Row
 
 
@@ -174,10 +176,13 @@ data CardView card
   | FaceUp card
   deriving (Eq, Show)
 
-instance Pretty card => Pretty (CardView card) where
-  prettyExpr None = "  "
-  prettyExpr FaceDown = "--"
+instance PrettyCard card => Pretty (CardView card) where
+  prettyExpr None = repeatChar @card ' '
+  prettyExpr FaceDown = repeatChar @card '-'
   prettyExpr (FaceUp card) = prettyExpr card
+
+repeatChar :: forall card. PrettyCard card => Char -> PrettyExpr
+repeatChar = fromString . replicate (prettyWidth @card)
 
 
 newtype RowCount = RowCount Int

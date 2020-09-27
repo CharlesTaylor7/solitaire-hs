@@ -7,6 +7,7 @@ module PrettyPrinter
   -- , tracePretty
   , chunksToByteStrings
   , Pretty(..)
+  , PrettyCard(..)
   , PrettyExpr(..)
   , WrappedShow(..)
   , KeyValuePairs(..)
@@ -40,6 +41,11 @@ import qualified Data.Map as Map
 import qualified Rainbow
 
 import System.IO.Unsafe (unsafePerformIO)
+
+
+class Pretty card => PrettyCard card where
+  -- | width of the pretty printed card text
+  prettyWidth :: Int
 
 
 -- tracePretty :: Pretty a => a -> b -> b

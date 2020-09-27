@@ -34,6 +34,9 @@ instance IsCard Card where
 instance Pretty Card where
   prettyExpr = fromString . show . (+1) . fromEnum
 
+instance PrettyCard Card where
+  prettyWidth = 1
+
 
 newtype Foundation = Foundation
   { numSets :: Int

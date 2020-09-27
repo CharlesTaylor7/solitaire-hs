@@ -9,7 +9,7 @@ import Solitaire.Core.Types
 
 defaultConfig :: MonadError InvalidConfig m => m Config
 defaultConfig =
-  mkConfig
+  mkConfig @Card
     (NumSets 1)
     (Piles
       [ Pile 1 0

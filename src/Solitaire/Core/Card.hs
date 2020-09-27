@@ -9,6 +9,7 @@ import Solitaire.Prelude
 
 import qualified Data.Vector as V
 
+
 class IsCard card where
   isSuccessorOf :: card -> card -> Bool
 
