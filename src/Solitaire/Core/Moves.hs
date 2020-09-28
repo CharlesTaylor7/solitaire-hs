@@ -37,7 +37,7 @@ newtype FlipCard = FlipCard
 instance (HasField' "tableau" game (Tableau card)) => IsMove FlipCard game where
   steps game = do
     (pileId, (card, rest)) <- game
-      ^.. faceDownPiles
+      ^.. (indexedTableau <. filteredBy (#faceUp . _Empty))
       . cloneIndexPreservingTraversal (#faceDown . _Cons)
       . withIndex
 
@@ -47,6 +47,3 @@ instance (HasField' "tableau" game (Tableau card)) => IsMove FlipCard game where
         #faceDown .= rest
 
       pure $ FlipCard pileId
-    where
-      faceDownPiles :: IndexedTraversal' Int game (PileOfCards card)
-      faceDownPiles = indexedTableau <. filteredBy (#faceUp . _Empty)
