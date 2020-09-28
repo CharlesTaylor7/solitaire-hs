@@ -1,4 +1,3 @@
-{-# language FlexibleInstances #-}
 {-# options_ghc -Wno-unused-top-binds #-}
 module Solitaire.Boring.Rules
   ( Boring
@@ -7,7 +6,7 @@ module Solitaire.Boring.Rules
 
 import Solitaire.Prelude
 import Solitaire.Core.Rules
-import Solitaire.Core.Move
+import Solitaire.Core.Move.Class
 import Solitaire.Core.Utils (toPile, totalCards, pileCountsSize, getDeck)
 import Solitaire.Core.Card (IsCard(..), Run(..), splitIntoRuns)
 
@@ -35,7 +34,7 @@ instance Rules Boring where
     shuffled <- getDeck >>= shuffle
     pileCounts <- view #piles
     let
-      piles = fst $ foldl'
+      (piles, _) = foldl'
         (\(ps, cs) count ->
           let
             size = pileCountsSize count

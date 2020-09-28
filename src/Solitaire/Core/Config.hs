@@ -26,6 +26,7 @@ newtype InvalidConfig = InvalidConfig Text
 instance Exception InvalidConfig
 
 type BoundedEnum a = (Bounded a, Enum a)
+
 mkConfig :: forall card m. (MonadError InvalidConfig m, BoundedEnum card) => NumSets -> Piles -> m Config
 mkConfig (NumSets s) (Piles piles)
   | s < 0 = throwError $ InvalidConfig "Number of sets should be non negative."

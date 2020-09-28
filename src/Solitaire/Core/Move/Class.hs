@@ -1,4 +1,4 @@
-module Solitaire.Core.Move where
+module Solitaire.Core.Move.Class where
 
 import Solitaire.Prelude
 import Solitaire.Core.Config

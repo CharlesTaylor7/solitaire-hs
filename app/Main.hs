@@ -9,5 +9,5 @@ import qualified Examples.Yukon as Yukon
 
 main :: IO ()
 main = do
-  Boring.main
---  Yukon.main
+ --  Boring.main
+  Yukon.main

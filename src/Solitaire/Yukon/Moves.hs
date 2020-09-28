@@ -1,4 +1,4 @@
-module Solitaire.Boring.Moves
+module Solitaire.Yukon.Moves
   ( FlipCard
   , MoveToFoundation
   , MoveStack
@@ -10,7 +10,7 @@ import Solitaire.Core.Card (splitAtFirstRun, isSuccessorOf)
 import Solitaire.Core.Move.Class
 import Solitaire.Core.Moves (FlipCard)
 
-import Solitaire.Boring.Types
+import Solitaire.Yukon.Types
 
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
@@ -31,7 +31,8 @@ newtype MoveToFoundation = MoveToFoundation
 
 instance IsMove MoveToFoundation Game where
   steps :: Game -> [(MoveToFoundation, Game)]
-  steps game =
+  steps game = undefined
+  {--
     game ^.. indexedTableau
     . to takeSet
     . _Just
@@ -52,9 +53,8 @@ instance IsMove MoveToFoundation Game where
           if length run == enumSize @Card
           then Just $ pile & #faceUp .~ rest
           else Nothing
-
-
-------------------------------------
+--}
+-------------------------------------
 data MoveStack = MoveStack
   { fromIndex :: Int
   , toIndex :: Int

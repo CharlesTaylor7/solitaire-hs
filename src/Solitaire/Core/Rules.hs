@@ -1,14 +1,12 @@
 {-# language UndecidableInstances #-}
 {-# language GADTs #-}
 {-# language DataKinds #-}
-{-# options_ghc -Wwarn #-}
 module Solitaire.Core.Rules where
 
 import Solitaire.Prelude
 import Solitaire.Core.Config
 
-import Solitaire.Core.Move
-import qualified Solitaire.Core.Move as Move
+import Solitaire.Core.Move.Class
 
 import qualified Data.HashSet as Set
 

@@ -71,6 +71,7 @@ default-extensions:
   - RankNTypes
   - FlexibleContexts
   - ConstraintKinds
+  - DataKinds
 
   # overloaded
   - OverloadedLists
