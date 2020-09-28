@@ -17,6 +17,8 @@ module PrettyPrinter
 
 import Prelude
 
+import Control.Lens (ifor_)
+
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Writer
@@ -88,7 +90,7 @@ toPrettyM (PrettySoftWrap exprs) =
 
 toPrettyM (PrettyHardWrap exprs) = do
   indentation <- T.encodeUtf8 . flip T.replicate " " <$> get
-  for_ (exprs `zip` [0 :: Int ..]) $ \(expr, i) -> do
+  ifor_ exprs $ \i expr -> do
     -- print newlines for all but the first line
     when (i /= 0) $ tell (DL.singleton "\n")
     -- print the indentation

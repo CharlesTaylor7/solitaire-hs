@@ -12,8 +12,6 @@ import qualified Solitaire.Core.Move as Move
 
 import qualified Data.HashSet as Set
 
-import GHC.Records (HasField(..))
-
 
 class Rules rs where
   type Config (rs :: *) :: *
@@ -47,6 +45,12 @@ data Step game = Step
   }
   deriving (Generic)
 
+instance Pretty game => Pretty (Step game) where
+  prettyExpr (Step move game) =
+    PrettyHardWrap
+      [ prettyExpr move
+      , prettyExpr game
+      ]
 
 -- data types
 newtype App config game a = App

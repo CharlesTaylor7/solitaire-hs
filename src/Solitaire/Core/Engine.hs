@@ -77,7 +77,7 @@ runGameLoop = do
 
 
 step
-  :: forall rs. Solitaire rs
+  :: forall rs. (Solitaire rs, Pretty (Step (Game rs)))
   => ExceptT (GameConclusion (Game rs)) (App (Config rs) (Game rs)) ()
 step = do
   -- retrieve the best priority game state
@@ -105,7 +105,10 @@ step = do
         steps <- nextSteps @rs game
 
         -- insert new game states reachable from this one
-        for_ steps $ \step -> do
-            queueInsert
-              (priority + 1)
-              (step ^. #game <| gameHistory)
+        ifor_ steps $ \i step -> do
+          print $ "step " <> show i
+          -- print the step
+          prettyPrint step
+          queueInsert
+            (priority + 1)
+            (step ^. #game <| gameHistory)

@@ -101,10 +101,7 @@ instance IsMove MoveStack Game where
       sourceStacks = indexedTableau <. #faceUp . to splitAtFirstRun
 
       targets :: Card -> IndexedFold Int Game (Vector Card)
-      targets card = indexedTableau <. #faceUp . filtered isTarget
-        where
-          isTarget :: Vector Card -> Bool
-          isTarget cards = maybe False (isSuccessorOf card) (cards ^? _head)
+      targets card = indexedTableau <. #faceUp . filteredBy (_head . filtered (`isSuccessorOf` card))
 
     in do
       -- parse, don't validate
@@ -116,7 +113,7 @@ instance IsMove MoveStack Game where
 
       let
         numMoved = length sourceStack
-        updatedFaceUp = sourceStack <> cons stackBottom targetFaceUp
+        updatedFaceUp = sourceStack <> targetFaceUp
         game' = game
             & #tableau . #_Tableau . ix target_i . #faceUp .~ updatedFaceUp
             & #tableau . #_Tableau . ix source_i . #faceUp .~ sourceRest

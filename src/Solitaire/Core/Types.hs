@@ -206,7 +206,6 @@ toCardViews (RowCount n) =
 
 toRows :: Tableau card -> [Row card]
 toRows (Tableau tableau) =
-
   let
     rowCount =
       tableau
@@ -221,7 +220,6 @@ toRows (Tableau tableau) =
   in
     rows
 
-
 -- orphan instance for Hashable Intmap & Hashable Vector
 -- TODO: Use newtype wrappers?
 newtype SomeIndexedFoldable f a i = SomeIndexedFoldable (f a)
@@ -235,6 +233,3 @@ instance (FoldableWithIndex i f, Hashable i, Hashable a) => Hashable (SomeIndexe
 deriving via (SomeIndexedFoldable IntMap a Int) instance Hashable a => Hashable (IntMap a)
 deriving via (SomeIndexedFoldable (Map k) v k) instance (Hashable k, Hashable v) => Hashable (Map k v)
 deriving via (SomeIndexedFoldable Vector a Int) instance Hashable a => Hashable (Vector a)
-
-
--- pretty instances
