@@ -103,12 +103,15 @@ step = do
         -- checking the history hash set is much cheaper than spurious extra inserts to the priority queue
         -- so we check the visited set both at insert time & queue pop time
         steps <- nextSteps @rs game
-
+        liftIO $ putStrLn "game:\n"
+        prettyPrint game
+        liftIO $ putStrLn ""
         -- insert new game states reachable from this one
         ifor_ steps $ \i step -> do
-          print $ "step " <> show i
+          liftIO $ putStrLn $ "step " <> show i <> "\n"
           -- print the step
           prettyPrint step
+          liftIO $ putStrLn $ replicate 20 '-'
           queueInsert
             (priority + 1)
             (step ^. #game <| gameHistory)

@@ -101,10 +101,12 @@ instance IsMove MoveStack Game where
       sourceStacks = indexedTableau <. #faceUp . to splitAtFirstRun
 
       targets :: Card -> IndexedFold Int Game (Vector Card)
-      targets card = indexedTableau <. #faceUp . filteredBy (_head . filtered (`isSuccessorOf` card))
+      targets card = indexedTableau <.
+        failing
+          (#faceUp . filteredBy (_head . filtered (`isSuccessorOf` card)))
+          (filteredBy (#faceUp . _Empty) . filteredBy (#faceDown . _Empty) . like mempty)
 
     in do
-      -- parse, don't validate
       (source_i, (sourceStack, sourceRest)) <- game ^.. sourceStacks . withIndex
 
       stackBottom <- sourceStack ^.. _last

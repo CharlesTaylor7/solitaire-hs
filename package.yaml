@@ -97,6 +97,7 @@ ghc-options:
   - -Wno-unused-local-binds
   - -Wno-unused-top-binds
   - -Wno-unused-matches
+  - -Wno-type-defaults
   - -freverse-errors
 
 library:
