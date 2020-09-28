@@ -35,15 +35,22 @@ newtype FlipCard = FlipCard
 
 
 instance (HasField' "tableau" game (Tableau card)) => IsMove FlipCard game where
-  steps game =
-    game ^.. faceDownPiles
-    . to flipCard
-    . _Just
-    . withIndex
-    . to
-      (   (FlipCard . fst)
-      &&& \(pileId, pile) -> game & tableauL . ix pileId .~ pile
-      )
+  steps game = do
+    (pile_id, (card, rest)) <- game
+      ^.. faceDownPiles
+      . #faceUp
+      . _Cons
+      . withIndex
+
+    pure $ flip runState game $ do
+      pure $ FlipCard undefined
+    -- . to flipCard
+    -- . _Just
+    -- . withIndex
+    -- . to
+    --   (   (FlipCard . fst)
+    --   &&& \(pileId, pile) -> game & tableauL . ix pileId .~ pile
+    --   )
     where
       faceDownPiles :: IndexedTraversal' Int game (PileOfCards card)
       faceDownPiles = indexedTableau <. filteredBy (#faceUp . _Empty)
