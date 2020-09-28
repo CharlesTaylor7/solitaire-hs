@@ -15,13 +15,17 @@ import qualified Data.Vector as V
 import qualified Data.IntMap as M
 
 import Data.Generics.Product.Fields
+import Data.Generics.Product
 
 
 type PileOfCards card = Pile (Vector card)
 
+tableauL :: forall game card. HasField' "tableau" game (Tableau card) => Lens' game (IntMap (PileOfCards card))
+tableauL = field' @"tableau" @game @(Tableau card) . singular #_Tableau
+
 -- | convenience traversal
-indexedTableau :: IndexedTraversal' Int Game (PileOfCards Card)
-indexedTableau = #tableau . #_Tableau . itraversed
+indexedTableau :: forall game card. HasField' "tableau" game (Tableau card) => IndexedTraversal' Int game (PileOfCards card)
+indexedTableau = tableauL . itraversed
 
 
 newtype FlipCard = FlipCard
@@ -30,29 +34,28 @@ newtype FlipCard = FlipCard
   deriving (Eq, Show, Generic)
 
 
--- type HasSimpleField symbol s a = HasField symbol s s a a
-instance (Generic game, HasField' "tableau" game (Tableau card)) => IsMove FlipCard game where
+instance (HasField' "tableau" game (Tableau card)) => IsMove FlipCard game where
   steps game =
-    game ^.. indexedTableau
+    game ^.. faceDownPiles
     . to flipCard
     . _Just
     . withIndex
     . to
       (   (FlipCard . fst)
-      &&& \(pileId, pile) -> game & #tableau . #_Tableau . ix pileId .~ pile
+      &&& \(pileId, pile) -> game & tableauL . ix pileId .~ pile
       )
     where
+      faceDownPiles :: IndexedTraversal' Int game (PileOfCards card)
+      faceDownPiles = indexedTableau <. filteredBy (#faceUp . _Empty)
+
       flipCard :: PileOfCards card -> Maybe (PileOfCards card)
-      flipCard pile
-        -- face down pile is covered by face up cards
-        | pile ^. #faceUp . to (not . V.null) = Nothing
-        | otherwise =
-          pile ^? #faceDown . _Cons .
-            to
-              (\(card, rest) ->
-                pile
-                  & #faceUp .~ V.singleton card
-                  & #faceDown .~ rest
-              )
+      flipCard pile =
+        pile ^? #faceDown . _Cons .
+          to
+            (\(card, rest) ->
+              pile
+                & #faceUp .~ V.singleton card
+                & #faceDown .~ rest
+            )
 
 --
