@@ -89,6 +89,9 @@ step = do
 
     -- we have game states to play from
     Just (priority, gameHistory@(game :| _ )) -> do
+      liftIO $ putStrLn $ "popping priority " <> show priority
+      prettyPrint game
+
       -- game states can be reached multiple times via different paths
       -- verify we haven't visted this state before
       visited <- historyHas game
@@ -100,18 +103,12 @@ step = do
 
         -- record we visited this game state
         saveToHistory game
+
         -- checking the history hash set is much cheaper than spurious extra inserts to the priority queue
         -- so we check the visited set both at insert time & queue pop time
         steps <- nextSteps @rs game
-        liftIO $ putStrLn "game:\n"
-        prettyPrint game
-        liftIO $ putStrLn ""
         -- insert new game states reachable from this one
         ifor_ steps $ \i step -> do
-          liftIO $ putStrLn $ "step " <> show i <> "\n"
-          -- print the step
-          prettyPrint step
-          liftIO $ putStrLn $ replicate 20 '-'
           queueInsert
             (priority + 1)
             (step ^. #game <| gameHistory)

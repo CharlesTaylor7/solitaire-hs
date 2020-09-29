@@ -29,7 +29,6 @@ import Debug.Trace
 data Yukon
 
 
-
 instance Rules Yukon where
 
   type Game Yukon = Yukon.Game
@@ -40,7 +39,6 @@ instance Rules Yukon where
     , moveType @MoveStack
     , moveType @MoveToFoundation
     ]
-
 
   newGame :: (MonadIO m, MonadReader Yukon.Config m) => m Yukon.Game
   newGame = do
@@ -63,4 +61,10 @@ instance Rules Yukon where
   gameIsWon :: Yukon.Game -> Bool
   gameIsWon game = game ^. #tableau . to totalCards . to (== 0)
 
-
+  heuristic :: Yukon.Game -> MoveCount
+  heuristic = view
+    $ #tableau
+    . #_Tableau
+    . folded -- piles
+    . folded -- vectors
+    . to (MoveCount . length)

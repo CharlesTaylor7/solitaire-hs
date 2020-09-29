@@ -147,7 +147,7 @@ data Pile a = Pile
   { faceUp :: a
   , faceDown :: a
   }
-  deriving stock (Eq, Ord, Show, Read, Generic)
+  deriving stock (Eq, Ord, Show, Read, Functor, Foldable, Traversable, Generic)
   deriving anyclass (Hashable)
 
 

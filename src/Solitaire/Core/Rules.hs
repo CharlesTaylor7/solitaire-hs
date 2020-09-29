@@ -15,6 +15,8 @@ class Rules rs where
   type Config (rs :: *) :: *
   type Game (rs :: *) :: *
 
+  -- | estimate the remaining moves
+  heuristic :: Game rs -> MoveCount
 
   moveTypes :: [SomeMoveType (Game rs)]
 
@@ -66,5 +68,6 @@ newtype App config game a = App
 
 
 newtype MoveCount = MoveCount Int
-  deriving stock (Eq, Ord)
+  deriving stock (Eq, Ord, Show)
   deriving newtype (Num)
+  deriving (Monoid, Semigroup) via Sum Int

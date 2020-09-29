@@ -58,6 +58,7 @@ default-extensions:
   # deriving extensions
   - GeneralizedNewtypeDeriving
   - DeriveGeneric
+  - DeriveTraversable
   - DerivingStrategies
   - StandaloneDeriving
   - DerivingVia

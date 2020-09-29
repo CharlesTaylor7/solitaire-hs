@@ -50,13 +50,19 @@ instance Rules Boring where
   gameIsWon :: Boring.Game -> Bool
   gameIsWon game = game ^. #tableau . to totalCards . to (== 0)
 
+  heuristic :: Boring.Game -> MoveCount
+  heuristic = view
+    $ #tableau
+    . #_Tableau
+    . folded -- piles
+    . folded -- vectors
+    . to (MoveCount . length)
 
 
 -- scoring game states, for A* path finding
 -- TODO: account for foundation
 scoreGame :: Boring.Game -> Score
 scoreGame = undefined
-
 
 scoreRun :: Run card -> Score
 scoreRun (Run cards) = Score $ length cards - 1
