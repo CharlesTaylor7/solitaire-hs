@@ -64,29 +64,38 @@ data MoveStack = MoveStack
 
 instance IsMove MoveStack Game where
   steps :: Game -> [(MoveStack, Game)]
-  steps game =
+  steps game = do
     let
-      sourceStacks :: IndexedFold Int Game (Vector Card, Vector Card)
-      sourceStacks = indexedTableau <. #faceUp . to splitAtFirstRun
+      targets :: Card -> Fold PileOfCards (Vector Card)
+      targets card = failing
+          -- can move onto pile when the target pile's first card is the successor of our card
+        (#faceUp . filteredBy (_head . filtered (`isSuccessorOf` card)))
+        -- can move onto empty piles
+        (filteredBy (#faceUp . _Empty) . filteredBy (#faceDown . _Empty) . like mempty)
 
-      targets :: Card -> IndexedFold Int Game (Vector Card)
-      targets card = indexedTableau <.
-        failing
-          (#faceUp . filteredBy (_head . filtered (`isSuccessorOf` card)))
-          (filteredBy (#faceUp . _Empty) . filteredBy (#faceDown . _Empty) . like mempty)
+    -- parse valid source stacks
+    (source_i, (sourceStack, sourceRest)) <- game
+      ^.. (indexedTableau <. #faceUp)
+      . to splitAtFirstRun
+      . withIndex
 
-    in do
-      (source_i, (sourceStack, sourceRest)) <- game ^.. sourceStacks . withIndex
+    -- parse stack bottom
+    stackBottom <- sourceStack ^.. _last
 
-      stackBottom <- sourceStack ^.. _last
+    -- parse valid targets based on current source stack's bottom card
+    (target_i, targetFaceUp) <- game
+      ^.. (indexedTableau <. targets stackBottom)
+      . withIndex
 
-      (target_i, targetFaceUp) <- game ^.. targets stackBottom . withIndex
+    let
+      numMoved = length sourceStack
+      updatedFaceUp = sourceStack <> targetFaceUp
 
-      let
-        numMoved = length sourceStack
-        updatedFaceUp = sourceStack <> targetFaceUp
-        game' = game
-            & #tableau . #_Tableau . ix target_i . #faceUp .~ updatedFaceUp
-            & #tableau . #_Tableau . ix source_i . #faceUp .~ sourceRest
+    -- apply update to game
+    pure $ flip runState game $ do
+      zoom (#tableau . #_Tableau) $ do
+        ix source_i . #faceUp .= sourceRest
+        ix target_i . #faceUp .= updatedFaceUp
 
-      pure $ (MoveStack source_i target_i numMoved, game')
+      -- describe the move
+      pure $ MoveStack source_i target_i numMoved
