@@ -15,6 +15,7 @@ import Solitaire.Yukon.Types
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
 
+import Data.List (inits)
 
 
 type PileOfCards = Pile (Vector Card)
@@ -32,7 +33,7 @@ newtype MoveToFoundation = MoveToFoundation
 safeSucc :: (Eq a, Bounded a, Enum a) => a -> Maybe a
 safeSucc val
   | val == maxBound = Nothing
-  | otherwise = Just $ succ val
+  | otherwise       = Just $ succ val
 
 
 instance IsMove MoveToFoundation Game where
@@ -71,6 +72,7 @@ instance IsMove MoveToFoundation Game where
       -- descrive game update
       pure $ MoveToFoundation pileId
 -------------------------------------
+--
 data MoveStack = MoveStack
   { fromIndex :: Int
   , toIndex :: Int
@@ -80,29 +82,45 @@ data MoveStack = MoveStack
 
 instance IsMove MoveStack Game where
   steps :: Game -> [(MoveStack, Game)]
-  steps game =
+  steps game = do
     let
-      sourceStacks :: IndexedFold Int Game (Vector Card, Vector Card)
-      sourceStacks = indexedTableau <. #faceUp . to splitAtFirstRun
+      targets :: Card -> Fold PileOfCards (Vector Card)
+      targets card = failing
+          -- can move onto pile when the target pile's first card is the successor of our card
+        (#faceUp . filteredBy (_head . filtered (`isSuccessorOf` card)))
+        -- can move onto empty piles when the source stack ends with a king
+        ( filteredBy (like card . #rank . only King)
+        . filteredBy (#faceUp . _Empty)
+        . filteredBy (#faceDown . _Empty)
+        . like mempty
+        )
 
-      targets :: Card -> IndexedFold Int Game (Vector Card)
-      targets card = indexedTableau <.
-        failing
-          (#faceUp . filteredBy (_head . filtered (`isSuccessorOf` card)))
-          (filteredBy (#faceUp . _Empty) . filteredBy (#faceDown . _Empty) . like mempty)
+    -- parse valid source stacks
+    (sourcePileId, sourceFaceUp) <- game
+      ^@.. indexedTableau
+      . cloneIndexPreservingTraversal #faceUp
 
-    in do
-      (source_i, (sourceStack, sourceRest)) <- game ^.. sourceStacks . withIndex
+    (sourceStack, sourceRest) <- [1 .. V.length sourceFaceUp]
+      <&>  flip V.splitAt sourceFaceUp
 
-      stackBottom <- sourceStack ^.. _last
+    -- parse stack bottom
+    stackBottom <- sourceStack ^.. _last
 
-      (target_i, targetFaceUp) <- game ^.. targets stackBottom . withIndex
+    -- parse valid targets based on current source stack's bottom card
+    (targetPileId, targetFaceUp) <- game
+      ^@.. indexedTableau
+      <. targets stackBottom
 
-      let
-        numMoved = length sourceStack
-        updatedFaceUp = sourceStack <> targetFaceUp
-        game' = game
-            & #tableau . #_Tableau . ix target_i . #faceUp .~ updatedFaceUp
-            & #tableau . #_Tableau . ix source_i . #faceUp .~ sourceRest
+    let
+      numMoved = length sourceStack
+      updatedFaceUp = sourceStack <> targetFaceUp
 
-      pure $ (MoveStack source_i target_i numMoved, game')
+    -- apply update to game
+    pure $ flip runState game $ do
+      zoom (#tableau . #_Tableau) $ do
+        ix sourcePileId . #faceUp .= sourceRest
+        ix targetPileId . #faceUp .= updatedFaceUp
+
+      -- describe the move
+      pure $ MoveStack sourcePileId targetPileId numMoved
+
