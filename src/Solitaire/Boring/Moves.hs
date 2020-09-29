@@ -1,3 +1,4 @@
+{-# language FlexibleInstances #-}
 module Solitaire.Boring.Moves
   ( FlipCard
   , MoveToFoundation

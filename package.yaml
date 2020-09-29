@@ -51,6 +51,7 @@ default-extensions:
   - MonoLocalBinds
   - InstanceSigs
   - PatternSynonyms
+  - TypeSynonymInstances
 
   # type applications
   - AllowAmbiguousTypes

@@ -71,10 +71,15 @@ data Priority = Priority
   deriving stock (Show, Generic)
 
 newtype Estimated = Estimated MoveCount
-  deriving stock (Show, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
-priorityOrder :: Priority -> (MoveCount, MoveCount, Int, Score)
-priorityOrder = undefined
+priorityOrder :: Priority -> (MoveCount, Estimated, Int, Down Score)
+priorityOrder p =
+  ( p ^. #made + p ^. #estimated . #_Estimated
+  , p ^. #estimated
+  , p ^. #numFaceDown
+  , p ^. #totalRunScore . to Down
+  )
 
 instance Eq Priority where
   (==) = (==) `on` priorityOrder

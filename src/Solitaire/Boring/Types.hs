@@ -3,7 +3,8 @@ module Solitaire.Boring.Types
   ( module CoreTypes
   , Card(..)
   , Config(..)
-  , Game(..)
+  , Game
+  , pattern Game
   , Foundation(..)
   ) where
 
@@ -13,9 +14,17 @@ import Solitaire.Core.Types as CoreTypes
   , Score(..)
   , Config(..)
   , Tableau(..)
+  , MoveCount(..)
   )
+import qualified Solitaire.Core.Types as Core
 
 import Solitaire.Core.Card (IsCard(..))
+
+
+type Game = Core.Game Card Foundation ()
+
+pattern Game :: Tableau Card -> Foundation -> Game
+pattern Game tableau foundation = Core.Game tableau foundation ()
 
 
 data Card
@@ -50,18 +59,3 @@ instance Pretty Foundation where
     , fromString (show n)
     , "]"
     ]
-
-
-data Game = Game
-  { tableau :: Tableau Card
-  , foundation :: Foundation
-  }
-  deriving stock (Eq, Show, Generic)
-  deriving anyclass (Hashable)
-
-instance Pretty Game where
-  prettyExpr (Game layout foundation) =
-    PrettyHardWrap
-      [ prettyExpr foundation
-      , prettyExpr layout
-      ]

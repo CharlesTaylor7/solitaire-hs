@@ -1,23 +1,21 @@
-{-# language FlexibleInstances #-}
-{-# language UndecidableInstances #-}
 module Solitaire.Core.Moves
   ( FlipCard(..)
   ) where
 
 import Solitaire.Prelude
 import Solitaire.Core.Move.Class (IsMove(..))
-import Solitaire.Core.Types (Pile, Tableau)
+import Solitaire.Core.Types (Game, Pile, Tableau)
 
 import qualified Data.Vector as V
 
 
 type PileOfCards card = Pile (Vector card)
 
-tableauL :: forall game card. HasField' "tableau" game (Tableau card) => Lens' game (IntMap (PileOfCards card))
-tableauL = field' @"tableau" @game @(Tableau card) . singular #_Tableau
+tableauL :: Lens' (Game card foundation stock) (IntMap (PileOfCards card))
+tableauL = #tableau . singular #_Tableau
 
 -- | convenience traversal
-indexedTableau :: forall game card. HasField' "tableau" game (Tableau card) => IndexedTraversal' Int game (PileOfCards card)
+indexedTableau :: IndexedTraversal' Int (Game card foundation stock) (PileOfCards card)
 indexedTableau = tableauL . itraversed
 
 
@@ -27,7 +25,7 @@ newtype FlipCard = FlipCard
   deriving (Eq, Show, Generic)
 
 
-instance (HasField' "tableau" game (Tableau card)) => IsMove FlipCard game where
+instance IsMove FlipCard (Game card foundation stock) where
   steps game = do
     -- parse valid piles
     (pileId, (card, rest)) <- game

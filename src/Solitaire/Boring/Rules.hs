@@ -19,9 +19,11 @@ data Boring
 
 
 instance Rules Boring where
-  type Game Boring = Boring.Game
   type Config Boring = Boring.Config
   type Priority Boring = MoveCount
+  type Foundation Boring = Boring.Foundation
+  type Card Boring = Boring.Card
+
 
   moveTypes =
     [ moveType @FlipCard
