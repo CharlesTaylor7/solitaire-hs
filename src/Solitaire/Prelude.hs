@@ -6,9 +6,6 @@ import GHC.Generics (Generic)
 import Utils as X
 import PrettyPrinter as X
 
--- my open union type wrapper
-import Data.Union as X
-
 import Control.Monad.History as X
 import Control.Monad.PQueue as X
 
