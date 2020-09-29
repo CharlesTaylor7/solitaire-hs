@@ -5,17 +5,10 @@ module Solitaire.Core.Moves
   ) where
 
 import Solitaire.Prelude
-import Solitaire.Core.Utils (cards, toPile, totalCards, pileCountsSize, getDeck)
-import Solitaire.Core.Card (splitAtFirstRun, isSuccessorOf)
-import Solitaire.Core.Move.Class
-
-import Solitaire.Boring.Types
+import Solitaire.Core.Move.Class (IsMove(..))
+import Solitaire.Core.Types (Pile, Tableau)
 
 import qualified Data.Vector as V
-import qualified Data.IntMap as M
-
-import Data.Generics.Product.Fields
-import Data.Generics.Product
 
 
 type PileOfCards card = Pile (Vector card)
@@ -36,14 +29,17 @@ newtype FlipCard = FlipCard
 
 instance (HasField' "tableau" game (Tableau card)) => IsMove FlipCard game where
   steps game = do
+    -- parse valid piles
     (pileId, (card, rest)) <- game
       ^.. (indexedTableau <. filteredBy (#faceUp . _Empty))
       . cloneIndexPreservingTraversal (#faceDown . _Cons)
       . withIndex
 
+    -- generate state change based on pile info
     pure $ flip runState game $ do
       zoom (tableauL . ix pileId) $ do
         #faceUp .= V.singleton card
         #faceDown .= rest
 
+      -- describe the state change
       pure $ FlipCard pileId

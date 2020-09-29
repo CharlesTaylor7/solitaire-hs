@@ -58,6 +58,7 @@ import Control.Lens.Extras as X (is)
 
 -- generic-lens
 import Data.Generics.Labels ()
+import Data.Generics.Product.Fields as X (HasField'(..))
 
 -- mtl
 import Control.Monad.Except as X

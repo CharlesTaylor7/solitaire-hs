@@ -29,31 +29,47 @@ newtype MoveToFoundation = MoveToFoundation
   deriving (Eq, Show, Generic)
 
 
+safeSucc :: (Eq a, Bounded a, Enum a) => a -> Maybe a
+safeSucc val
+  | val == maxBound = Nothing
+  | otherwise = Just $ succ val
+
+
 instance IsMove MoveToFoundation Game where
   steps :: Game -> [(MoveToFoundation, Game)]
-  steps game = undefined
-  {--
-    game ^.. indexedTableau
-    . to takeSet
-    . _Just
-    . withIndex
-    . to
-      (   (MoveToFoundation . fst)
-      &&& \(pileId, pile) ->
-            game
-            & #tableau . #_Tableau . ix pileId .~ pile
-            & #foundation . #numSets +~ 1
-      )
-    where
-      takeSet :: PileOfCards -> Maybe (PileOfCards)
-      takeSet pile =
-        pile ^. #faceUp
-        & splitAtFirstRun
-        & \(run, rest) ->
-          if length run == enumSize @Card
-          then Just $ pile & #faceUp .~ rest
-          else Nothing
---}
+  steps game = do
+    let
+      foundationNeeds :: Card -> Bool
+      foundationNeeds card = game
+        ^?! #foundation
+        . #_Foundation
+        . failing
+          (ix (card ^. #suit) . to safeSucc . _Just)
+          (like Ace)
+        . to (is $ only (card ^. #rank))
+
+    -- parse valid cards to move
+    (pileId, (card, rest)) <- game
+      ^.. indexedTableau
+      . cloneIndexPreservingTraversal
+        ( #faceUp
+        . filteredBy (_head . filtered foundationNeeds)
+        . _Cons
+        )
+      . withIndex
+
+    -- apply update
+    pure $ flip runState game $ do
+      -- update pile in tableau
+      #tableau . #_Tableau . ix pileId . #faceUp
+        .= rest
+
+      -- update foundation
+      #foundation . #_Foundation . at (card ^. #suit)
+        ?= card ^. #rank
+
+      -- descrive game update
+      pure $ MoveToFoundation pileId
 -------------------------------------
 data MoveStack = MoveStack
   { fromIndex :: Int
