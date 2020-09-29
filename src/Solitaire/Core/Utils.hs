@@ -2,6 +2,7 @@ module Solitaire.Core.Utils where
 
 import Solitaire.Prelude
 import Solitaire.Core.Types
+import Solitaire.Core.Card
 
 
 color :: Suit -> Color
@@ -43,3 +44,24 @@ pileSize pile = (pile ^. #faceUp . to length) + (pile ^. #faceDown . to length)
 
 totalCards :: Tableau card -> Int
 totalCards = sumOf (#_Tableau . folded . to pileSize)
+
+
+cardsRemaining :: Game c f s -> MoveCount
+cardsRemaining = view
+  $ #tableau
+  . #_Tableau
+  . folded -- piles
+  . folded -- vectors
+  . to (MoveCount . length)
+
+
+scoreByRuns :: IsCard card => Tableau card -> Score
+scoreByRuns game =
+  game & sumOf (#_Tableau . folded . to scorePile)
+
+scorePile :: (IsCard card, Foldable f) => Pile (f card) -> Score
+scorePile pile =
+  pile & sumOf (#faceUp . to toList . to splitIntoRuns . traverse . to scoreRun)
+
+scoreRun :: Run card -> Score
+scoreRun (Run cards) = Score $ length cards - 1

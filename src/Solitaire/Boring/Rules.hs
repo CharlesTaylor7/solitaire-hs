@@ -1,13 +1,12 @@
 {-# options_ghc -Wno-unused-top-binds #-}
 module Solitaire.Boring.Rules
   ( Boring
-  , scorePile
   ) where
 
 import Solitaire.Prelude
 import Solitaire.Core.Rules
 import Solitaire.Core.Move.Class
-import Solitaire.Core.Utils (toPile, totalCards, pileCountsSize, getDeck)
+import Solitaire.Core.Utils (toPile, totalCards, pileCountsSize, getDeck, cardsRemaining)
 import Solitaire.Core.Card (IsCard(..), Run(..), splitIntoRuns)
 
 import Solitaire.Boring.Types
@@ -55,28 +54,4 @@ instance Rules Boring where
 
   heuristic :: Boring.Game -> MoveCount -> MoveCount
   heuristic game moves = moves + cardsRemaining game
-    where
-      cardsRemaining :: Boring.Game -> MoveCount
-      cardsRemaining = view
-        $ #tableau
-        . #_Tableau
-        . folded -- piles
-        . folded -- vectors
-        . to (MoveCount . length)
 
-
--- scoring game states, for A* path finding
--- TODO: account for foundation
-scoreGame :: Boring.Game -> Score
-scoreGame = undefined
-
-scoreRun :: Run card -> Score
-scoreRun (Run cards) = Score $ length cards - 1
-
-scorePile :: (IsCard card, Foldable f) => Pile (f card) -> Score
-scorePile pile =
-  pile & sumOf (#faceUp . to toList . to splitIntoRuns . traverse . to scoreRun)
-
-scoreByRuns :: Boring.Game -> Score
-scoreByRuns game =
-  game & sumOf (#tableau . #_Tableau . traverse . to scorePile)

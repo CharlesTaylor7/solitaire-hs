@@ -4,6 +4,7 @@ module Solitaire.Yukon.Types
   , pattern Game
   , Foundation(..)
   , Priority(..)
+  , Estimated(..)
   ) where
 
 import Solitaire.Prelude

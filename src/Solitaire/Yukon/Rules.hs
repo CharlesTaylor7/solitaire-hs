@@ -9,6 +9,8 @@ import Solitaire.Core.Utils
   , getDeck
   , totalCards
   , cards
+  , cardsRemaining
+  , scoreByRuns
   )
 
 import Solitaire.Core.Move.Class (moveType)
@@ -63,10 +65,16 @@ instance Rules Yukon where
   gameIsWon game = game ^. #tableau . to totalCards . to (== 0)
 
   heuristic :: Yukon.Game -> MoveCount -> Yukon.Priority
-  heuristic = undefined
-   -- view
-   -- $ #tableau
-   -- . #_Tableau
-   -- . folded -- piles
-   -- . folded -- vectors
-   -- . to (MoveCount . length)
+  heuristic game moves =
+    Yukon.Priority
+      { made = moves
+      , estimated = Estimated $ cardsRemaining game
+      , numFaceDown = game & sumOf
+          ( #tableau
+          . #_Tableau
+          . folded
+          . #faceDown
+          . to length
+          )
+      , totalRunScore = game ^. #tableau . to scoreByRuns
+      }
