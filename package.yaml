@@ -50,6 +50,7 @@ default-extensions:
   - PartialTypeSignatures
   - MonoLocalBinds
   - InstanceSigs
+  - PatternSynonyms
 
   # type applications
   - AllowAmbiguousTypes

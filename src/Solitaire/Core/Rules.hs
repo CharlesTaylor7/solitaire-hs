@@ -7,16 +7,23 @@ import Solitaire.Prelude
 import Solitaire.Core.Config
 
 import Solitaire.Core.Move.Class
+import Solitaire.Core.Types (MoveCount, Tableau)
+import qualified Solitaire.Core.Types as Core
 
 import qualified Data.HashSet as Set
 
 
+type Game rs = Core.Game (Card rs) (Foundation rs) (Stock rs)
+
+
 class Rules rs where
   type Config (rs :: *) :: *
-  type Game (rs :: *) :: *
+  type Card (rs :: *) :: *
+  type Stock (rs :: *) :: *
+  type Foundation (rs :: *) :: *
+  type Priority (rs :: *) :: *
 
-  -- | estimate the remaining moves
-  heuristic :: Game rs -> MoveCount
+  type Stock rs = ()
 
   moveTypes :: [SomeMoveType (Game rs)]
 
@@ -28,17 +35,21 @@ class Rules rs where
 
   gameIsWon :: Game rs -> Bool
 
+  heuristic :: Game rs -> MoveCount -> Priority rs
+
 
 -- catch all constraint
 type Solitaire rs =
   ( Rules rs
-  , Eq (Game rs)
-  , Hashable (Game rs)
-  , Pretty (Game rs)
   , IsConfig (Config rs)
+  , PrettyCard (Card rs), Eq (Card rs), Hashable (Card rs)
+  , Pretty (Foundation rs), Eq (Foundation rs), Hashable (Foundation rs)
+  , Eq (Stock rs), Hashable (Stock rs)
+  , Ord (Priority rs), Show (Priority rs)
   )
 
 
+-- data types
 data Step game = Step
   { move :: SomeMove game
   , game :: game
@@ -52,22 +63,22 @@ instance Pretty game => Pretty (Step game) where
       , prettyExpr game
       ]
 
--- data types
-newtype App config game a = App
-  { unApp :: PQueueT MoveCount (NonEmpty game) (HistoryT game (ReaderT config IO)) a
+data GameHistory game = GameHistory
+  { moveCount :: MoveCount
+  , games :: NonEmpty game
+  }
+  deriving stock (Generic)
+
+
+newtype App config game priority a = App
+  { unApp :: PQueueT priority (GameHistory game) (HistoryT game (ReaderT config IO)) a
   }
   deriving newtype
     ( Functor
     , Applicative
     , Monad
     , MonadIO
-    , MonadPQueue MoveCount (NonEmpty game)
+    , MonadPQueue priority (GameHistory game)
     , MonadReader config
     , MonadHistory game
     )
-
-
-newtype MoveCount = MoveCount Int
-  deriving stock (Eq, Ord, Show)
-  deriving newtype (Num)
-  deriving (Monoid, Semigroup) via Sum Int

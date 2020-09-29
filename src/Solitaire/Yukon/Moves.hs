@@ -1,3 +1,4 @@
+{-# language TypeSynonymInstances, FlexibleInstances #-}
 module Solitaire.Yukon.Moves
   ( FlipCard
   , MoveToFoundation
@@ -15,7 +16,7 @@ import Solitaire.Yukon.Types
 import qualified Data.Vector as V
 import qualified Data.IntMap as M
 
-import Data.List (inits)
+-- import Data.List (inits)
 
 
 type PileOfCards = Pile (Vector Card)

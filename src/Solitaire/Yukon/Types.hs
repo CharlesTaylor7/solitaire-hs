@@ -1,7 +1,9 @@
 module Solitaire.Yukon.Types
   ( module CoreTypes
-  , Game(..)
+  , Game
+  , pattern Game
   , Foundation(..)
+  , Priority(..)
   ) where
 
 import Solitaire.Prelude
@@ -14,11 +16,20 @@ import Solitaire.Core.Types as CoreTypes
   , Color(..)
   , Config(..)
   , Tableau(..)
+  , Score(..)
+  , MoveCount(..)
   )
+import qualified Solitaire.Core.Types as Core
 
 import qualified Data.DList as DL
 
 import qualified Rainbow
+
+
+type Game = Core.Game Card Foundation ()
+
+pattern Game :: Tableau Card -> Foundation -> Game
+pattern Game tableau foundation = Core.Game tableau foundation ()
 
 
 newtype Foundation = Foundation (Map Suit Rank)
@@ -51,16 +62,22 @@ instance Pretty Foundation where
 chunkToByteStrings :: Rainbow.Chunk -> DList ByteString
 chunkToByteStrings = fromList . chunksToByteStrings . pure
 
-data Game = Game
-  { tableau :: Tableau Card
-  , foundation :: Foundation
+data Priority = Priority
+  { made :: MoveCount
+  , estimated :: Estimated
+  , numFaceDown :: Int
+  , totalRunScore :: Score
   }
-  deriving stock (Eq, Show, Generic)
-  deriving anyclass (Hashable)
+  deriving stock (Show, Generic)
 
-instance Pretty Game where
-  prettyExpr (Game tableau foundation) =
-    PrettyHardWrap
-      [ prettyExpr foundation
-      , prettyExpr tableau
-      ]
+newtype Estimated = Estimated MoveCount
+  deriving stock (Show, Generic)
+
+priorityOrder :: Priority -> (MoveCount, MoveCount, Int, Score)
+priorityOrder = undefined
+
+instance Eq Priority where
+  (==) = (==) `on` priorityOrder
+
+instance Ord Priority where
+  compare = compare `on` priorityOrder

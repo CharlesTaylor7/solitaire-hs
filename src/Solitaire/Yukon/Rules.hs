@@ -15,7 +15,7 @@ import Solitaire.Core.Move.Class (moveType)
 import Solitaire.Core.Card (splitAtFirstRun)
 import Solitaire.Core.Utils (toPile)
 
-import Solitaire.Yukon.Types hiding (Game, Config)
+import Solitaire.Yukon.Types hiding (Config)
 import Solitaire.Yukon.Moves
 import qualified Solitaire.Yukon.Types as Yukon
 
@@ -28,11 +28,12 @@ import Debug.Trace
 
 data Yukon
 
-
 instance Rules Yukon where
-
-  type Game Yukon = Yukon.Game
+  type Card Yukon = Yukon.Card
+  type Foundation Yukon = Yukon.Foundation
+  type Stock Yukon = ()
   type Config Yukon = Yukon.Config
+  type Priority Yukon = Yukon.Priority
 
   moveTypes =
     [ moveType @FlipCard
@@ -61,10 +62,11 @@ instance Rules Yukon where
   gameIsWon :: Yukon.Game -> Bool
   gameIsWon game = game ^. #tableau . to totalCards . to (== 0)
 
-  heuristic :: Yukon.Game -> MoveCount
-  heuristic = view
-    $ #tableau
-    . #_Tableau
-    . folded -- piles
-    . folded -- vectors
-    . to (MoveCount . length)
+  heuristic :: Yukon.Game -> MoveCount -> Yukon.Priority
+  heuristic = undefined
+   -- view
+   -- $ #tableau
+   -- . #_Tableau
+   -- . folded -- piles
+   -- . folded -- vectors
+   -- . to (MoveCount . length)

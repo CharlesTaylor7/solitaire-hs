@@ -11,6 +11,21 @@ import qualified Data.DList as DL
 
 import qualified Rainbow
 
+data Game card foundation stock = Game
+  { tableau :: Tableau card
+  , foundation :: foundation
+  , stock :: stock
+  }
+  deriving stock (Eq, Generic)
+  deriving anyclass (Hashable)
+
+instance (PrettyCard card, Pretty foundation) => Pretty (Game card foundation stock) where
+  prettyExpr game =
+    PrettyHardWrap
+      [ game ^. #foundation . to prettyExpr
+      , game ^. #tableau    . to prettyExpr
+      ]
+
 
 -- | Config
 data Config = Config
@@ -160,6 +175,7 @@ instance PrettyCard card => Pretty (Tableau card) where
   prettyExpr = PrettyHardWrap . map prettyExpr . toRows
 
 
+
 -- | Row
 newtype Row card = Row [CardView card]
   deriving stock (Eq, Show, Generic)
@@ -185,10 +201,16 @@ repeatChar :: forall card. PrettyCard card => Char -> PrettyExpr
 repeatChar = fromString . replicate (prettyWidth @card)
 
 
-newtype RowCount = RowCount Int
+-- | MoveCount
+newtype MoveCount = MoveCount Int
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving newtype (Num)
+  deriving (Monoid, Semigroup) via Sum Int
 
 
 -- pretty helpers
+newtype RowCount = RowCount Int
+
 rightPad :: Int -> a -> [a] -> [a]
 rightPad n filler list =
   let
@@ -233,3 +255,4 @@ instance (FoldableWithIndex i f, Hashable i, Hashable a) => Hashable (SomeIndexe
 deriving via (SomeIndexedFoldable IntMap a Int) instance Hashable a => Hashable (IntMap a)
 deriving via (SomeIndexedFoldable (Map k) v k) instance (Hashable k, Hashable v) => Hashable (Map k v)
 deriving via (SomeIndexedFoldable Vector a Int) instance Hashable a => Hashable (Vector a)
+

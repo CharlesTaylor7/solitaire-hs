@@ -21,6 +21,7 @@ data Boring
 instance Rules Boring where
   type Game Boring = Boring.Game
   type Config Boring = Boring.Config
+  type Priority Boring = MoveCount
 
   moveTypes =
     [ moveType @FlipCard
@@ -50,13 +51,16 @@ instance Rules Boring where
   gameIsWon :: Boring.Game -> Bool
   gameIsWon game = game ^. #tableau . to totalCards . to (== 0)
 
-  heuristic :: Boring.Game -> MoveCount
-  heuristic = view
-    $ #tableau
-    . #_Tableau
-    . folded -- piles
-    . folded -- vectors
-    . to (MoveCount . length)
+  heuristic :: Boring.Game -> MoveCount -> MoveCount
+  heuristic game moves = moves + cardsRemaining game
+    where
+      cardsRemaining :: Boring.Game -> MoveCount
+      cardsRemaining = view
+        $ #tableau
+        . #_Tableau
+        . folded -- piles
+        . folded -- vectors
+        . to (MoveCount . length)
 
 
 -- scoring game states, for A* path finding

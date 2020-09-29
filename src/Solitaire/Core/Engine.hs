@@ -2,7 +2,9 @@ module Solitaire.Core.Engine where
 
 import Solitaire.Prelude
 
-import Solitaire.Core.Rules
+import Solitaire.Core.Rules hiding (App)
+import qualified Solitaire.Core.Rules as Core
+
 import Solitaire.Core.Config
 
 import Solitaire.Core.Move.Class
@@ -10,6 +12,8 @@ import qualified Solitaire.Core.Move.Class as Move
 
 import qualified Data.HashSet as Set
 
+
+type App rs = Core.App (Config rs) (Game rs) (Priority rs)
 
 data GameConclusion game = GameWon [game] | GameLost
 
@@ -66,19 +70,18 @@ runGame config = do
 
 runGameLoop
   :: forall rs. Solitaire rs
-  => App (Config rs) (Game rs) (GameConclusion (Game rs))
+  => App rs (GameConclusion (Game rs))
 runGameLoop = do
   game <- newGame @rs
   prettyPrint game
-
-  queueInsert 0 $ [game]
+  queueInsert (heuristic @rs game 0) $ GameHistory 0 [game]
   conclusion <- loopM (\_ -> step @rs) ()
   pure conclusion
 
 
 step
   :: forall rs. (Solitaire rs, Pretty (Step (Game rs)))
-  => ExceptT (GameConclusion (Game rs)) (App (Config rs) (Game rs)) ()
+  => ExceptT (GameConclusion (Game rs)) (App rs) ()
 step = do
   -- retrieve the best priority game state
   maybeMin <- queuePopMin
@@ -88,8 +91,10 @@ step = do
       throwError GameLost
 
     -- we have game states to play from
-    Just (priority, gameHistory@(game :| _ )) -> do
+    Just (priority, gameHistory) -> do
       liftIO $ putStrLn $ "popping priority " <> show priority
+      let
+        game = gameHistory ^. #games . head1
       prettyPrint game
 
       -- game states can be reached multiple times via different paths
@@ -99,7 +104,7 @@ step = do
 
         -- check to see if we won
         when (gameIsWon @rs game) $
-          throwError $ GameWon (toList gameHistory)
+          throwError $ GameWon $ gameHistory ^.. #games . folded
 
         -- record we visited this game state
         saveToHistory game
@@ -107,8 +112,14 @@ step = do
         -- checking the history hash set is much cheaper than spurious extra inserts to the priority queue
         -- so we check the visited set both at insert time & queue pop time
         steps <- nextSteps @rs game
+
         -- insert new game states reachable from this one
         ifor_ steps $ \i step -> do
           queueInsert
-            (priority + 1)
-            (step ^. #game <| gameHistory)
+            -- total moves made so far + estimated remaining moves
+            (heuristic @rs (step ^. #game) (gameHistory ^. #moveCount))
+            -- update total move count & list of game states
+            (gameHistory
+            & #moveCount +~ 1
+            & #games %~ ((step ^. #game) <|)
+            )
