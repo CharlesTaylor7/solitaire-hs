@@ -42,7 +42,7 @@ class Rules rs where
 type Solitaire rs =
   ( Rules rs
   , IsConfig (Config rs)
-  , PrettyCard (Card rs), Eq (Card rs), Hashable (Card rs)
+  , PrettyCard (Card rs), Eq (Card rs), Hashable (Card rs), Ord (Card rs)
   , Pretty (Foundation rs), Eq (Foundation rs), Hashable (Foundation rs)
   , Eq (Stock rs), Hashable (Stock rs)
   , Ord (Priority rs), Show (Priority rs)

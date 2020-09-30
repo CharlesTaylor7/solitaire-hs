@@ -6,6 +6,7 @@ import Solitaire.Core.Rules hiding (App)
 import qualified Solitaire.Core.Rules as Core
 
 import Solitaire.Core.Config
+import Solitaire.Core.Utils
 
 import Solitaire.Core.Move.Class
 import qualified Solitaire.Core.Move.Class as Move
@@ -117,6 +118,13 @@ step = do
         ifor_ steps $ \i step -> do
           prettyPrint game
           prettyPrint step
+
+          let
+            dups = step & duplicates (#game . #tableau . indexedCards)
+
+          when (dups & not . null) $ do
+            prettyPrint dups
+            throwError GameLost
 
           queueInsert
             -- total moves made so far + estimated remaining moves

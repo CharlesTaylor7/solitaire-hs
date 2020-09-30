@@ -48,7 +48,7 @@ data Card = Card
   { rank :: Rank
   , suit :: Suit
   }
-  deriving stock (Eq, Show, Generic)
+  deriving stock (Eq, Ord, Show, Generic)
   deriving anyclass (Hashable)
 
 instance Enum Card where
@@ -166,6 +166,7 @@ data Pile a = Pile
   deriving anyclass (Hashable)
 
 newtype IsFaceUp = IsFaceUp Bool
+  deriving stock (Eq)
 
 instance FunctorWithIndex IsFaceUp Pile
 instance FoldableWithIndex IsFaceUp Pile

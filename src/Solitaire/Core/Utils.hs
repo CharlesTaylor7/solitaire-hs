@@ -75,7 +75,10 @@ scoreRun :: Run card -> Score
 scoreRun (Run cards) = Score $ length cards - 1
 
 newtype PileId = PileId Int
+  deriving stock (Eq)
+
 newtype StackId = StackId Int
+  deriving stock (Eq)
 
 indexedCards :: forall card. IndexedTraversal' (PileId, IsFaceUp, StackId) (Tableau card) card
 indexedCards =
@@ -92,7 +95,7 @@ indexedCards =
     indexStack = itraversed & reindexed StackId
 
 
-duplicates :: forall a i s. (Eq i, Ord a) => IndexedFold i s a -> s -> [(a, [i])]
+duplicates :: forall a i s. (Eq i, Ord a) => IndexedGetting i (Endo (Map a [i] -> Map a [i])) s a -> s -> [(a, [i])]
 duplicates fold =
   -- accumulate duplicate targets with their indices by pushing the fold into a Map
   ifoldlOf' fold reducer mempty >>>
