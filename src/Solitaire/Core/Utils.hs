@@ -77,9 +77,29 @@ scoreRun (Run cards) = Score $ length cards - 1
 newtype PileId = PileId Int
 newtype StackId = StackId Int
 
-indexedCards :: IndexedTraversal' (PileId, IsFaceUp, StackId) (Tableau card) card
+indexedCards :: forall card. IndexedTraversal' (PileId, IsFaceUp, StackId) (Tableau card) card
 indexedCards =
-  (#_Tableau . itraversed . reindexed PileId)
-  <.> itraversed
-  <.> itraversed
-  . reindexed undefined
+  (indexPiles <.> indexIsFaceUp <.> indexStack)
+  & reindexed (\(pileId, (isFaceUp, stackId)) -> (pileId, isFaceUp, stackId))
+  where
+    indexPiles :: IndexedTraversal' PileId (Tableau card) (Pile (Vector card))
+    indexPiles = #_Tableau . itraversed & reindexed PileId
+
+    indexIsFaceUp :: IndexedTraversal' IsFaceUp (Pile a) a
+    indexIsFaceUp = itraversed
+
+    indexStack :: IndexedTraversal' StackId (Vector a) a
+    indexStack = itraversed & reindexed StackId
+
+
+duplicates :: forall a i s. (Eq i, Ord a) => IndexedFold i s a -> s -> [(a, [i])]
+duplicates fold =
+  -- accumulate duplicate targets with their indices by pushing the fold into a Map
+  ifoldlOf' fold reducer mempty >>>
+  -- extract a list indexed by targets
+  itoList                       >>>
+  -- filter to pairs with multiple indices
+  filter (view $ _2 . to length . to (> 1))
+  where
+    reducer :: i -> Map a [i] -> a -> Map a [i]
+    reducer i map a = map & at a . non mempty %~ cons i

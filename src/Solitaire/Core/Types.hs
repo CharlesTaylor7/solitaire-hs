@@ -167,12 +167,10 @@ data Pile a = Pile
 
 newtype IsFaceUp = IsFaceUp Bool
 
-instance FunctorWithIndex IsFaceUp Pile where
-instance FoldableWithIndex IsFaceUp Pile where
+instance FunctorWithIndex IsFaceUp Pile
+instance FoldableWithIndex IsFaceUp Pile
 instance TraversableWithIndex IsFaceUp Pile where
-  itraverse = undefined
-
-
+  itraverse = itraverseOf (traversed & reindexed (IsFaceUp . (== 0)))
 
 
 -- | Tableau
@@ -182,7 +180,6 @@ newtype Tableau card = Tableau (IntMap (Pile (Vector card)))
 
 instance PrettyCard card => Pretty (Tableau card) where
   prettyExpr = PrettyHardWrap . map prettyExpr . toRows
-
 
 
 -- | Row
