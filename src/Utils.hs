@@ -22,6 +22,7 @@ import Control.Arrow
 import Control.Exception
 
 import Data.Foldable
+import Data.List (sort, group)
 
 import GHC.Exts (IsList(..))
 
@@ -111,3 +112,12 @@ distributed = iso to from
     to (a, Right c) = Right (a, c)
     from (Left (a, b)) = (a, Left b)
     from (Right (a, c)) = (a, Right c)
+
+
+duplicates :: (Ord a) => [a] -> [a]
+duplicates list =
+  list
+  & sort
+  & group
+  & filter (\g -> length g > 1)
+  & map head

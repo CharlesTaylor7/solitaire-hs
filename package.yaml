@@ -36,6 +36,7 @@ dependencies:
 - fastsum
 # control flow
 - lens
+- profunctors
 - generic-lens
 - mtl
 - transformers

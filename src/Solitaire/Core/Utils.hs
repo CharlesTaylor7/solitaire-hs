@@ -46,14 +46,22 @@ totalCards :: Tableau card -> Int
 totalCards = sumOf (#_Tableau . folded . to pileSize)
 
 
-cardsRemaining :: Game c f s -> MoveCount
-cardsRemaining = view
+cardsRemaining' :: Game c f s -> MoveCount
+cardsRemaining' = view
   $ #tableau
   . #_Tableau
   . folded -- piles
   . folded -- vectors
   . to (MoveCount . length)
 
+
+-- TODO: revert this
+cardsRemaining :: Game c f s -> MoveCount
+cardsRemaining game =
+  case cardsRemaining' game of
+    mc@(MoveCount n)
+      | n > 52 -> error $ "estimated move count exceeded 52"
+      | otherwise -> mc
 
 scoreByRuns :: IsCard card => Tableau card -> Score
 scoreByRuns game =
@@ -65,3 +73,13 @@ scorePile pile =
 
 scoreRun :: Run card -> Score
 scoreRun (Run cards) = Score $ length cards - 1
+
+newtype PileId = PileId Int
+newtype StackId = StackId Int
+
+indexedCards :: IndexedTraversal' (PileId, IsFaceUp, StackId) (Tableau card) card
+indexedCards =
+  (#_Tableau . itraversed . reindexed PileId)
+  <.> itraversed
+  <.> itraversed
+  . reindexed undefined

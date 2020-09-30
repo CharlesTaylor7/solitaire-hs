@@ -165,6 +165,15 @@ data Pile a = Pile
   deriving stock (Eq, Ord, Show, Read, Functor, Foldable, Traversable, Generic)
   deriving anyclass (Hashable)
 
+newtype IsFaceUp = IsFaceUp Bool
+
+instance FunctorWithIndex IsFaceUp Pile where
+instance FoldableWithIndex IsFaceUp Pile where
+instance TraversableWithIndex IsFaceUp Pile where
+  itraverse = undefined
+
+
+
 
 -- | Tableau
 newtype Tableau card = Tableau (IntMap (Pile (Vector card)))

@@ -115,6 +115,9 @@ step = do
 
         -- insert new game states reachable from this one
         ifor_ steps $ \i step -> do
+          prettyPrint game
+          prettyPrint step
+
           queueInsert
             -- total moves made so far + estimated remaining moves
             (heuristic @rs (step ^. #game) (gameHistory ^. #moveCount))

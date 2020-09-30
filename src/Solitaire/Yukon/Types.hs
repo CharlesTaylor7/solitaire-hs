@@ -74,13 +74,18 @@ data Priority = Priority
 newtype Estimated = Estimated MoveCount
   deriving stock (Show, Eq, Ord, Generic)
 
-priorityOrder :: Priority -> (MoveCount, Estimated, Int, Down Score)
-priorityOrder p =
-  ( p ^. #made + p ^. #estimated . #_Estimated
-  , p ^. #estimated
-  , p ^. #numFaceDown
-  , p ^. #totalRunScore . to Down
-  )
+priorityOrder :: Priority -> Float
+priorityOrder p = made + weightEstimated * estimated
+  where
+    made = p ^. #made . singular #_MoveCount . to fromIntegral
+    estimated = p ^. #estimated . singular(#_Estimated. #_MoveCount) . to fromIntegral
+
+    -- weightEstimated of 1 would be A*
+    -- this allows the search to reach a greater depth before backing out
+    -- as such the search is not guaranteed to find the shortest solution, just a solution
+    weightEstimated :: Float
+    weightEstimated = 2
+
 
 instance Eq Priority where
   (==) = (==) `on` priorityOrder
