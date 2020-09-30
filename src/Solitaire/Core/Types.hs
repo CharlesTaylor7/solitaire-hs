@@ -166,7 +166,9 @@ data Pile a = Pile
   deriving anyclass (Hashable)
 
 newtype IsFaceUp = IsFaceUp Bool
-  deriving stock (Eq)
+  deriving stock (Eq, Show)
+
+deriving via WrappedShow IsFaceUp instance Pretty IsFaceUp
 
 instance FunctorWithIndex IsFaceUp Pile
 instance FoldableWithIndex IsFaceUp Pile

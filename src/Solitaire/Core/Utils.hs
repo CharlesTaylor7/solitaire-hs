@@ -75,10 +75,14 @@ scoreRun :: Run card -> Score
 scoreRun (Run cards) = Score $ length cards - 1
 
 newtype PileId = PileId Int
-  deriving stock (Eq)
+  deriving stock (Eq, Show)
+
+deriving via WrappedShow PileId instance Pretty PileId
 
 newtype StackId = StackId Int
-  deriving stock (Eq)
+  deriving stock (Eq, Show)
+
+deriving via WrappedShow StackId instance Pretty StackId
 
 indexedCards :: forall card. IndexedTraversal' (PileId, IsFaceUp, StackId) (Tableau card) card
 indexedCards =

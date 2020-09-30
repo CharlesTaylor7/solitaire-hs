@@ -110,6 +110,7 @@ instance IsMove MoveStack Game where
     -- parse valid targets based on current source stack's bottom card
     (targetPileId, targetFaceUp) <- game
       ^@.. indexedTableau
+      . indices (/= sourcePileId)
       <. targets stackBottom
 
     let

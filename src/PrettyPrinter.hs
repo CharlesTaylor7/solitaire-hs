@@ -164,5 +164,21 @@ instance (Pretty a, Pretty b) => Pretty (Either a b) where
   prettyExpr (Left x) = prettyExpr x
   prettyExpr (Right x) = prettyExpr x
 
+instance (Pretty a, Pretty b) => Pretty (a, b) where
+  prettyExpr (a, b) =
+    PrettyHardWrap
+      [ prettyExpr a
+      , prettyExpr b
+      ]
+
+instance (Pretty a, Pretty b, Pretty c) => Pretty (a, b, c) where
+  prettyExpr (a, b, c) =
+    PrettyHardWrap
+      [ prettyExpr a
+      , prettyExpr b
+      , prettyExpr c
+      ]
+
+
 instance Pretty Char where
   prettyExpr = prettyExpr . T.singleton
