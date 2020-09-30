@@ -4,7 +4,6 @@ module Utils
   , enumerate
   , enumSize
   , maybeToError
-  , distributed
   , Input(..)
   , userInput
   , print
@@ -22,7 +21,6 @@ import Control.Arrow
 import Control.Exception
 
 import Data.Foldable
-import Data.List (sort, group)
 
 import GHC.Exts (IsList(..))
 
@@ -104,20 +102,3 @@ shuffleIOVector vector =
     for_ indices $ \i ->
       getRandomR (0, i) >>=
       liftIO . MV.swap vector i
-
-distributed :: Iso' (a, Either b c) (Either (a, b) (a, c))
-distributed = iso to from
-  where
-    to (a, Left b) = Left (a, b)
-    to (a, Right c) = Right (a, c)
-    from (Left (a, b)) = (a, Left b)
-    from (Right (a, c)) = (a, Right c)
-
-
-duplicates :: (Ord a) => [a] -> [a]
-duplicates list =
-  list
-  & sort
-  & group
-  & filter (\g -> length g > 1)
-  & map head
