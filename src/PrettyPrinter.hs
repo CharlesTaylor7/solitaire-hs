@@ -44,14 +44,26 @@ import qualified Rainbow
 
 import System.IO.Unsafe (unsafePerformIO)
 
+-- | types
+class Pretty a where
+  prettyExpr :: a -> PrettyExpr
+  default prettyExpr :: Show a => a -> PrettyExpr
+  prettyExpr = fromString . show
+
 
 class Pretty card => PrettyCard card where
   -- | width of the pretty printed card text
   prettyWidth :: Int
 
+data PrettyExpr
+  = PrettyStr (DList ByteString)
+  | PrettySoftWrap [PrettyExpr]
+  | PrettyHardWrap [PrettyExpr]
+  | PrettyIndent PrettyExpr
 
--- tracePretty :: Pretty a => a -> b -> b
--- tracePretty = trace . T.unpack . pretty
+instance IsString PrettyExpr where
+  fromString = PrettyStr . DL.singleton . fromString
+
 
 prettyPrint :: (MonadIO m, Pretty a) => a -> m ()
 prettyPrint a = liftIO $ do
@@ -97,20 +109,6 @@ toPrettyM (PrettyHardWrap exprs) = do
     tell $ DL.singleton indentation
     -- print the expression
     toPrettyM expr
-
-data PrettyExpr
-  = PrettyStr (DList ByteString)
-  | PrettySoftWrap [PrettyExpr]
-  | PrettyHardWrap [PrettyExpr]
-  | PrettyIndent PrettyExpr
-
-instance IsString PrettyExpr where
-  fromString = PrettyStr . DL.singleton . fromString
-
-class Pretty a where
-  prettyExpr :: a -> PrettyExpr
-  default prettyExpr :: Show a => a -> PrettyExpr
-  prettyExpr = fromString . show
 
 
 -- instances
@@ -173,7 +171,6 @@ instance (Pretty a, Pretty b, Pretty c) => Pretty (a, b, c) where
       , prettyExpr b
       , prettyExpr c
       ]
-
 
 instance Pretty Int
 instance Pretty Float

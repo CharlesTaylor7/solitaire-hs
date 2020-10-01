@@ -4,7 +4,6 @@ module Solitaire.Yukon.Types
   , pattern Game
   , Foundation(..)
   , Priority(..)
-  , Estimated(..)
   ) where
 
 import Solitaire.Prelude
@@ -65,7 +64,7 @@ chunkToByteStrings = fromList . chunksToByteStrings . pure
 
 data Priority = Priority
   { made :: MoveCount
-  , estimated :: Estimated
+  , numFaceUp :: Int
   , numFaceDown :: Int
   , totalRunScore :: Score
   }
@@ -73,30 +72,26 @@ data Priority = Priority
 
 instance Pretty Priority where
   prettyExpr p = prettyExpr $
-
-    (mempty :: Map String SomePretty)
-    & at "made" ?~ (p ^. #made . to SomePretty)
-    & at "estimated" ?~ (p ^. #estimated . to SomePretty)
+    (mempty :: Map Text SomePretty)
     & at "order" ?~ (p & priorityOrder & SomePretty)
-
-newtype Estimated = Estimated MoveCount
-  deriving stock (Show, Eq, Ord, Generic)
-
-
-instance Pretty Estimated where
-  prettyExpr (Estimated (MoveCount mc)) = fromString $ "Estimated " <> show mc
+    & at "made" ?~ (p ^. #made . to SomePretty)
+    & at "numFaceDown" ?~ (p ^. #numFaceDown . to SomePretty)
+    & at "numFaceUp" ?~ (p ^. #numFaceUp . to SomePretty)
 
 priorityOrder :: Priority -> Float
 priorityOrder p = made + weightEstimated * estimated
   where
     made = p ^. #made . singular #_MoveCount . to fromIntegral
-    estimated = p ^. #estimated . singular(#_Estimated. #_MoveCount) . to fromIntegral
+    numFaceUp = p ^. #numFaceUp . to fromIntegral
+    numFaceDown = p ^. #numFaceDown . to fromIntegral
+    -- face down cards count double because they have to be flipped over before being placed in the tableau
+    estimated = numFaceUp + 2 * numFaceDown
 
     -- weightEstimated of 1 would be A*
     -- this allows the search to reach a greater depth before backing out
     -- as such the search is not guaranteed to find the shortest solution, just a solution
     weightEstimated :: Float
-    weightEstimated = 2
+    weightEstimated = 1
 
 
 instance Eq Priority where

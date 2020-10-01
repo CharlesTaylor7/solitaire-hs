@@ -68,7 +68,13 @@ instance Rules Yukon where
   heuristic game moves =
     Yukon.Priority
       { made = moves
-      , estimated = Estimated $ cardsRemaining game
+      , numFaceUp = game & sumOf
+          ( #tableau
+          . #_Tableau
+          . folded
+          . #faceUp
+          . to length
+          )
       , numFaceDown = game & sumOf
           ( #tableau
           . #_Tableau
