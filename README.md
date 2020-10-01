@@ -22,3 +22,6 @@ A vastly simplified Spider solitaire:
   - average amount of branching?
   - space usage?
   - time spent exploring unfruitful decision paths?
+- yukon solve sorta works
+  - heuristic weights were chosen arbitrarily
+  - it either finds a solution in about 5 seconds or it hangs itself by fruitlessly enumerating the universe of hopeless game states
