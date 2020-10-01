@@ -95,6 +95,8 @@ step = do
     Just (priority, gameHistory) -> do
       let
         game = gameHistory ^. #games . head1
+      prettyPrint priority
+      prettyPrint game
 
       -- game states can be reached multiple times via different paths
       -- verify we haven't visted this state before
