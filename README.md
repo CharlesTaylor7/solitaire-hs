@@ -25,3 +25,4 @@ A vastly simplified Spider solitaire:
 - yukon solve sorta works
   - heuristic weights were chosen arbitrarily
   - it either finds a solution in about 5 seconds or it hangs itself by fruitlessly enumerating the universe of hopeless game states
+  - time out solves that don't terminate in under 10 seconds, and tune heuristic weights based on statistical refinement?
