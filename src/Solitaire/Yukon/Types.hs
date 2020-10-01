@@ -77,21 +77,33 @@ instance Pretty Priority where
     & at "made" ?~ (p ^. #made . to SomePretty)
     & at "numFaceDown" ?~ (p ^. #numFaceDown . to SomePretty)
     & at "numFaceUp" ?~ (p ^. #numFaceUp . to SomePretty)
+    & at "runScore" ?~ (p ^. #totalRunScore . to SomePretty)
 
 priorityOrder :: Priority -> Float
-priorityOrder p = made + weightEstimated * estimated
+priorityOrder p = made + estimate
   where
     made = p ^. #made . singular #_MoveCount . to fromIntegral
     numFaceUp = p ^. #numFaceUp . to fromIntegral
     numFaceDown = p ^. #numFaceDown . to fromIntegral
+    runScore = p ^. #totalRunScore . singular #_Score . to fromIntegral
+
+    estimate = weightFaceUp * numFaceUp + weightFaceDown * numFaceDown + weightRunScore * runScore
     -- face down cards count double because they have to be flipped over before being placed in the tableau
-    estimated = numFaceUp + 2 * numFaceDown
 
     -- weightEstimated of 1 would be A*
     -- this allows the search to reach a greater depth before backing out
     -- as such the search is not guaranteed to find the shortest solution, just a solution
-    weightEstimated :: Float
-    weightEstimated = 1
+    --
+    weightFaceUp :: Float
+    weightFaceUp = 2
+
+    -- should be atleast twice as big as weightFaceUp
+    weightFaceDown :: Float
+    weightFaceDown = 5
+
+    -- should be zero or less
+    weightRunScore :: Float
+    weightRunScore = -0.5
 
 
 instance Eq Priority where
