@@ -13,6 +13,9 @@ import qualified Solitaire.Core.Move.Class as Move
 
 import qualified Data.HashSet as Set
 
+import Data.IORef
+import System.IO.Unsafe
+
 
 type App rs = Core.App (Config rs) (Game rs) (Priority rs)
 
@@ -80,10 +83,55 @@ runGameLoop = do
   pure conclusion
 
 
+totalInserts :: IORef Int
+totalInserts = unsafePerformIO $ newIORef 1
+{-# NoInline totalInserts #-}
+
+totalPops :: IORef Int
+totalPops = unsafePerformIO $ newIORef 0
+{-# NoInline totalPops #-}
+
+thresholdScale :: IORef Int
+thresholdScale = unsafePerformIO $ newIORef 0
+{-# NoInline thresholdScale #-}
+
+addToRef :: MonadIO m => Int -> IORef Int -> m ()
+addToRef n ref = liftIO $ modifyIORef' ref (+ n)
+
+readRef :: MonadIO m => IORef a -> m a
+readRef = liftIO . readIORef
+
+printIO :: (MonadIO m, Show a) => a -> m ()
+printIO = liftIO . print
+
 step
   :: forall rs. (Solitaire rs, Pretty (Step (Game rs)))
   => ExceptT (GameConclusion (Game rs)) (App rs) ()
 step = do
+  inserts <- readRef totalInserts
+  pops <- readRef totalPops
+  let
+    queueSize = inserts - pops
+
+  threshold <- (10 ^) <$> readRef thresholdScale
+
+  when (queueSize > threshold) $ do
+
+    liftIO $ putStrLn "queueSize"
+    printIO queueSize
+
+    liftIO $ putStrLn "threshold"
+    printIO threshold
+
+    liftIO $ putStrLn "pops"
+    printIO pops
+
+    liftIO $ putStrLn "inserts"
+    printIO inserts
+
+    thresholdScale & addToRef 1
+    userConfirm
+
   -- retrieve the best priority game state
   maybeMin <- queuePopMin
   case maybeMin of
@@ -93,6 +141,8 @@ step = do
 
     -- we have game states to play from
     Just (priority, gameHistory) -> do
+      totalPops & addToRef 1
+
       let
         game = gameHistory ^. #games . head1
       prettyPrint priority
@@ -116,6 +166,7 @@ step = do
 
         -- insert new game states reachable from this one
         ifor_ steps $ \i step -> do
+          totalInserts & addToRef 1
           queueInsert
             -- total moves made so far + estimated remaining moves
             (heuristic @rs (step ^. #game) (gameHistory ^. #moveCount))

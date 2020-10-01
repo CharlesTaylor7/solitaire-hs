@@ -6,6 +6,7 @@ module Utils
   , maybeToError
   , Input(..)
   , userInput
+  , userConfirm
   , print
   , printS
   , loopM
@@ -75,6 +76,11 @@ newtype Input = Input String
 
 userInput :: (MonadIO m, Read a) => m (Either Input a)
 userInput = safeRead <$> liftIO getLine
+
+userConfirm :: (MonadIO m) => m ()
+userConfirm = liftIO $ do
+  putStrLn "press enter to continue..."
+  void getLine
 
 safeRead :: Read a => String -> Either Input a
 safeRead s =
