@@ -93,12 +93,8 @@ step = do
 
     -- we have game states to play from
     Just (priority, gameHistory) -> do
-      liftIO $ putStrLn "popping"
-      prettyPrint priority
-
       let
         game = gameHistory ^. #games . head1
-      prettyPrint game
 
       -- game states can be reached multiple times via different paths
       -- verify we haven't visted this state before
@@ -118,17 +114,6 @@ step = do
 
         -- insert new game states reachable from this one
         ifor_ steps $ \i step -> do
-
-          let
-            reverseLookup = step & toReverseMapOf (#game . #tableau . indexedCards)
-            dups = duplicates reverseLookup
-            missed = missing reverseLookup
-
-          when (dups & not . null) $ do
-            liftIO $ print $ "duplicates"
-            prettyPrint dups
-            throwError GameLost
-
           queueInsert
             -- total moves made so far + estimated remaining moves
             (heuristic @rs (step ^. #game) (gameHistory ^. #moveCount))
