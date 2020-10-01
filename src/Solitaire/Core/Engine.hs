@@ -74,7 +74,6 @@ runGameLoop
   => App rs (GameConclusion (Game rs))
 runGameLoop = do
   game <- newGame @rs
-  prettyPrint game
   queueInsert (heuristic @rs game 0) $ GameHistory 0 [game]
   conclusion <- loopM (\_ -> step @rs) ()
   pure conclusion
@@ -95,8 +94,8 @@ step = do
     Just (priority, gameHistory) -> do
       let
         game = gameHistory ^. #games . head1
-      prettyPrint priority
-      prettyPrint game
+      -- prettyPrint priority
+      -- prettyPrint game
 
       -- game states can be reached multiple times via different paths
       -- verify we haven't visted this state before
