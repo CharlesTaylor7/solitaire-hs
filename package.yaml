@@ -53,6 +53,7 @@ default-extensions:
   - InstanceSigs
   - PatternSynonyms
   - TypeSynonymInstances
+  - DefaultSignatures
 
   # type applications
   - AllowAmbiguousTypes

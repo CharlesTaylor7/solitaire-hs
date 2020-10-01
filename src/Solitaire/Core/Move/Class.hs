@@ -20,7 +20,7 @@ data SomeMove game =
     SomeMove move
 
 deriving instance Show (SomeMove game)
-deriving via WrappedShow (SomeMove game) instance Pretty (SomeMove game)
+instance Pretty (SomeMove game)
 
 
 moveType :: forall move game. MoveConstraints move game => SomeMoveType game

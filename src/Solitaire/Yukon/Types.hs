@@ -71,8 +71,20 @@ data Priority = Priority
   }
   deriving stock (Show, Generic)
 
+instance Pretty Priority where
+  prettyExpr p = prettyExpr $
+
+    (mempty :: Map String SomePretty)
+    & at "made" ?~ (p ^. #made . to SomePretty)
+    & at "estimated" ?~ (p ^. #estimated . to SomePretty)
+    & at "order" ?~ (p & priorityOrder & SomePretty)
+
 newtype Estimated = Estimated MoveCount
   deriving stock (Show, Eq, Ord, Generic)
+
+
+instance Pretty Estimated where
+  prettyExpr (Estimated (MoveCount mc)) = fromString $ "Estimated " <> show mc
 
 priorityOrder :: Priority -> Float
 priorityOrder p = made + weightEstimated * estimated

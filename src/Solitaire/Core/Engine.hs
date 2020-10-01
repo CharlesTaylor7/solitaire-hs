@@ -93,7 +93,9 @@ step = do
 
     -- we have game states to play from
     Just (priority, gameHistory) -> do
-      liftIO $ putStrLn $ "popping priority " <> show priority
+      liftIO $ putStrLn "popping"
+      prettyPrint priority
+
       let
         game = gameHistory ^. #games . head1
       prettyPrint game
@@ -116,13 +118,14 @@ step = do
 
         -- insert new game states reachable from this one
         ifor_ steps $ \i step -> do
-          prettyPrint game
-          prettyPrint step
 
           let
-            dups = step & duplicates (#game . #tableau . indexedCards)
+            reverseLookup = step & toReverseMapOf (#game . #tableau . indexedCards)
+            dups = duplicates reverseLookup
+            missed = missing reverseLookup
 
           when (dups & not . null) $ do
+            liftIO $ print $ "duplicates"
             prettyPrint dups
             throwError GameLost
 

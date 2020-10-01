@@ -102,7 +102,7 @@ instance IsMove MoveStack Game where
       . cloneIndexPreservingTraversal #faceUp
 
     (sourceStack, sourceRest) <- [1 .. V.length sourceFaceUp]
-      <&>  flip V.splitAt sourceFaceUp
+      <&> flip V.splitAt sourceFaceUp
 
     -- parse stack bottom
     stackBottom <- sourceStack ^.. _last

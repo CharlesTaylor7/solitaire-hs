@@ -39,8 +39,8 @@ data Config = Config
 newtype Score = Score Int
   deriving stock (Eq, Ord, Show, Generic)
   deriving newtype (Num)
+  deriving anyclass (Pretty)
 
-deriving via WrappedShow Score instance Pretty Score
 
 
 -- | Card
@@ -167,8 +167,7 @@ data Pile a = Pile
 
 newtype IsFaceUp = IsFaceUp Bool
   deriving stock (Eq, Show)
-
-deriving via WrappedShow IsFaceUp instance Pretty IsFaceUp
+  deriving anyclass (Pretty)
 
 instance FunctorWithIndex IsFaceUp Pile
 instance FoldableWithIndex IsFaceUp Pile
@@ -215,7 +214,7 @@ newtype MoveCount = MoveCount Int
   deriving stock (Eq, Ord, Show, Generic)
   deriving newtype (Num)
   deriving (Monoid, Semigroup) via Sum Int
-
+  deriving anyclass (Pretty)
 
 -- pretty helpers
 newtype RowCount = RowCount Int

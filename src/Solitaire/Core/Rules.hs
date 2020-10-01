@@ -37,15 +37,22 @@ class Rules rs where
 
   heuristic :: Game rs -> MoveCount -> Priority rs
 
+type CardConstraints card =
+  ( PrettyCard card
+  , Ord card
+  , Hashable card
+  , Bounded card
+  , Enum card
+  )
 
 -- catch all constraint
 type Solitaire rs =
   ( Rules rs
   , IsConfig (Config rs)
-  , PrettyCard (Card rs), Eq (Card rs), Hashable (Card rs), Ord (Card rs)
+  , CardConstraints (Card rs)
   , Pretty (Foundation rs), Eq (Foundation rs), Hashable (Foundation rs)
   , Eq (Stock rs), Hashable (Stock rs)
-  , Ord (Priority rs), Show (Priority rs)
+  , Ord (Priority rs), Pretty (Priority rs)
   )
 
 

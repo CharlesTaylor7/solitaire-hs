@@ -7,9 +7,9 @@ module PrettyPrinter
   -- , tracePretty
   , chunksToByteStrings
   , Pretty(..)
+  , SomePretty(..)
   , PrettyCard(..)
   , PrettyExpr(..)
-  , WrappedShow(..)
   , KeyValuePairs(..)
   -- re export
   , DList
@@ -109,16 +109,11 @@ instance IsString PrettyExpr where
 
 class Pretty a where
   prettyExpr :: a -> PrettyExpr
+  default prettyExpr :: Show a => a -> PrettyExpr
+  prettyExpr = fromString . show
 
 
 -- instances
-newtype WrappedShow a = WrappedShow a
-
-instance Show a => Pretty (WrappedShow a) where
-  prettyExpr (WrappedShow a) = fromString . show $ a
-
-deriving via WrappedShow Bool instance Pretty Bool
-
 instance Pretty Text where
   prettyExpr = PrettyStr . DL.singleton . T.encodeUtf8
 
@@ -180,5 +175,13 @@ instance (Pretty a, Pretty b, Pretty c) => Pretty (a, b, c) where
       ]
 
 
+instance Pretty Int
+instance Pretty Float
 instance Pretty Char where
   prettyExpr = prettyExpr . T.singleton
+
+data SomePretty =
+  forall p. Pretty p => SomePretty p
+
+instance Pretty SomePretty where
+  prettyExpr (SomePretty p) = prettyExpr p

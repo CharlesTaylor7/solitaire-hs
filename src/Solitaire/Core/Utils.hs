@@ -4,6 +4,9 @@ import Solitaire.Prelude
 import Solitaire.Core.Types
 import Solitaire.Core.Card
 
+import qualified Data.Map as Map
+import qualified Data.Set as Set
+
 
 color :: Suit -> Color
 color Hearts = Red
@@ -76,13 +79,11 @@ scoreRun (Run cards) = Score $ length cards - 1
 
 newtype PileId = PileId Int
   deriving stock (Eq, Show)
-
-deriving via WrappedShow PileId instance Pretty PileId
+  deriving anyclass (Pretty)
 
 newtype StackId = StackId Int
   deriving stock (Eq, Show)
-
-deriving via WrappedShow StackId instance Pretty StackId
+  deriving anyclass (Pretty)
 
 indexedCards :: forall card. IndexedTraversal' (PileId, IsFaceUp, StackId) (Tableau card) card
 indexedCards =
@@ -98,15 +99,24 @@ indexedCards =
     indexStack :: IndexedTraversal' StackId (Vector a) a
     indexStack = itraversed & reindexed StackId
 
+type EndoEndo a = Endo (a -> a)
 
-duplicates :: forall a i s. (Eq i, Ord a) => IndexedGetting i (Endo (Map a [i] -> Map a [i])) s a -> s -> [(a, [i])]
-duplicates fold =
-  -- accumulate duplicate targets with their indices by pushing the fold into a Map
-  ifoldlOf' fold reducer mempty >>>
-  -- extract a list indexed by targets
-  itoList                       >>>
-  -- filter to pairs with multiple indices
-  filter (view $ _2 . to length . to (> 1))
+toReverseMapOf :: forall a i s. (Eq i, Ord a) => IndexedGetting i (EndoEndo (Map a [i])) s a -> s -> Map a [i]
+toReverseMapOf fold = ifoldlOf' fold reducer mempty
   where
     reducer :: i -> Map a [i] -> a -> Map a [i]
     reducer i map a = map & at a . non mempty %~ cons i
+
+
+duplicates :: forall a i. Map a [i] -> [(a, [i])]
+duplicates map = map ^@.. ifolded . filtered ((> 1) . length)
+
+
+missing :: forall a i. (Bounded a, Enum a, Ord a) => Map a [i] -> [a]
+missing map = universe `Set.difference` keySet & Set.toList
+  where
+    keySet :: Set a
+    keySet = map & Map.keys & Set.fromAscList
+
+    universe :: Set a
+    universe = enumerate
