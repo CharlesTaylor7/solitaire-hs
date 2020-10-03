@@ -1,3 +1,4 @@
+{-# options_ghc -Wno-missing-pattern-synonym-signatures #-}
 module Solitaire.Core.Engine where
 
 import Solitaire.Prelude
@@ -19,65 +20,19 @@ import GenericUtils (constructorName)
 import qualified Data.Map as Map
 
 
--- | select a random point inside the unit n-dimensional ball
-randomDelta :: MonadRandom m => Int -> m [Float]
-randomDelta n = do
-  vars <- sequence $ replicate n $ getRandomR (0, 1)
-  -- nth root
-  r <- (** (1 / fromIntegral n)) <$> getRandomR (0, 1)
-  let
-    norm = vars & sumOf (folded . to (^ 2)) & sqrt
-    scalar = r / norm
+data GameSolve game = Solution [game] | NoSolution
+  deriving stock (Generic)
 
-  pure $ (scalar *) <$> vars
+type App rs = Core.App (AppConfig rs) (Game rs)
 
 
-collectStats :: forall rs. Solitaire rs => AppConfig rs -> IO (Map Text Text)
-collectStats config = do
-  conclusions <-
-    for ([1 .. config ^. #stats . #numTrials] :: [Int]) $ \i -> do
-      putStrLn $ "Run #" <> show i
+pattern App rs = Core.App rs
 
-      game <- runGame @rs config
-        & timeout (config ^. #stats . #microSecondsTimeout)
-        <&> view (non Timeout)
-
-      putStrLn $ constructorName game <> "\n"
-      pure game
-
-  let
-    numTimedOut = conclusions & lengthOf (folded . #_Timeout)
-    numWon = conclusions & lengthOf (folded . #_GameWon)
-    numLost = conclusions & lengthOf (folded . #_GameLost)
-
-  pure $ mempty
-    & at "numTimedOut" ?~ showText numTimedOut
-    & at "numWon" ?~ showText numWon
-    & at "numLost" ?~ showText numLost
+type Weights = Map Text Float
 
 
 showText :: Show a => a -> Text
 showText = fromString . show
-
-
-runGame
-  :: forall rs.
-  ( Solitaire rs
-  )
-  => AppConfig rs
-  -> IO (GameConclusion (Game rs))
-runGame config =
-  runGameLoop @rs
-    & unApp
-    & flip runReaderT config
-    & runPQueueT
-    & runHistoryT
-
-
-type App rs = Core.App (AppConfig rs) (Game rs)
-
-data GameConclusion game = GameWon [game] | GameLost | Timeout
-  deriving stock (Eq, Generic)
 
 
 heuristic
@@ -95,6 +50,21 @@ heuristic game =
       . withIndex
       . to (\(i, w) -> features ^?! ix i . to (* w))
       )
+
+
+runGame
+  :: forall rs.
+  ( Solitaire rs
+  )
+  => AppConfig rs
+  -> Game rs
+  -> IO (GameSolve (Game rs))
+runGame config game =
+  runGameLoop @rs game
+    & unApp
+    & (runReaderT ?? config)
+    & runPQueueT
+    & runHistoryT
 
 
 allMoves
@@ -124,11 +94,13 @@ nextSteps game = do
 
   pure $ allMoves @rs game & filter unvisited
 
+
 runGameLoop
   :: forall rs. Solitaire rs
-  => App rs (GameConclusion (Game rs))
-runGameLoop = do
-  game <- Core.App $ magnify #game $ newGame @rs
+  => Game rs
+  -> App rs (GameSolve (Game rs))
+
+runGameLoop game = do
   priority <- heuristic @rs game
   queueInsert priority $ GameHistory 0 [game]
   conclusion <- loopM (\_ -> step @rs) ()
@@ -137,14 +109,14 @@ runGameLoop = do
 
 step
   :: forall rs. (Solitaire rs, Pretty (Step (Game rs)))
-  => ExceptT (GameConclusion (Game rs)) (App rs) ()
+  => ExceptT (GameSolve (Game rs)) (App rs) ()
 step = do
   -- retrieve the best priority game state
   maybeMin <- queuePopMin
   case maybeMin of
     -- out of game states to try, we lost
     Nothing ->
-      throwError GameLost
+      throwError NoSolution
 
     -- we have game states to play from
     Just (priority, gameHistory) -> do
@@ -158,7 +130,7 @@ step = do
 
         -- check to see if we won
         when (gameIsWon @rs game) $
-          throwError $ GameWon $ gameHistory ^.. #games . folded
+          throwError $ Solution $ gameHistory ^.. #games . folded
 
         -- record we visited this game state
         saveToHistory game

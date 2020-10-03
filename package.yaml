@@ -50,6 +50,7 @@ dependencies:
 default-extensions:
   # always
   - NoImplicitPrelude
+  - NoStarIsType
   - ScopedTypeVariables
   - PartialTypeSignatures
   - MonoLocalBinds

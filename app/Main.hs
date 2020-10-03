@@ -9,7 +9,6 @@ main = do
   gameConfig <- rightOrThrow $ defaultConfig
 
   let
-    collectYukonStats = collectStats @Yukon
     statsConfig = StatsConfig
       { numTrials = 100
       , microSecondsTimeout = 5 * (10 ^ 6)
@@ -20,20 +19,8 @@ main = do
       }
     appConfig = AppConfig statsConfig gameConfig
 
-  _ <- adjustForever @Yukon appConfig
-  pure ()
-
-
-adjustForever :: forall rs. Solitaire rs => AppConfig rs -> IO Void
-adjustForever config = do
-  prettyPrint $ config ^. #stats . #heuristicWeights
-
-  stats <- collectStats @rs config
-  prettyPrint stats
-
-  updatedConfig <- config & (#stats . #heuristicWeights) updateWeightsAtRandom
-
-  adjustForever updatedConfig
+  games <- runGames @Yukon appConfig
+  prettyPrint games
 
 
 updateWeightsAtRandom

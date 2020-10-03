@@ -17,10 +17,10 @@ type Game rs = Core.Game (Card rs) (Foundation rs) (Stock rs)
 
 
 class Rules rs where
-  type Config (rs :: *) :: *
-  type Card (rs :: *) :: *
-  type Stock (rs :: *) :: *
-  type Foundation (rs :: *) :: *
+  type Config rs
+  type Card rs
+  type Stock rs
+  type Foundation rs
 
   type Stock rs = ()
 

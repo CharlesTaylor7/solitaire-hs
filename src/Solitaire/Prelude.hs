@@ -27,8 +27,9 @@ import Data.List.NonEmpty as X (NonEmpty(..), (<|), nonEmpty)
 import Data.Ord as X
 import Data.Proxy as X (Proxy(..))
 import Data.Void as X
-
 import Data.String as X (IsString(..))
+import Data.Kind as X (Type)
+
 import GHC.Exts as X (IsList(fromList, Item))
 import GHC.Generics as X (Generic)
 

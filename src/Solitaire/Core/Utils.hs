@@ -99,13 +99,9 @@ indexedCards =
     indexStack :: IndexedTraversal' StackId (Vector a) a
     indexStack = itraversed & reindexed StackId
 
-type EndoEndo a = Endo (a -> a)
 
-toReverseMapOf :: forall a i s. (Eq i, Ord a) => IndexedGetting i (EndoEndo (Map a [i])) s a -> s -> Map a [i]
-toReverseMapOf fold = ifoldlOf' fold reducer mempty
-  where
-    reducer :: i -> Map a [i] -> a -> Map a [i]
-    reducer i map a = map & at a . non mempty %~ cons i
+toMap :: (Ord k, Eq a) => [(k, a)] -> Map k [a]
+toMap = foldl' (\map (k, a) -> map & at k . non Empty %~ cons a) mempty
 
 
 duplicates :: forall a i. Map a [i] -> [(a, [i])]
