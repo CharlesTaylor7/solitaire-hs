@@ -43,6 +43,9 @@ dependencies:
 - MonadRandom
 # color terminal output
 - rainbow
+- time
+
+
 
 default-extensions:
   # always

@@ -30,7 +30,7 @@ class Rules rs where
   -- should be MonadPrimitive + MonadRandom instead of MonadIO
   -- IO is used for mutable vectors & randomness to shuffle the deck
   -- We don't need full IO
-  newGame :: (MonadIO m, MonadReader (AppConfig rs) m) => m (Game rs)
+  newGame :: (MonadIO m, MonadReader (Config rs) m) => m (Game rs)
 
   gameIsWon :: Game rs -> Bool
 
@@ -91,7 +91,7 @@ data GameHistory game = GameHistory
 
 
 newtype App config game a = App
-  { unApp :: PQueueT Float (GameHistory game) (HistoryT game (ReaderT config IO)) a
+  { unApp :: ReaderT config (PQueueT Float (GameHistory game) (HistoryT game IO)) a
   }
   deriving newtype
     ( Functor
@@ -102,3 +102,4 @@ newtype App config game a = App
     , MonadReader config
     , MonadHistory game
     )
+

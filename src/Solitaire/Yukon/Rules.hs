@@ -42,10 +42,10 @@ instance Rules Yukon where
     , moveType @MoveToFoundation
     ]
 
-  newGame :: (MonadIO m, MonadReader (AppConfig Yukon) m) => m Yukon.Game
+  newGame :: (MonadIO m, MonadReader Yukon.Config m) => m Yukon.Game
   newGame = do
     shuffled <- getDeck >>= shuffle
-    pileCounts <- view $ #game . #piles
+    pileCounts <- view #piles
     let
       (piles, _) = foldl'
         (\(ps, cs) count ->

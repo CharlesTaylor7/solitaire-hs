@@ -19,6 +19,19 @@ import GenericUtils (constructorName)
 import qualified Data.Map as Map
 
 
+-- | select a random point inside the unit n-dimensional ball
+randomDelta :: MonadRandom m => Int -> m [Float]
+randomDelta n = do
+  vars <- sequence $ replicate n $ getRandomR (0, 1)
+  -- nth root
+  r <- (** (1 / fromIntegral n)) <$> getRandomR (0, 1)
+  let
+    norm = vars & sumOf (folded . to (^ 2)) & sqrt
+    scalar = r / norm
+
+  pure $ (scalar *) <$> vars
+
+
 collectStats :: forall rs. Solitaire rs => AppConfig rs -> IO (Map Text Text)
 collectStats config = do
   conclusions <-
@@ -56,9 +69,9 @@ runGame
 runGame config =
   runGameLoop @rs
     & unApp
+    & flip runReaderT config
     & runPQueueT
     & runHistoryT
-    & flip runReaderT config
 
 
 type App rs = Core.App (AppConfig rs) (Game rs)
@@ -115,7 +128,7 @@ runGameLoop
   :: forall rs. Solitaire rs
   => App rs (GameConclusion (Game rs))
 runGameLoop = do
-  game <- newGame @rs
+  game <- Core.App $ magnify #game $ newGame @rs
   priority <- heuristic @rs game
   queueInsert priority $ GameHistory 0 [game]
   conclusion <- loopM (\_ -> step @rs) ()
@@ -156,9 +169,13 @@ step = do
 
         -- insert new game states reachable from this one
         ifor_ steps $ \i step -> do
+          let
+            moves = gameHistory ^. #moveCount . singular #_MoveCount . to fromIntegral
+          h <- heuristic @rs $ step ^. #game
+
           queueInsert
             -- total moves made so far + estimated remaining moves
-            (heuristic @rs (step ^. #game) (gameHistory ^. #moveCount))
+            (moves + h)
             -- update total move count & list of game states
             (gameHistory
             & #moveCount +~ 1
