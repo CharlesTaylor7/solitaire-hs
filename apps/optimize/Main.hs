@@ -2,27 +2,31 @@
 module Main where
 
 import Solitaire.Yukon
+import System.Directory
+import System.Microtimer
 
 
 main :: IO ()
 main = do
-  gameConfig <- rightOrThrow $ defaultConfig
-
-  let
-    statsConfig = StatsConfig
-      { numTrials = 10
-      , microSecondsTimeout = 10 * (10 ^ 6)
-      , heuristicWeights = mempty
+  files <- listDirectory "games/Solvable"
+  for_ files $ \filePath -> do
+    file <- readFile $ "games/Solvable/" <> filePath
+    let
+      game :: Game
+      game = read file
+      weights = mempty
         & at "numFaceUp" ?~ 2
         & at "numFaceDown" ?~ 5
         & at "totalRunScore" ?~ (-0.5)
-      }
-    appConfig = AppConfig statsConfig gameConfig
 
-  games <- runTrials @Yukon appConfig
-  prettyPrint games
+    time <- runGame @Yukon game
+      & (runReaderT ?? weights)
+      & time_
 
-  writeToFiles games
+    putStrLn filePath
+    putStrLn $ formatSeconds time
+
+    prettyPrint game
 
 
 updateWeightsAtRandom
