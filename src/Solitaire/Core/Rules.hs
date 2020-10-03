@@ -21,7 +21,6 @@ class Rules rs where
   type Card (rs :: *) :: *
   type Stock (rs :: *) :: *
   type Foundation (rs :: *) :: *
-  type Priority (rs :: *) :: *
 
   type Stock rs = ()
 
@@ -31,11 +30,11 @@ class Rules rs where
   -- should be MonadPrimitive + MonadRandom instead of MonadIO
   -- IO is used for mutable vectors & randomness to shuffle the deck
   -- We don't need full IO
-  newGame :: (MonadIO m, MonadReader (Config rs) m) => m (Game rs)
+  newGame :: (MonadIO m, MonadReader (AppConfig rs) m) => m (Game rs)
 
   gameIsWon :: Game rs -> Bool
 
-  heuristic :: Game rs -> MoveCount -> Priority rs
+  heuristicFeatures :: Game rs -> Map Text Float
 
 type CardConstraints card =
   ( PrettyCard card
@@ -52,11 +51,25 @@ type Solitaire rs =
   , CardConstraints (Card rs)
   , Pretty (Foundation rs), Eq (Foundation rs), Hashable (Foundation rs)
   , Eq (Stock rs), Hashable (Stock rs)
-  , Ord (Priority rs), Pretty (Priority rs)
   )
 
 
 -- data types
+
+data AppConfig rs = AppConfig
+  { stats :: StatsConfig
+  , game :: Config rs
+  }
+  deriving stock (Generic)
+
+data StatsConfig = StatsConfig
+  { numTrials :: Int
+  , microSecondsTimeout :: Int
+  , heuristicWeights :: Map Text Float
+  }
+  deriving stock (Generic)
+
+
 data Step game = Step
   { move :: SomeMove game
   , game :: game
@@ -77,15 +90,15 @@ data GameHistory game = GameHistory
   deriving stock (Generic)
 
 
-newtype App config game priority a = App
-  { unApp :: PQueueT priority (GameHistory game) (HistoryT game (ReaderT config IO)) a
+newtype App config game a = App
+  { unApp :: PQueueT Float (GameHistory game) (HistoryT game (ReaderT config IO)) a
   }
   deriving newtype
     ( Functor
     , Applicative
     , Monad
     , MonadIO
-    , MonadPQueue priority (GameHistory game)
+    , MonadPQueue Float (GameHistory game)
     , MonadReader config
     , MonadHistory game
     )

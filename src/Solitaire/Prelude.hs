@@ -20,6 +20,7 @@ import Data.Char as X (intToDigit)
 import Data.Coerce as X (coerce)
 import Data.Bifunctor as X
 import Data.Foldable as X
+import Data.Traversable as X
 import Data.Function as X (on)
 import Data.List as X (intercalate, transpose, sortOn)
 import Data.List.NonEmpty as X (NonEmpty(..), (<|), nonEmpty)

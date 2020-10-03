@@ -13,10 +13,75 @@ import qualified Solitaire.Core.Move.Class as Move
 
 import qualified Data.HashSet as Set
 
+import System.Timeout
+import GenericUtils (constructorName)
 
-type App rs = Core.App (Config rs) (Game rs) (Priority rs)
+import qualified Data.Map as Map
 
-data GameConclusion game = GameWon [game] | GameLost
+
+collectStats :: forall rs. Solitaire rs => AppConfig rs -> IO (Map Text Text)
+collectStats config = do
+  conclusions <-
+    for ([1 .. config ^. #stats . #numTrials] :: [Int]) $ \i -> do
+      putStrLn $ "Run #" <> show i
+
+      game <- runGame @rs config
+        & timeout (config ^. #stats . #microSecondsTimeout)
+        <&> view (non Timeout)
+
+      putStrLn $ constructorName game <> "\n"
+      pure game
+
+  let
+    numTimedOut = conclusions & lengthOf (folded . #_Timeout)
+    numWon = conclusions & lengthOf (folded . #_GameWon)
+    numLost = conclusions & lengthOf (folded . #_GameLost)
+
+  pure $ mempty
+    & at "numTimedOut" ?~ showText numTimedOut
+    & at "numWon" ?~ showText numWon
+    & at "numLost" ?~ showText numLost
+
+
+showText :: Show a => a -> Text
+showText = fromString . show
+
+
+runGame
+  :: forall rs.
+  ( Solitaire rs
+  )
+  => AppConfig rs
+  -> IO (GameConclusion (Game rs))
+runGame config =
+  runGameLoop @rs
+    & unApp
+    & runPQueueT
+    & runHistoryT
+    & flip runReaderT config
+
+
+type App rs = Core.App (AppConfig rs) (Game rs)
+
+data GameConclusion game = GameWon [game] | GameLost | Timeout
+  deriving stock (Eq, Generic)
+
+
+heuristic
+  :: forall rs m. (MonadReader (AppConfig rs) m, Rules rs)
+  => Game rs
+  -> m Float
+heuristic game =
+  let
+    features = heuristicFeatures @rs game
+  in
+    reader $ sumOf
+      ( #stats
+      . #heuristicWeights
+      . ifolded
+      . withIndex
+      . to (\(i, w) -> features ^?! ix i . to (* w))
+      )
 
 
 allMoves
@@ -46,35 +111,13 @@ nextSteps game = do
 
   pure $ allMoves @rs game & filter unvisited
 
-
-runGame
-  :: forall rs.
-  ( Solitaire rs
-  )
-  => Config rs
-  -> IO ()
-runGame config = do
-  result <- runGameLoop @rs
-    & unApp
-    & runPQueueT
-    & runHistoryT
-    & flip runReaderT config
-  case result of
-    GameLost -> do
-      putStrLn "GameLost"
-
-    GameWon games -> do
-      liftIO $ putStrLn ""
-      for_ games prettyPrint
-      putStrLn "GameWon"
-
-
 runGameLoop
   :: forall rs. Solitaire rs
   => App rs (GameConclusion (Game rs))
 runGameLoop = do
   game <- newGame @rs
-  queueInsert (heuristic @rs game 0) $ GameHistory 0 [game]
+  priority <- heuristic @rs game
+  queueInsert priority $ GameHistory 0 [game]
   conclusion <- loopM (\_ -> step @rs) ()
   pure conclusion
 
@@ -94,8 +137,6 @@ step = do
     Just (priority, gameHistory) -> do
       let
         game = gameHistory ^. #games . head1
-      -- prettyPrint priority
-      -- prettyPrint game
 
       -- game states can be reached multiple times via different paths
       -- verify we haven't visted this state before

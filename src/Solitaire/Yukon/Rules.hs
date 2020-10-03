@@ -35,7 +35,6 @@ instance Rules Yukon where
   type Foundation Yukon = Yukon.Foundation
   type Stock Yukon = ()
   type Config Yukon = Yukon.Config
-  type Priority Yukon = Yukon.Priority
 
   moveTypes =
     [ moveType @FlipCard
@@ -43,10 +42,10 @@ instance Rules Yukon where
     , moveType @MoveToFoundation
     ]
 
-  newGame :: (MonadIO m, MonadReader Yukon.Config m) => m Yukon.Game
+  newGame :: (MonadIO m, MonadReader (AppConfig Yukon) m) => m Yukon.Game
   newGame = do
     shuffled <- getDeck >>= shuffle
-    pileCounts <- view #piles
+    pileCounts <- view $ #game . #piles
     let
       (piles, _) = foldl'
         (\(ps, cs) count ->
@@ -64,23 +63,31 @@ instance Rules Yukon where
   gameIsWon :: Yukon.Game -> Bool
   gameIsWon game = game ^. #tableau . to totalCards . to (== 0)
 
-  heuristic :: Yukon.Game -> MoveCount -> Yukon.Priority
-  heuristic game moves =
-    Yukon.Priority
-      { made = moves
-      , numFaceUp = game & sumOf
+  heuristicFeatures :: Yukon.Game -> Map Text Float
+  heuristicFeatures game =
+    mempty
+      & at "numFaceUp" ?~
+        ( game & sumOf
           ( #tableau
           . #_Tableau
           . folded
           . #faceUp
-          . to length
+          . to (fromIntegral . length)
           )
-      , numFaceDown = game & sumOf
+        )
+      & at "numFaceDown" ?~
+        ( game & sumOf
           ( #tableau
           . #_Tableau
           . folded
           . #faceDown
-          . to length
+          . to (fromIntegral . length)
           )
-      , totalRunScore = game ^. #tableau . to scoreByRuns
-      }
+        )
+      & at "totalRunScore" ?~
+        ( game
+          ^. #tableau
+          . to scoreByRuns
+          . singular #_Score
+          . to fromIntegral
+        )

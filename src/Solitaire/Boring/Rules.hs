@@ -49,9 +49,10 @@ instance Rules Boring where
       foundation = Foundation 0
     pure $ Boring.Game tableau foundation
 
+
   gameIsWon :: Boring.Game -> Bool
   gameIsWon game = game ^. #tableau . to totalCards . to (== 0)
 
-  heuristic :: Boring.Game -> MoveCount -> MoveCount
-  heuristic game moves = moves + cardsRemaining game
 
+  heuristicFeatures :: Boring.Game -> Map Text Float
+  heuristicFeatures _ = mempty

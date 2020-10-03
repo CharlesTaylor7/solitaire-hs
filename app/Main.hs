@@ -1,13 +1,19 @@
 {-# options_ghc -Wwarn #-}
 module Main where
 
-import Solitaire.Prelude
-
-import qualified Examples.Boring as Boring
-import qualified Examples.Yukon as Yukon
+import Solitaire.Yukon
 
 
 main :: IO ()
 main = do
- --  Boring.main
-  Yukon.main
+  config <- rightOrThrow $ defaultConfig
+
+  let
+    collectYukonStats = collectStats @Yukon config
+
+  stats <- collectYukonStats StatsConfig
+    { numRuns = 20
+    , microSecondsTimeout = 5 * (10 ^ 6)
+    }
+
+  prettyPrint stats

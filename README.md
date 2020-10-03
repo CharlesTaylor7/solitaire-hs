@@ -18,6 +18,7 @@ A vastly simplified Spider solitaire:
   - switch from breadth first approach back to depth first?
   - better heuristics?
   - move defaults?
+
 - benchmark
   - average amount of branching?
   - space usage?
