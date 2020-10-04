@@ -4,8 +4,9 @@ packages:
   - .
 
 extra-deps:
-  - dlist-1.0@sha256:124cb3aa1decebd5171b46601b1f74cca6cfae12d266ace3799b86dd05ef7cb4,3560
   - microtimer-0.0.1.2@sha256:daf649a763408f8dc118e0ac2cedd847b426252377a958e0d3aacc8cb4db2c34,1092
+  - optparse-generic-1.4.4@sha256:458eaa5bc448f9b67ce07ea597099d76b80f001f5eb2fe7f0a95633b000b119d,1738
+  - optparse-applicative-0.16.0.0@sha256:de6f2a1be366a1f6db786883c605bbd121bbafbe41c4fff00a306672566b0e7f,4785
 
 nix:
   enable: true

@@ -30,8 +30,6 @@ dependencies:
 - vector
 # priority queues
 - pqueue
-# difference lists
-- dlist >= 1.0
 # control flow
 - lens
 - profunctors
@@ -41,11 +39,6 @@ dependencies:
 - MonadRandom
 # color terminal output
 - rainbow
-- time
-- directory
-- uuid
-- microtimer
-
 
 default-extensions:
   # always
@@ -58,6 +51,7 @@ default-extensions:
   - PatternSynonyms
   - TypeSynonymInstances
   - DefaultSignatures
+  - NamedFieldPuns
 
   # type applications
   - AllowAmbiguousTypes
@@ -125,6 +119,8 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - solitaire
+    - uuid
+    - directory
 
   optimize:
     main:                Main.hs
@@ -135,6 +131,10 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - solitaire
+    - optparse-generic >= 1.4.0
+    - microtimer
+    - statistics
+    - directory
 
 
 tests:

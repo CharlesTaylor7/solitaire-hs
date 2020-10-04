@@ -54,6 +54,7 @@ import Data.Hashable as X
 -- lens
 import Control.Lens as X hiding (each, (<|))
 import Control.Lens.Extras as X (is)
+import Data.Text.Lens as X (packed, unpacked)
 import Data.Profunctor.Unsafe as X ((.#))
 
 -- generic-lens

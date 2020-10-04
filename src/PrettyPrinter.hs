@@ -32,9 +32,7 @@ import Data.String (IsString(..))
 import Data.Text (Text)
 import Data.ByteString (ByteString)
 import Data.Vector (Vector)
-import Data.DList (DList)
 
-import qualified Data.DList as DL
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.ByteString as BS
@@ -43,6 +41,9 @@ import qualified Data.Map as Map
 import qualified Rainbow
 
 import System.IO.Unsafe (unsafePerformIO)
+import Data.DList (DList)
+import qualified Data.DList as DL
+
 
 -- | types
 class Pretty a where

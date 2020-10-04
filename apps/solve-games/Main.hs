@@ -3,6 +3,9 @@ module Main where
 
 import Solitaire.Yukon
 
+import System.Directory
+import qualified Data.UUID as UUID
+
 
 main :: IO ()
 main = do
@@ -25,17 +28,15 @@ main = do
   writeToFiles games
 
 
-updateWeightsAtRandom
-  :: forall k m. (Ord k, MonadRandom m)
-  => Map k Float
-  -> m (Map k Float)
-updateWeightsAtRandom map = do
-  let
-    n = length map
-    keys = (map ^.. ifolded . asIndex)
+writeToFiles :: (Show k, Show a, Read a) => Map k [a] -> IO ()
+writeToFiles map = do
+  ifor_ map $ \k as -> do
+    let dirName = "games/" <> show k <> "/"
 
-  delta <- randomDelta n
+    createDirectoryIfMissing True dirName
+    for_ as $ \a -> do
+      uuid <- getRandom
 
-  pure $ flip execState map $
-    ifor_ keys $ \i key -> do
-      ix key += (delta ^?! ix i)
+      let filePath = dirName <> UUID.toString uuid
+
+      appendFile filePath (show a)

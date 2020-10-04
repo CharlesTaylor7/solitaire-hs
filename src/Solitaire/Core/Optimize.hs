@@ -13,13 +13,9 @@ import qualified Solitaire.Core.Move.Class as Move
 import qualified Data.HashSet as Set
 
 import System.Timeout
-import System.Directory
 import GenericUtils (constructorName)
 
 import qualified Data.Map as Map
-
-import Data.UUID (UUID)
-import qualified Data.UUID as UUID
 
 
 data GameLabel = Solvable | Unsolvable | TimedOut
@@ -58,20 +54,6 @@ runTrials config = do
       pure (label, game)
 
   pure $ conclusions & toMap
-
-
-writeToFiles :: (Show k, Show a, Read a) => Map k [a] -> IO ()
-writeToFiles map = do
-  ifor_ map $ \k as -> do
-    let dirName = "games/" <> show k <> "/"
-
-    createDirectoryIfMissing True dirName
-    for_ as $ \a -> do
-      uuid <- getRandom
-
-      let filePath = dirName <> UUID.toString uuid
-
-      appendFile filePath (show a)
 
 
 toGameLabel :: Maybe (GameSolve game) -> GameLabel
