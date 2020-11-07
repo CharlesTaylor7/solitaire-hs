@@ -24,9 +24,6 @@ data GameSolve game = Solution [game] | NoSolution
   deriving stock (Generic)
 
 
-type Weights = Map Text Float
-
-
 showText :: Show a => a -> Text
 showText = fromString . show
 

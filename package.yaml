@@ -59,12 +59,13 @@ default-extensions:
 
   # deriving extensions
   - GeneralizedNewtypeDeriving
-  - DeriveGeneric
-  - DeriveTraversable
-  - DerivingStrategies
   - StandaloneDeriving
+  - DerivingStrategies
   - DerivingVia
   - DeriveAnyClass
+  - DeriveGeneric
+  - DeriveDataTypeable
+  - DeriveTraversable
 
   # sugar
   - TupleSections

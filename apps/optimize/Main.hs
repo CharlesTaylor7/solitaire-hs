@@ -14,11 +14,12 @@ import qualified Data.Vector as V
 import Statistics.Sample
 import Data.List (sort)
 import Options.Generic
-
+import LinearRegression
 
 data CliArgs w = CliArgs
   { numTrials  :: w ::: Int <!> "10"  <?> "Number of trials to run"
   , limitGames :: w ::: Int <!> "100" <?> "Limit number of games to test"
+  , step       :: w ::: Float <!> "0.1" <?> "Step size"
   }
   deriving stock (Generic)
 
@@ -48,11 +49,50 @@ main = do
       & at "numFaceDown" ?~ 5
       & at "totalRunScore" ?~ (-0.5)
 
-  runTime <- testWeights initialWeights
-    & (runReaderT ?? optimizeConfig)
+    test = testWeights optimizeConfig
+
+  runTime <- test initialWeights
 
   prettyPrint runTime
   pure ()
+
+data PartialDArgs = PartialDArgs
+  { step :: Float
+  , field :: Text
+  , runTime :: RunTime
+  , weights :: Weights
+  , function :: Weights -> IO RunTime
+  }
+  deriving stock (Generic)
+
+partialDerivative :: PartialDArgs -> IO RunTime
+partialDerivative args = do
+  let
+    w_1 :: Weights
+    w_1 = args ^. #weights & ix (args ^. #field) -~ (args ^. #step)
+
+    w_2 :: Weights
+    w_2 = args ^. #weights & ix (args ^. #field) +~ (args ^. #step)
+
+    r0 = args ^. #runTime
+
+  r1 <- args ^. #function $ w_1
+  r2 <- args ^. #function $ w_2
+
+  pure $ undefined
+
+data Uncertain a = a :+- a
+
+data Line = Line
+  { m :: Uncertain Float
+  , b :: Uncertain Float
+  }
+  deriving stock (Generic)
+
+
+linearRegression :: [(Weight, RunTime)] -> Line
+linearRegression = undefined
+
 
 
 data OptimizeConfig = OptimizeConfig
@@ -76,17 +116,17 @@ instance Pretty RunTime where
       & at "std dev" ?~ (run ^. #standardDeviation . to formatSeconds . packed)
 
 
-testWeights :: (MonadReader OptimizeConfig m, MonadIO m) => Weights -> m RunTime
-testWeights weights = do
-  games <- view #games
-  numTrials <- view #numTrials
+testWeights :: OptimizeConfig -> Weights -> IO RunTime
+testWeights config weights = do
+  let
+    games = config ^. #games
+    numTrials = config ^. #numTrials
 
   times <- for games $ \game -> do
     let
       run = runGame @Yukon game
         & (runReaderT ?? weights)
         & time_
-        & liftIO
 
     sequenceA $ replicate numTrials run
 
@@ -100,8 +140,8 @@ testWeights weights = do
 
 updateWeightsAtRandom
   :: forall k m. (Ord k, MonadRandom m)
-  => Map k Float
-  -> m (Map k Float)
+  => Weights
+  -> m Weights
 updateWeightsAtRandom map = do
   let
     n = length map

@@ -33,7 +33,7 @@ class Rules rs where
 
   gameIsWon :: Game rs -> Bool
 
-  heuristicFeatures :: Game rs -> Map Text Float
+  heuristicFeatures :: Game rs -> Weights
 
 type CardConstraints card =
   ( PrettyCard card
@@ -55,6 +55,9 @@ type Solitaire rs =
 
 
 -- data types
+type Weights = Map Text Weight
+type Weight = Float
+
 
 data AppConfig = AppConfig
   { stats :: StatsConfig
@@ -65,7 +68,7 @@ data AppConfig = AppConfig
 data StatsConfig = StatsConfig
   { numTrials :: Int
   , microSecondsTimeout :: Int
-  , heuristicWeights :: Map Text Float
+  , heuristicWeights :: Weights
   }
   deriving stock (Generic)
 
